@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.173 2006/05/20 20:08:14 dww Exp $ */
+/* $Id: issue.inc,v 1.172.2.1 2006/05/20 20:08:20 dww Exp $ */
 
 function project_issue_nodeapi(&$node, $op, $arg) {
   global $user;

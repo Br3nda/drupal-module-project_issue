@@ -1,26 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.185 2006/07/25 08:51:30 dww Exp $ */
-
-/**
- * hook_nodeapi() implementation specific for issue nodes.
- * @see project_nodeapi().
- */
-function project_issue_nodeapi(&$node, $op, $arg) {
-  global $user;
-  switch ($op) {
-    case 'validate':
-      $result = db_query('SELECT * FROM {project_issue_state} WHERE sid = %d ORDER BY weight', $node->sid);
-      $state = db_fetch_object($result);
-
-      // Check if user has access, or if status is default status and therefore available to all,
-      // or if user is original issue poster and poster is granted access.
-      // If none of these is true, set error.
-      if (!(user_access('set issue status '. str_replace("'", "", $state->name)) || ($node->sid == variable_get('project_issue_default_state', 1)) || ($state->author_has && ($user->uid == $node->uid)))) {
-        form_set_error('sid', t('Invalid issue status %status: you do not have permission to set this status', array('%status' => "<em>$state</em>")));
-      }
-      break;
-  }
-}
+/* $Id: issue.inc,v 1.186 2006/07/25 09:54:35 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {

@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.172.2.11 2006/07/24 10:22:39 dww Exp $ */
+/* $Id: issue.inc,v 1.172.2.12 2006/07/25 08:51:36 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -803,10 +803,7 @@ function project_issue_query($project = 0, $query = NULL) {
     $versions = project_release_load($project, 0);
   }
   else {
-    $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n WHERE n.type = 'project_project' AND n.status = 1 AND n.moderate = 0 ORDER BY n.title"));
-    while ($node = db_fetch_object($result)) {
-      $projects[$node->nid] = $node->title;
-    }
+    $projects = project_projects_select_options();
   }
   if (is_null($query)) {
     $query = new StdClass();
@@ -1149,12 +1146,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   $categories = array(0 => t('<all>')) + project_issue_category();
   $states = array(implode(',', array_keys(project_issue_state())) => t('<all>')) + project_issue_state();
   $priorities = array(0 => t('<all>')) + project_issue_priority();
-
-  $projects = array(0 => t('<all>'));
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n WHERE n.type = 'project_project' AND n.status = 1 AND n.moderate = 0 ORDER BY n.title"));
-  while ($node = db_fetch_object($result)) {
-    $projects[$node->nid] = $node->title;
-  }
+  $projects = array(0 => t('<all>')) + project_projects_select_options();
 
   // Load active project
   if (count($query->projects) == 1) {

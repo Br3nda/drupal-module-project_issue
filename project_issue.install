@@ -1,7 +1,10 @@
 <?php
-// $Id: project_issue.install,v 1.1 2006/07/22 10:46:43 dww Exp $
+// $Id: project_issue.install,v 1.2 2006/07/26 21:33:18 dww Exp $
 
 function project_issue_install() {
+  // We need to check this before we try to create the table, so that
+  // if it already exists, we don't attempt to insert our own values. 
+  $project_issue_state_existed = project_issue_db_table_exists('project_issue_state');
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
@@ -133,7 +136,7 @@ function project_issue_install() {
       break;
   }
 
-  if (!project_issue_db_table_exists('project_issue_state')) {
+  if (!$project_issue_state_existed) {
     db_query("INSERT INTO {project_issue_state} VALUES (1, 'active', -13, 0)");
     db_query("INSERT INTO {project_issue_state} VALUES (2, 'fixed', 1, 0)");
     db_query("INSERT INTO {project_issue_state} VALUES (3, 'duplicate', 4, 0)");
@@ -159,4 +162,3 @@ function project_issue_db_table_exists($table) {
       break;
   }
 }
-

@@ -1,4 +1,9 @@
-// $Id: project_issue.css,v 1.1.2.1 2006/08/04 02:34:12 dww Exp $
+// $Id: project_issue.css,v 1.1.2.2 2006/08/04 05:40:14 dww Exp $
+
+.project .header {
+  font-weight: bold;
+  padding-top: 0.5em;
+}
 
 .node-form .project .options fieldset .form-item {
   float: left;
@@ -15,8 +20,3 @@
 }
 
 .node-form .project .options fieldset {display: inline-table;}
-
-.project .header {
-  font-weight: bold;
-  padding-top: 0.5em;
-}

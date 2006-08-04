@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.172.2.13 2006/08/04 01:15:17 dww Exp $ */
+/* $Id: issue.inc,v 1.172.2.14 2006/08/04 04:47:10 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -426,11 +426,13 @@ function project_issue_form(&$node, &$param) {
     $form['issue_details']['title'] = array(
       '#type' => 'textfield',
       '#title' => t('Title'),
-      '#description' => $node->title ? t('Note: modifying this value will change the title of the entire issue, not your follow-up comment.') : '',
-      '#default_value' => $node->title,
       '#size' => 60,
       '#maxlength' => 128,
     );
+    if ($node->title) {
+      $form['issue_details']['title']['#default_value'] = $node->title;
+      $form['issue_details']['title']['#description'] = t('Note: modifying this value will change the title of the entire issue, not your follow-up comment.');
+    }
     $form['issue_details']['body'] = array(
       '#type' => 'textarea',
       '#title' => t('Description'),

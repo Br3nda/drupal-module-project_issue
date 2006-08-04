@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.188 2006/08/04 04:47:05 dww Exp $ */
+/* $Id: issue.inc,v 1.189 2006/08/04 23:08:18 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -1363,7 +1363,7 @@ function project_issue_query_parse($query = NULL) {
   }
 
   if (empty($query->states)) {
-    $query->states = array(1, 2, 8, 13, 14);
+    $query->states = array(1, 2, 8, 13, 14, 4);
   }
 
   return $query;

@@ -1,0 +1,22 @@
+// $Id: project_issue.css,v 1.1.2.1 2006/08/04 02:34:12 dww Exp $
+
+.node-form .project .options fieldset .form-item {
+  float: left;
+  padding-right: 0.8em;
+  margin: 0.05em 0.1em;
+}
+
+.node-form .project fieldset:after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+.node-form .project .options fieldset {display: inline-table;}
+
+.project .header {
+  font-weight: bold;
+  padding-top: 0.5em;
+}

@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.172.2.12 2006/07/25 08:51:36 dww Exp $ */
+/* $Id: issue.inc,v 1.172.2.13 2006/08/04 01:15:17 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -1257,6 +1257,21 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
 
   $rows = array();
+
+  // For the rest of this function, we need $projects to be a flat
+  // array to map pids to project names. If we're using the project
+  // taxonomy, it will really be an array of arrays, where each
+  // project type is itself an array. So, we flatten the array once
+  // and then can use it safely in the rest of this method. 
+  if (project_use_taxonomy()) {
+    $flat_projects = array();
+    foreach ($projects as $tmp) {
+      if (is_array($tmp)) {
+        $flat_projects += $tmp;
+      }
+    }
+    $projects = $flat_projects;
+  }
 
   if ($format == 'rss') {
     return project_issue_query_rss($projects, $result);

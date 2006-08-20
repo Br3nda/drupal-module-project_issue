@@ -1,5 +1,5 @@
 <?php
-// $Id
+/* $Id: mail.inc,v 1.60.2.2 2006/08/20 18:56:40 dww Exp $ */
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {

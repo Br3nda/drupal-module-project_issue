@@ -1,7 +1,7 @@
 <?php
-/* $Id: mail.inc,v 1.60 2006/04/22 21:14:57 dww Exp $ */
+/* $Id: mail.inc,v 1.61 2006/08/20 19:00:34 dww Exp $ */
 
-function project_mailhandler($node, $result, $i, $header, $mailbox) {
+function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
     if (user_access('create project issues')) {
       $node->nid = preg_replace('/@.+/', '', $node->nid);
@@ -335,7 +335,7 @@ function project_mail_notify($node) {
 
 function project_mail_reminder() {
   $projects = array();
-  $result = db_query(db_rewrite_sql('SELECT p.nid, n.title FROM {project_projects} p INNER JOIN {node} n ON p.nid = n.nid WHERE p.mail_reminder = 1 AND n.status = 1', 'p'));
+  $result = db_query(db_rewrite_sql('SELECT p.nid, n.title FROM {project_issue_projects} p INNER JOIN {node} n ON p.nid = n.nid WHERE p.mail_reminder = 1 AND n.status = 1', 'p'));
   while ($project = db_fetch_object($result)) {
     $projects[$project->nid] = $project->title;
     $pids[] = "p.pid = $project->nid";
@@ -353,7 +353,7 @@ function project_mail_reminder() {
           "Return-Path: <$sender->mail;>",
           'Date: '. date('r'),
           "From: $sender->name <$sender->mail>",
-          'X-Mailer: Drupal Project module (http://drupal.org/project/project)',
+          'X-Mailer: Drupal Project Issues module (http://drupal.org/project/project_issue)',
           "List-Id: $sender->name <project-reminder-". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']) .'>',
           'List-Archive: <'. url('project', NULL, NULL, 1) .'>',
         );
@@ -388,12 +388,12 @@ function project_mail_digest() {
   $body = array();
   $header = array(
     'Date: '. date('r'),
-    'X-Mailer: Drupal Project module (http://drupal.org/project/project)',
+    'X-Mailer: Drupal Project Issues module (http://drupal.org/project/project_issue)',
     "List-Id: $project->title <". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']) .'-project-issues-digest>',
     'List-Archive: <'. url('project/issues?priorities=1', NULL, NULL, 1) .'>',
   );
 
-  $result = db_query(db_rewrite_sql("SELECT p.nid, p.* FROM {project_projects} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.mail_digest <> '' ORDER BY title, p.mail_digest", 'p'));
+  $result = db_query(db_rewrite_sql("SELECT p.nid, p.* FROM {project_issue_projects} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.mail_digest <> '' ORDER BY title, p.mail_digest", 'p'));
   while ($project = db_fetch_object($result)) {
     $category = '';
     $result2 = db_query(db_rewrite_sql('SELECT p.nid, n.title, n.created, p.sid, p.category, p.component, p.priority, p.assigned FROM {project_issues} p INNER JOIN {node} n ON p.nid = n.nid WHERE n.status = 1 AND p.pid = %d AND p.sid = 1 AND p.priority = 1 ORDER BY p.category, n.created DESC', 'p'), $project->nid);

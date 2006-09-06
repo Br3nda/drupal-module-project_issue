@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.192 2006/08/20 19:03:15 dww Exp $ */
+/* $Id: issue.inc,v 1.193 2006/09/06 18:35:45 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -1032,7 +1032,7 @@ function project_issue_admin_states_page() {
         $form['delete'][$state->sid] = array(
           '#type' => 'markup',
           '#value' => ($state->sid != $default_state) ?
-            l(t('delete'), 'admin/settings/project/status/delete/'. $state->sid) :
+            l(t('delete'), 'admin/settings/project_issue/status/delete/'. $state->sid) :
             '',
         );
       }
@@ -1091,7 +1091,7 @@ function project_issue_admin_save_states() {
       }
     }
   }
-  drupal_goto('admin/settings/project/status');
+  drupal_goto('admin/settings/project_issue/status');
 }
 
 function project_issue_admin_delete_state_confirm() {
@@ -1121,7 +1121,7 @@ function project_issue_admin_delete_state_confirm() {
       'project_issue_admin_delete_state',
       $form,
       t('Are you sure you want to delete the status option "%name"?', array('%name' => $name)),
-      'admin/settings/project/status',
+      'admin/settings/project_issue/status',
       t('This action cannot be undone.'),
       t('Delete'),
       t('Cancel')
@@ -1137,7 +1137,7 @@ function project_issue_admin_delete_state_submit($form_id, $form_values) {
     }
     db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_values['sid']);
     drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_values['name'])));
-    drupal_goto('admin/settings/project/status');
+    drupal_goto('admin/settings/project_issue/status');
   }
 }
 

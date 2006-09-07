@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.193 2006/09/06 18:35:45 dww Exp $ */
+/* $Id: issue.inc,v 1.194 2006/09/07 19:25:17 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -49,7 +49,7 @@ function project_issue_page() {
     case 'user':
        $_GET['participated'] = $GLOBALS['user']->uid;
     default:
-      $project = project_project_retrieve(arg(2));
+      $project = project_issue_build_form_url(arg(2));
       if ($project->nid && node_access('view', $project)) {
         $query = new StdClass();
         $query->projects = array($project->nid);
@@ -60,6 +60,125 @@ function project_issue_page() {
         return project_issue_query_result();
       }
   }
+}
+
+/**
+ * Decides what to do with search page request.
+ *
+ * - if this is not a POST, return project_project_retrieve() after
+ *   dealing with $_SESSION['project_issue_search']
+ * - if this is a POST, dispatch to handler function based on form id
+ *
+ * @param $url_arg
+ *   Value returned from arg(2)
+ */
+function project_issue_build_form_url($url_arg) {
+  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'participated', 
+                       'states', 'categories', 'priorities');
+  $filters = array_slice($adv_filters, 5);
+
+  // this isn't a POST, so check session and return project
+  if (empty($_POST)) {
+    if (isset($_SESSION['project_issue_search'])) {
+      // put session vars in $_GET for project_issue_query_parse 
+      foreach ($filters as $filter) {
+        if (isset($_SESSION['project_issue_search'][$filter])) {
+          $_GET[$filter] = $_SESSION['project_issue_search'][$filter];
+        }
+      }
+
+      // clean up after ourselves
+      unset($_SESSION['project_issue_search']);
+    }
+    return project_project_retrieve($url_arg);
+  }
+  
+  // dispatch to hanlders based on value of $_POST['edit']['form_id']
+  if ($_POST['edit']['form_id'] == 'project_issue_query_result_quick_search') {
+    return project_issue_quick_search($url_arg, $filters);
+  }
+  else if ($_POST['edit']['form_id'] == 'project_issue_query') {
+    return project_issue_advanced_search($url_arg, $adv_filters);
+  }
+}
+
+/**
+ * Handles quick search form 
+ *
+ * @param $url_arg
+ *   Value returned from arg(2)
+ * @param $filters
+ *   Search filters
+ */
+function project_issue_quick_search($url_arg, $filters) {
+  // search is for all/multiple projects, so just send to project/issues
+  if ($_POST['edit']['projects'] == 0 || strpos($_POST['edit']['projects'], ',') !== FALSE) {
+    $destination = 'project/issues';
+  }
+  else {
+    // try to find the project, and 404 if not found
+    if (!$project = project_project_retrieve($_POST['edit']['projects'])) {
+      drupal_not_found();
+      exit;
+    }
+    $destination = 'project/issues/'. $project->uri;
+  }
+  
+  // if 'q' is the only thing in $_GET, and it == destination, don't redirect
+  if (count($_GET) == 1 && isset($_GET['q']) && $_GET['q'] == $destination) {
+
+    // put $_POST['edit'] where pager will see them 
+    foreach ($filters as $filter) {
+      if (isset($_POST['edit'][$filter])) {
+        $_REQUEST[$filter] = $_POST['edit'][$filter];
+      }
+    }
+
+    // unset $_REQUEST['edit'] so the pager links aren't full of cruft
+    unset($_REQUEST['edit']);
+    return isset($project) ? $project : NULL;
+  }
+
+  // redirecting, so put filters in session
+  foreach ($filters as $filter) {
+    if (isset($_POST['edit'][$filter])) {
+      $_SESSION['project_issue_search'][$filter] = $_POST['edit'][$filter];
+    }
+  }
+  $_REQUEST['destination'] = $destination;
+  drupal_goto();
+}
+
+/**
+ * handles the advanced search form
+ */
+function project_issue_advanced_search($url_arg, $filters) {
+  // do we have just one project to search for?
+  if (isset($_POST['edit']['projects']) && count($_POST['edit']['projects']) == 1) {
+    // try to find the project, and 404 if not found
+    if (!$project = project_project_retrieve($_POST['edit']['projects'][0])) {
+      drupal_not_found();
+      exit;
+    }
+
+    // redirecting, so put filters in session
+    foreach ($filters as $filter) {
+      if (isset($_POST['edit'][$filter])) {
+        if (is_array($_POST['edit'][$filter])) {
+          $_SESSION['project_issue_search'][$filter] = implode(',', $_POST['edit'][$filter]);
+        }
+        else {
+          $_SESSION['project_issue_search'][$filter] = $_POST['edit'][$filter];
+        }
+      }
+    }
+    $_REQUEST['destination'] = 'project/issues/'. $project->uri;
+    drupal_goto();
+  }
+
+  // unset $_REQUEST['edit'] so the pager links aren't full of cruft
+  unset($_REQUEST['edit']);
+  return project_project_retrieve($url_arg);
 }
 
 function project_issue_statistics($project = 0) {
@@ -304,7 +423,8 @@ function project_issue_form(&$node, &$param) {
   $form['#suffix'] = '</div>';
 
   // Fetch a list of all projects to make swapping simpler
-  $projects = array(t('<none>')) + project_projects_select_options();
+  $uris = NULL;
+  $projects = array(t('<none>')) + project_projects_select_options($uris);
 
   // Try to find the active project
   if (empty($node->pid) && $arg = arg(3)) {
@@ -805,7 +925,8 @@ function project_issue_query($project = 0, $query = NULL) {
     $versions = project_release_load($project, 0);
   }
   else {
-    $projects = project_projects_select_options();
+    $uris = NULL;
+    $projects = project_projects_select_options($uris);
   }
   if (is_null($query)) {
     $query = new StdClass();
@@ -1149,7 +1270,8 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   $categories = array(0 => t('<all>')) + project_issue_category();
   $states = array(implode(',', array_keys(project_issue_state())) => t('<all>')) + project_issue_state();
   $priorities = array(0 => t('<all>')) + project_issue_priority();
-  $projects = array(0 => t('<all>')) + project_projects_select_options();
+  $project_urls = array();
+  $projects = array(0 => t('<all>')) + project_projects_select_options($project_urls);
 
   // Load active project
   if (count($query->projects) == 1) {
@@ -1203,53 +1325,77 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     // Action links:
     $group = theme('links', $links);
 
-    // Convert array fields to single select form items. Some magic happens here.
+    // Convert array fields to single select form items.
     $fields = array('projects', 'states', 'priorities', 'categories', 'users');
     foreach ($fields as $field) {
       if (is_array($query->$field)) {
         $option = array();
-
-        foreach ($query->$field as $value) {
-          $option[] = ${$field}[$value];
+        
+        // $query is untrusted, user submitted data
+        foreach ($query->$field as $key => $value) {
+          if (isset(${$field}[$value])) {
+            $option[] = ${$field}[$value];
+          }
+          else {
+            unset($query->$field[$key]);
+          }
         }
         $query->$field = implode(',', $query->$field);
-        ${$field}[$query->$field] = implode(',', $option);
+
+        // special case for 'states' so we don't lose <all>
+        if (!isset(${$field}[$query->$field])) {
+          ${$field}[$query->$field] = implode(',', $option);
+        }
       }
     }
 
+    // special case for states - we always want the defaults
+    if ($query->states != '1,2,8,13,14,4') {
+      foreach (array(1, 2, 8, 13, 14, 4) as $state) {
+        $options[] = $state;
+        $values[]  = $states[$state];
+      }
+      $options = implode(',', $options);
+      $states[$options] =  implode(',', $values);
+    }
+
     // Make quick search form:
-      $form['projects'] = array(
-        '#type'=> 'select',
-        '#title' => t('Project'),
-        '#default_value' => $query->projects,
-        '#options' => $projects,
-      );
-      $form['states'] = array(
-        '#type'=> 'select',
-        '#title' => t('Status'),
-        '#default_value' => $query->states,
-        '#options' => $states,
-      );
-      $form['categories'] = array(
-        '#type'=> 'select',
-        '#title' => t('Category'),
-        '#default_value' => $query->categories,
-        '#options' => $categories,
-      );
-      $form['priorities'] = array(
-        '#type'=> 'select',
-        '#title' => t('Priority'),
-        '#default_value' => $query->priorities,
-        '#options' => $priorities,
-      );
-      $form['users'] = array(
-        '#type'=> 'hidden',
-        '#value' => $query->users,
-      );
-      $form['submit'] = array(
-        '#type' => 'button',
-        '#value' => t('Search'),
-      );
+    $form['projects'] = array(
+      '#type'=> 'select',
+      '#title' => t('Project'),
+      '#default_value' => $query->projects,
+      '#options' => $projects,
+    );
+    $form['states'] = array(
+      '#type'=> 'select',
+      '#title' => t('Status'),
+      '#default_value' => $query->states,
+      '#options' => $states,
+    );
+    $form['categories'] = array(
+      '#type'=> 'select',
+      '#title' => t('Category'),
+      '#default_value' => $query->categories,
+      '#options' => $categories,
+    );
+    $form['priorities'] = array(
+      '#type'=> 'select',
+      '#title' => t('Priority'),
+      '#default_value' => $query->priorities,
+      '#options' => $priorities,
+    );
+    $form['users'] = array(
+      '#type'=> 'hidden',
+      '#value' => $query->users,
+    );
+    $form['js'] = array(
+      '#type'=> 'hidden',
+      '#value' => '0',
+    );
+    $form['submit'] = array(
+      '#type' => 'button',
+      '#value' => t('Search'),
+    );
     $group .= drupal_get_form('project_issue_query_result_quick_search', $form);
   }
 
@@ -1300,8 +1446,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
 
     $rss = theme('feed_icon', url('project/issues/rss', project_issue_query_url($query)));
     $link = l(t('#'), 'project/issues', array('title' => t('Permalink to search query.')), project_issue_query_url($query));
-
-    if ($pager = theme('pager', NULL, 20, 0, $query)) {
+    if ($pager = theme('pager', NULL, 20, 0)) {
       $rows[] = array(array('data' => $pager, 'colspan' => count($header)));
     }
   }

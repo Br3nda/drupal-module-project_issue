@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.195 2006-09-08 19:03:18 dww Exp $ */
+/* $Id: issue.inc,v 1.196 2006-09-08 20:17:43 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -1295,7 +1295,12 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => $project->uri))));
   }
   else {
-    drupal_set_title(t('issues for all projects'));
+    // only set a more descriptive title if we're not looking at "my
+    // issues" or "my projects", since those set their own title already.
+    dprint_r($_GET);
+    if (!isset($_GET['q']) || !strpos($_GET['q'], '/user')) {
+      drupal_set_title(t('issues for all projects'));
+    }
     $links = array();
     if (user_access('create project issues')) {
       $links[] = l(t('submit'), "node/add/project_issue", array('title' => t('Submit a new issue.')));

@@ -1,5 +1,5 @@
 <?php
-/* $Id: issue.inc,v 1.194 2006-09-07 19:25:17 dww Exp $ */
+/* $Id: issue.inc,v 1.195 2006-09-08 19:03:18 dww Exp $ */
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
@@ -919,6 +919,7 @@ function project_issue_query($project = 0, $query = NULL) {
   $categories = project_issue_category();
   $components = array();
   if ($project->nid) {
+    drupal_set_title(t('search issues for %name', array('%name' => theme('placeholder', $project->title))));
     foreach ($project->components as $component) {
       $components[$component] = $component;
     }
@@ -927,6 +928,7 @@ function project_issue_query($project = 0, $query = NULL) {
   else {
     $uris = NULL;
     $projects = project_projects_select_options($uris);
+    drupal_set_title(t('search issues for all projects'));
   }
   if (is_null($query)) {
     $query = new StdClass();
@@ -1279,6 +1281,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
 
   if ($project) {
+    drupal_set_title(t('issues for %name', array('%name' => theme('placeholder', $project->title))));
     $releases = project_release_load($project, 0);
     $query->projects = $project->nid;
     $links = array();
@@ -1292,6 +1295,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => $project->uri))));
   }
   else {
+    drupal_set_title(t('issues for all projects'));
     $links = array();
     if (user_access('create project issues')) {
       $links[] = l(t('submit'), "node/add/project_issue", array('title' => t('Submit a new issue.')));

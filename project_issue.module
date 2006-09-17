@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.6 2006/08/11 17:47:46 dww Exp $
+// $Id: project_issue.module,v 1.7 2006/09/17 00:28:46 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments
@@ -111,9 +111,9 @@ function project_issue_cron() {
     project_mail_reminder();
   }
 
-  $result = db_query(db_rewrite_sql('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.assigned, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.sid = 2 AND n.changed < %d', 'p'), time() - 14 * 24 * 60 * 60);
+  $result = db_query(db_rewrite_sql('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.rid, p.assigned, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.sid = 2 AND n.changed < %d', 'p'), time() - 14 * 24 * 60 * 60);
   while ($node = db_fetch_object($result)) {
-    foreach (array('nid', 'pid', 'category', 'component', 'priority', 'assigned', 'sid', 'title') as $var) {
+    foreach (array('nid', 'pid', 'category', 'component', 'priority', 'rid', 'assigned', 'title') as $var) {
       $comment->$var = $node->$var;
     }
     $comment->sid = 7;

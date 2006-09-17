@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.2 2006/07/26 21:33:18 dww Exp $
+// $Id: project_issue.install,v 1.3 2006/09/17 00:28:46 dww Exp $
 
 function project_issue_install() {
   // We need to check this before we try to create the table, so that
@@ -149,6 +149,43 @@ function project_issue_install() {
     db_query("INSERT INTO {project_issue_state} VALUES (14, 'patch (ready to commit)', -2, 0)");
   }
 }
+
+/**
+ * Repairs DB from issues that were automatically closed and lost
+ * their version info.  See http://drupal.org/node/84555
+ */
+function project_issue_update_1() {
+  $ret = array();
+  // Instead of calling update_sql() on every query (which would
+  // generate 1000s of lines of output to update.php) this update is
+  // going to do the queries directly and just return a summary.
+  $fixed = 0;
+
+  $query = db_query("SELECT * FROM {project_comments} WHERE uid = 0 AND data RLIKE 'rid' ORDER by cid");
+  while ($comment = db_fetch_object($query)) {
+    $data = unserialize($comment->data);
+    $old_rid = $data['old']->rid;
+    $new_rid = $data['new']->rid;
+    if (isset($old_rid) && !isset($new_rid)) {
+      // This is the problem case.  Just clear out rid from both old
+      // and new, so we leave it alone with this comment.
+      unset($data['old']->rid);
+      unset($data['new']->rid);
+      db_query("UPDATE {project_comments} SET data = '%s' WHERE cid = %d", serialize($data), $comment->cid);
+      // Now, repair the issue node itself.  Note, this is potentially
+      // inefficient, since it's possible there are multiple comments
+      // in the same issue that need to be repaired.  However, since
+      // we "ORDER BY cid" in the query above, we know we'll always
+      // repair sequentially, so the last repaired comment in an issue
+      // will be what's stored in the issue when this update is over...
+      db_query("UPDATE {project_issues} SET rid = %d WHERE nid = %d", $old_rid, $comment->nid);
+      $fixed++;
+    }
+  }
+  $ret[] = array('success' => TRUE, 'query' => "Repaired $fixed comments");
+  return $ret;
+}
+
 
 function project_issue_db_table_exists($table) {
   switch ($GLOBALS['db_type']) {

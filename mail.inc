@@ -1,5 +1,5 @@
 <?php
-/* $Id: mail.inc,v 1.60.2.3 2006/08/20 19:06:50 dww Exp $ */
+/* $Id: mail.inc,v 1.60.2.3.2.1 2006/10/25 00:45:31 dww Exp $ */
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -59,8 +59,8 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
               }
               break;
             case 'rid':
-              if ($entry->pid && ($rid = db_result(db_query("SELECT rid FROM {project_releases} WHERE nid = %d AND version = '%s'", $entry->pid, $node->$text), 0))) {
-                $entry->rid = $rid;
+              if ($entry->pid && ($nid = db_result(db_query("SELECT nid FROM {project_release_nodes} WHERE pid = %d AND version = '%s'", $entry->pid, $node->$text), 0))) {
+                $entry->rid = $nid;
               }
               break;
             case 'assigned':
@@ -172,7 +172,8 @@ function project_mail_summary($field, $value) {
       return $value ? project_issue_priority($value) : t('<none>');
     case 'rid':
       if ($value) {
-        $release = project_release_load($value);
+        $release->nid = $value;
+        $release = project_release_load($release);
         return $release->version;
       }
       return t('<none>');

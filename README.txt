@@ -29,4 +29,5 @@ Wish list
  - Make components sub-projects with their own defaults.
  - Enable taxonomy support.
 
-$Id: README.txt,v 1.1 2006-07-22 10:46:43 dww Exp $
+$Id: README.txt,v 1.2 2006-11-12 09:22:54 dww Exp $
+$Name:  $

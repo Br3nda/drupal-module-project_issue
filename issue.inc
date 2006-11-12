@@ -1,5 +1,6 @@
 <?php
-/* $Id: issue.inc,v 1.172.2.22 2006/09/08 22:07:43 dww Exp $ */
+// $Id: issue.inc,v 1.172.2.23 2006/11/12 09:19:34 dww Exp $
+// $Name:  $
 
 function project_issue_page() {
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {

@@ -1,5 +1,6 @@
 <?php
-// $Id: project_issue.install,v 1.1.2.2 2006/09/17 00:29:00 dww Exp $
+// $Id: project_issue.install,v 1.1.2.3 2006/11/12 09:19:34 dww Exp $
+// $Name:  $
 
 function project_issue_install() {
   // We need to check this before we try to create the table, so that

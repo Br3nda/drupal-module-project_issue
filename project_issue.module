@@ -1,5 +1,6 @@
 <?php
-// $Id: project_issue.module,v 1.7 2006/09/17 00:28:46 dww Exp $
+// $Id: project_issue.module,v 1.8 2006/11/12 09:22:54 dww Exp $
+// $Name:  $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments

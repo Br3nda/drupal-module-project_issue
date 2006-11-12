@@ -1,5 +1,6 @@
 <?php
-/* $Id: comment.inc,v 1.70 2006/05/19 09:13:43 dww Exp $ */
+// $Id: comment.inc,v 1.71 2006/11/12 09:22:54 dww Exp $
+// $Name:  $
 
 function project_comment_page() {
   

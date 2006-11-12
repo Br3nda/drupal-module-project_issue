@@ -1,0 +1,65 @@
+-------------------------------------------------------------
+New Installation (with no previous use of the project.module)
+-------------------------------------------------------------
+
+1. Install the project.module (http://drupal.org/project/project),
+   which the project_issues module requires and depends on.
+
+2. Place these files in modules/project:
+     project_issue.install
+     project_issue.module
+     project_issue.css
+     comment.inc
+     issue.inc
+     mail.inc
+
+3. Enable the project_issue module under administer >> modules
+
+4. Configure the status messages at admin/settings/project_issue/status
+
+5. Grant the proper access to users under administer >> access control
+
+
+--------------------------------------------------------------
+New Installation (if you are already using the project.module)
+--------------------------------------------------------------
+
+0. Make sure you backup your database!
+
+1. Install the new version of project.module that supports the
+   project.issue.module (TODO: need good way to identify this)
+
+2. Login as the site administrator (user #1) and run the update.php
+   script. You must perform project_update_4() to transition your data
+   to the format used by the project_issue.module.
+
+3. Place these files in modules/project:
+     project_issue.install
+     project_issue.module
+     project_issue.css
+     comment.inc
+     issue.inc
+     mail.inc
+
+4. Enable the project_issue module under administer >> modules
+
+5. Configure the status messages at admin/settings/project_issue/status
+
+6. Grant the proper access to users under administer >> access control
+
+
+--------------------------------------------------------------
+Upgrading
+--------------------------------------------------------------
+
+0. Make sure you backup your database!
+
+1. Copy new files to modules/project_issues.
+
+2. Login as the site administrator (user #1) and run the update.php script.
+
+3. Configure the status messages at admin/settings/project_issue/status
+   and admin/access.
+
+$Id: INSTALL.txt,v 1.1.4.1 2006/11/12 09:22:15 dww Exp $
+$Name:  $

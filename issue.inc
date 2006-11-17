@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.23 2006/11/12 09:19:34 dww Exp $
+// $Id: issue.inc,v 1.172.2.24 2006/11/17 21:07:06 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -66,32 +66,32 @@ function project_issue_page() {
 /**
  * Decides what to do with search page request.
  *
- * - if this is not a POST, return project_project_retrieve() after
- *   dealing with $_SESSION['project_issue_search']
+ * - if this is not a POST, just return project_project_retrieve()
  * - if this is a POST, dispatch to handler function based on form id
  *
  * @param $url_arg
  *   Value returned from arg(2)
  */
 function project_issue_build_form_url($url_arg) {
-  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'participated', 
-                       'states', 'categories', 'priorities');
+  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'participated', 'states', 'categories', 'priorities');
   $filters = array_slice($adv_filters, 5);
 
-  // this isn't a POST, so check session and return project
-  if (empty($_POST)) {
-    if (isset($_SESSION['project_issue_search'])) {
-      // put session vars in $_GET for project_issue_query_parse 
-      foreach ($filters as $filter) {
-        if (isset($_SESSION['project_issue_search'][$filter])) {
-          $_GET[$filter] = $_SESSION['project_issue_search'][$filter];
-        }
-      }
+  // Remember this is a request for "my issues"
+  if ($url_arg == 'user') {
+    $_REQUEST['participated'] = $GLOBALS['user']->uid;
+  }
 
-      // clean up after ourselves
-      unset($_SESSION['project_issue_search']);
+  // this isn't a POST, just return project
+  if (empty($_POST)) {
+    if ($url_arg == 'user') {
+      // If this is the "my issues" page, don't query the DB for a
+      // project that matches "user", just return and display all
+      // matching issues regardless of project.
+      return;
     }
-    return project_project_retrieve($url_arg);
+    else {
+      return project_project_retrieve($url_arg);
+    }
   }
   
   // dispatch to hanlders based on value of $_POST['edit']['form_id']
@@ -112,8 +112,12 @@ function project_issue_build_form_url($url_arg) {
  *   Search filters
  */
 function project_issue_quick_search($url_arg, $filters) {
-  // search is for all/multiple projects, so just send to project/issues
-  if ($_POST['edit']['projects'] == 0 || strpos($_POST['edit']['projects'], ',') !== FALSE) {
+  if ($url_arg == 'user') {
+    // My issues query, so stay on the same page
+    $destination = 'project/issues/user';
+  }
+  elseif ($_POST['edit']['projects'] == 0 || strpos($_POST['edit']['projects'], ',') !== FALSE) {
+    // search is for all/multiple projects, so just send to project/issues
     $destination = 'project/issues';
   }
   else {
@@ -130,30 +134,42 @@ function project_issue_quick_search($url_arg, $filters) {
 
     // put $_POST['edit'] where pager will see them 
     foreach ($filters as $filter) {
-      if (isset($_POST['edit'][$filter])) {
+      if (!empty($_POST['edit'][$filter])) {
         $_REQUEST[$filter] = $_POST['edit'][$filter];
       }
     }
 
     // unset $_REQUEST['edit'] so the pager links aren't full of cruft
     unset($_REQUEST['edit']);
+    unset($_REQUEST['op']);
     return isset($project) ? $project : NULL;
   }
 
   // redirecting, so put filters in session
   foreach ($filters as $filter) {
-    if (isset($_POST['edit'][$filter])) {
-      $_SESSION['project_issue_search'][$filter] = $_POST['edit'][$filter];
+    if (!empty($_POST['edit'][$filter])) {
+      $issue_filters[$filter] = $_POST['edit'][$filter];
     }
   }
-  $_REQUEST['destination'] = $destination;
-  drupal_goto();
+  drupal_goto($destination, drupal_query_string_encode($issue_filters));
 }
 
 /**
  * handles the advanced search form
  */
 function project_issue_advanced_search($url_arg, $filters) {
+  // Figure out what issue filters are in place for the query we're showing
+  foreach ($filters as $filter) {
+    if (!empty($_POST['edit'][$filter])) {
+      if (is_array($_POST['edit'][$filter])) {
+        $issue_filters[$filter] = implode(',', $_POST['edit'][$filter]);
+      }
+      else {
+        $issue_filters[$filter] = $_POST['edit'][$filter];
+      }
+    }
+  }
+
   // do we have just one project to search for?
   if (isset($_POST['edit']['projects']) && count($_POST['edit']['projects']) == 1) {
     // try to find the project, and 404 if not found
@@ -161,24 +177,19 @@ function project_issue_advanced_search($url_arg, $filters) {
       drupal_not_found();
       exit;
     }
-
-    // redirecting, so put filters in session
-    foreach ($filters as $filter) {
-      if (isset($_POST['edit'][$filter])) {
-        if (is_array($_POST['edit'][$filter])) {
-          $_SESSION['project_issue_search'][$filter] = implode(',', $_POST['edit'][$filter]);
-        }
-        else {
-          $_SESSION['project_issue_search'][$filter] = $_POST['edit'][$filter];
-        }
-      }
-    }
-    $_REQUEST['destination'] = 'project/issues/'. $project->uri;
-    drupal_goto();
+    $destination = 'project/issues/'. $project->uri;
+    drupal_goto($destination, drupal_query_string_encode($issue_filters));
   }
 
+  // Put the issue filters where the pager links can find them.
+  foreach ($issue_filters as $name => $val) {
+    $_REQUEST[$name] = $val;
+  }
   // unset $_REQUEST['edit'] so the pager links aren't full of cruft
   unset($_REQUEST['edit']);
+  // Get rid of the silly 'op', since it's not a filter.
+  unset($_REQUEST['op']);
+
   return project_project_retrieve($url_arg);
 }
 

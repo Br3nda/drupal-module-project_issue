@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.70.4.1 2006/11/12 09:22:15 dww Exp $
+// $Id: comment.inc,v 1.70.4.2 2006/11/18 00:11:51 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -9,12 +9,12 @@ function project_comment_page() {
     $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
 
     if ($_POST['op'] == t('Preview') || $_POST['op'] == t('Submit')) {
-      $edit = project_comment_validate($edit);
+      project_comment_validate($edit);
     } else {
       foreach (array('nid', 'type', 'pid', 'rid', 'category', 'component', 'priority', 'assigned', 'sid', 'title') as $var) {
-        $comment->$var = $node->$var;
+        $edit->$var = $node->$var;
       }
-      $edit = project_comment_validate($comment);
+      project_comment_validate($edit);
     }
     $output .= project_comment_form($edit, $param);
 
@@ -72,7 +72,7 @@ function project_comment_form(&$edit, &$param) {
   return drupal_get_form('project_comment_form', $form);
 }
 
-function project_comment_validate($edit) {
+function project_comment_validate(&$edit) {
   global $user;
 
   $edit->uid = $user->uid;
@@ -85,10 +85,8 @@ function project_comment_validate($edit) {
 
   $edit->comment = true;
 
-  $edit = project_issue_comment_validate($edit);
+  project_issue_comment_validate($edit);
   $edit->validated = true;
-
-  return $edit;
 }
 
 function project_comment_view($node, $main = 0) {
@@ -243,11 +241,17 @@ function project_comment_save($edit) {
  */
 function project_comment_form_add_preview($form, $edit) {
   drupal_set_title(t('Preview comment'));
-  $edit = project_comment_validate($edit);
+  if (is_array($edit)) {
+    $comment = (object)$edit;
+  }
+  else {
+    $comment = $edit;
+  }
+  project_comment_validate($comment);
 
   // Preview the comment with security check.
   if (!form_get_errors()) {
-    $output = _project_comment_view_single($edit, 0);
+    $output = _project_comment_view_single($comment, 0);
   }
 
   $form['comment_preview'] = array(

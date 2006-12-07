@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.3.2.3 2006/12/07 22:41:53 dww Exp $
+// $Id: mail.inc,v 1.60.2.3.2.4 2006/12/07 23:07:56 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -322,11 +322,11 @@ function project_mail_notify($node) {
     user_mail($recipient->mail, $node->title, $body, implode("\n", $header));
   }
 
-  if (count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {
+  if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {
     return;
   }
 
-  if (count(array_filter($project->mail_copy_filter_state)) && !$project->mail_copy_filter_state[$node->sid]) {
+  if (is_array($project->mail_copy_filter_state) && count(array_filter($project->mail_copy_filter_state)) && !$project->mail_copy_filter_state[$node->sid]) {
     return;
   }
 

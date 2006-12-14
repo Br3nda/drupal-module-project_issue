@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.70.4.3 2006/12/14 19:23:32 dww Exp $
+// $Id: comment.inc,v 1.70.4.4 2006/12/14 20:09:11 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -98,6 +98,7 @@ function project_comment_view($node, $main = 0) {
     $output = '<div class="project">';
     $i = 0;
     while ($comment = db_fetch_object($result)) {
+      $comment->body = db_decode_blob($comment->body);
       $i++;
       $output .= _project_comment_view_single($comment, $i);
     }
@@ -186,7 +187,9 @@ function _project_comment_view_single($comment, $count) {
 }
 
 function project_comment_load($cid) {
-  return db_fetch_object(db_query('SELECT p.*, u.name FROM {project_comments} p INNER JOIN {users} u USING (uid) WHERE p.cid = %d ORDER BY p.created DESC', $cid));
+  $object = db_fetch_object(db_query('SELECT p.*, u.name FROM {project_comments} p INNER JOIN {users} u USING (uid) WHERE p.cid = %d ORDER BY p.created DESC', $cid));
+  $object->body = db_decode_blob($object->body);
+  return $object;
 }
 
 function project_comment_save($edit) {

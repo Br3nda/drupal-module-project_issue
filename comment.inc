@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.70.2.2 2006/11/18 00:11:48 dww Exp $
+// $Id: comment.inc,v 1.70.2.3 2006/12/14 19:23:24 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -193,7 +193,7 @@ function project_comment_save($edit) {
   global $user;
 
   if (empty($edit->cid)) {
-    $edit->cid = db_next_id('project_cid');
+    $edit->cid = db_next_id('{project}_cid');
     if ($edit->file) {
       $file = file_save_upload($edit->file, variable_get('project_directory_issues', 'issues'));
       unset($edit->file);

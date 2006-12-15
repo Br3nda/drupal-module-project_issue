@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.1.2.3.2.2 2006/12/12 06:33:29 dww Exp $ */
+/* $Id: project_issue.css,v 1.1.2.3.2.3 2006/12/15 09:28:38 dww Exp $ */
 /* $Name:  $ */
 
 .project .header {
@@ -35,7 +35,7 @@ table.projects .project-issue-updated {
 }
 
 table.projects .project-issues {
-  width: 7%;
+  width: 8%;
   text-align: right;
 }
 
@@ -49,6 +49,5 @@ table.projects .project-project-updated {
 }
 
 table.projects .project-project-links {
-  width: 19%;
-  padding-left: 0.8em;
+  width: 18%;
 }

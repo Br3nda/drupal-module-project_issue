@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.8 2006/11/12 09:22:54 dww Exp $
+// $Id: project_issue.module,v 1.9 2006/12/18 09:11:08 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -190,44 +190,38 @@ function project_issue_menu($may_cache) {
     // Comments
     $access = user_access('create project issues');
     $items[] = array('path' => 'project/comments', 'title' => t('comments'), 'callback' => 'project_comment_page', 'access' => $access, 'type' => MENU_CALLBACK);
-
   }
   else {
+    // Issues subtab on project node edit tab.
+    if (arg(0) == 'node' && is_numeric(arg(1))) {
+      $node = node_load(arg(1));
+      if ($node->type == 'project_project' && node_access('update', $node)) {
+        $items[] = array(
+          'path' => 'node/'. arg(1) .'/edit/issues',
+          'title' => t('issues'),
+          'callback' => 'project_issue_project_edit_issues',
+          'weight' => 0, 'type' => MENU_LOCAL_TASK,
+        );
+      }
+    }
     theme_add_style(drupal_get_path('module', 'project_issue') .'/project_issue.css');
   }
-
   return $items;
 }
 
 /**
- * Implementation of hook_form_alter.
+ * Adds the issues subtab to the edit tab on project nodes.
  */
-function project_issue_form_alter($form_id, &$form) {
-  if ($form_id == 'project_project_node_form') {
-    return project_issue_alter_project_form($form);
-  }
-}
+function project_issue_project_edit_issues() {
+  $node = node_load(arg(1));
+  project_project_set_breadcrumb($node);
+  drupal_set_title(check_plain($node->title));
 
-/**
- * Alters the project_project node form to add issue tracking settings.
- * @see project_issue_form_alter
- */
-function project_issue_alter_project_form(&$form) {
-  $node = $form['#node'];
   if (is_array($node->components)) {
     $node->components = implode("\n", $node->components);
   }
   elseif (empty($node->components)) {
     $node->components = "Code\nDocumentation\nMiscellaneous\nUser interface";
-  }
-
-  /*
-  ** Allow the following fields to be initialized via $_GET
-  */
-  foreach (array('issues', 'mail_reminder', 'mail_digest') as $field) {
-    if ($_GET['edit'][$field]) {
-      $node->$field = $_GET['edit'][$field];
-    }
   }
 
   /* Issue properties */
@@ -267,7 +261,6 @@ function project_issue_alter_project_form(&$form) {
     '#type' => 'fieldset',
     '#title' => t('Issue e-mail options'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
   );
   $form['email']['mail_digest'] = array(
     '#type' => 'textfield',
@@ -285,39 +278,39 @@ function project_issue_alter_project_form(&$form) {
     '#maxlength' => 255,
     '#description' => t('If you wish to receive a copy of all the issues to a central location specify an address here.'),
   );
+  $options = project_issue_category();
+  $form['email']['categories'] = array(
+    '#type' => 'item',
+    '#title' => t('Categories'),
+    '#description' => t('Which issue categories to e-mail. If none is checked all categories will be posted.'),
+  );
+  $form['email']['mail_copy_filter']['#tree'] = TRUE;
+
+  foreach ($options as $key => $choice) {
+    $form['email']['mail_copy_filter'][$key] = array(
+      '#type' => 'checkbox',
+      '#title' => $choice,
+      '#return_value' => $key,
+      '#default_value' => $node->mail_copy_filter[$key],
+    );
+  }
+  $options = project_issue_state();
+  $form['email']['states'] = array(
+    '#type' => 'item',
+    '#title' => t('States'),
+    '#description' => t('Which issue states to e-mail. If none is checked all states will be posted.'),
+  );
+  $form['email']['mail_copy_filter_state']['#tree'] = TRUE;
+  foreach ($options as $key => $choice) {
+    $form['email']['mail_copy_filter_state'][$key] = array(
+      '#type' => 'checkbox',
+      '#title' => $choice,
+      '#return_value' => $key,
+      '#default_value' => $node->mail_copy_filter_state[$key],
+    );
+  }
+
   if (user_access('administer projects')) {
-    $options = project_issue_category();
-    $form['email']['categories'] = array(
-      '#type' => 'item',
-      '#title' => t('Categories'),
-      '#description' => t('Which issue categories to e-mail. If none is checked all categories will be posted.'),
-    );
-    $form['email']['mail_copy_filter']['#tree'] = TRUE;
-
-    foreach ($options as $key => $choice) {
-      $form['email']['mail_copy_filter'][$key] = array(
-        '#type' => 'checkbox',
-        '#title' => $choice,
-        '#return_value' => $key,
-        '#default_value' => $node->mail_copy_filter[$key],
-      );
-    }
-    $options = project_issue_state();
-    $form['email']['states'] = array(
-      '#type' => 'item',
-      '#title' => t('States'),
-      '#description' => t('Which issue states to e-mail. If none is checked all states will be posted.'),
-    );
-    $form['email']['mail_copy_filter_state']['#tree'] = TRUE;
-    foreach ($options as $key => $choice) {
-      $form['email']['mail_copy_filter_state'][$key] = array(
-        '#type' => 'checkbox',
-        '#title' => $choice,
-        '#return_value' => $key,
-        '#default_value' => $node->mail_copy_filter_state[$key],
-      );
-    }
-
     $form['email']['reminder'] = array(
       '#type' => 'item',
       '#title' => t('Monthly reminder'),
@@ -330,6 +323,29 @@ function project_issue_alter_project_form(&$form) {
       '#description' => t('Enabling this will send a monthly reminder to users that have open issues registered.'),
     );
   }
+
+  $form['nid'] = array('#type' => 'value', '#value' => $node->nid);
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    '#weight' => 45,
+  );
+
+  return drupal_get_form('project_issue_project_edit_form', $form);
+}
+
+/**
+ * Submit handler when project admins use the issues subtab.
+ * @see project_issue_project_edit_issues
+ */
+function project_issue_project_edit_form_submit($form_id, $form_values) {
+  $components = serialize(explode("\n", str_replace("\r", '', $form_values['components'])));
+  $mail_copy_filter = serialize($form_values['mail_copy_filter']);
+  $mail_copy_filter_state = serialize($form_values['mail_copy_filter_state']);
+
+  db_query("UPDATE {project_issue_projects} SET issues = %d, components = '%s', mail_digest = '%s', mail_reminder = %d, mail_copy = '%s', mail_copy_filter = '%s', mail_copy_filter_state = '%s', help = '%s' WHERE nid = %d", $form_values['issues'], $components, $form_values['mail_digest'], $form_values['mail_reminder'], $form_values['mail_copy'], $mail_copy_filter, $mail_copy_filter_state, $form_values['help'], $form_values['nid']);
+  db_query("UPDATE {node} SET changed = %d WHERE nid = %d", time(), $form_values['nid']);
+  drupal_set_message(t('Issue settings have been saved.'));
 }
 
 /**
@@ -365,7 +381,7 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
       // or if user is original issue poster and poster is granted access.
       // If none of these is true, set error.
       if (!(user_access('set issue status '. str_replace("'", "", $state->name)) || ($node->sid == variable_get('project_issue_default_state', 1)) || ($state->author_has && ($user->uid == $node->uid)))) {
-        form_set_error('sid', t('Invalid issue status %status: you do not have permission to set this status', array('%status' => "<em>$state</em>")));
+        form_set_error('sid', t('Invalid issue status %status: you do not have permission to set this status', array('%status' => theme('placeholder', $state))));
       }
       break;
   }
@@ -383,7 +399,7 @@ function project_issue_user_page($arg = 0) {
     }
     $user = db_fetch_object(db_query("SELECT uid, name FROM {users} WHERE $where", $arg));
     if ($user) {
-      drupal_set_title(t('Projects by %user', array('%user' => $user->name)));
+      drupal_set_title(t('Projects by %user', array('%user' => check_plain($user->name))));
     }
   }
 
@@ -398,29 +414,93 @@ function project_issue_user_page($arg = 0) {
 
   $header = array(
     array('data' => t('Project'), 'field' => 'n.title', 'sort' => 'asc'),
-    array('data' => t('Updated'), 'field' => 'n.changed'),
-    array('data' => t('Issues'), 'colspan' => 4, 'field' => 'count')
+    array(
+      'data' => t('Last issue update'),
+      'field' => 'max_issue_changed',
+      'class' => 'project-issue-updated',
+    ),
+    array(
+      'data' => t('Issues'),
+      'field' => 'count',
+      'class' => 'project-issues',
+    ),
+    array('data' => t('Issue links'), 'class' => 'project-issue-links'),
+    array(
+      'data' => t('Project updated'),
+      'field' => 'n.changed',
+      'class' => 'project-project-updated',
+    ),
   );
 
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, n.changed, COUNT(p.nid) AS count FROM {node} n LEFT JOIN {project_issues} p ON n.nid = p.pid AND p.sid IN (1,2,8,13,14) WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title, n.changed %s"), $user->uid, tablesort_sql($header));
+  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, n.changed, COUNT(p.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} p ON n.nid = p.pid AND p.sid IN (1,2,8,13,14) LEFT JOIN {node} ni ON ni.nid = p.nid WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title, n.changed") . tablesort_sql($header), $user->uid);
 
   if (!db_num_rows($result)) {
     return ($current_user ? t('You have no projects.') : t('This user has no projects.'));
   }
 
+  $any_admin = FALSE;
+  $projects = array();
   while ($node = db_fetch_object($result)) {
-    $rows[] = array(
-      l($node->title, "node/$node->nid"),
-      array('data' => format_interval(time() - $node->changed, 2), 'align' => 'right'),
-      array('data' => "$node->count open", 'align' => 'right'),
+    $node_obj = node_load($node->nid);
+    $node->is_admin = node_access('update', $node_obj);
+    if ($node->is_admin) {
+      $any_admin = TRUE;
+    }
+    $projects[] = $node;
+  }
+  foreach ($projects as $node) {
+    $issue_links = array(
       l(t('view'), "project/issues/$node->nid"),
       l(t('search'), "project/issues/search/$node->nid"),
-      l(t('submit'), "node/add/project_issue/$node->nid")
+      l(t('submit'), "node/add/project_issue/$node->nid"),
     );
+    if ($node->is_admin) {
+      $project_links = array(
+        l(t('edit'), "node/$node->nid/edit"),
+      );
+      if (module_exist('project_release')) {
+        $project_links[] = l(t('add release'), "node/add/project_release/$node->nid");
+      }
+    }
+    $row = array(
+      array(
+        'data' => l($node->title, "node/$node->nid"),
+        'class' => 'project-name',
+      ),
+      array(
+        'data' => $node->max_issue_changed ? format_interval(time() - $node->max_issue_changed, 2) : t('n/a'),
+        'class' => 'project-issue-updated',
+      ),
+      array(
+        'data' => "$node->count open",
+        'class' => 'project-issues', 'align' => 'right',
+      ),
+      array(
+        'data' => theme('links', $issue_links),
+        'class' => 'project-issue-links',
+      ),
+      array(
+        'data' => format_interval(time() - $node->changed, 2),
+        'class' => 'project-project-updated',
+      ),
+    );
+    if ($node->is_admin) {
+      $row[] = array(
+        'data' => theme('links', $project_links),
+        'class' => 'project-project-links',
+      );
+    }
+    elseif ($any_admin) {
+      $row[] = array();
+    }
+    $rows[] = $row;
     $query->projects[] = $node->nid;
   }
 
-  $output = '<div class="project">'. theme('table', $header, $rows) .'</div>';
+  if ($any_admin) {
+    $header[] = array('data' => t('Project links'), 'class' => 'project-project-links');
+  }
+  $output = theme('table', $header, $rows, array('class' => 'projects'));
   $output .= l('#', "project/user/$user->name");
 
   $output .= theme('box', t('issues'), project_issue_query_result($query, 'html', false));
@@ -455,10 +535,6 @@ function project_issue_project_nodeapi(&$node, $op, $arg) {
       project_issue_project_insert($node);
       break;
 
-    case 'update':
-      project_issue_project_update($node);
-      break;
-
     case 'delete':
       project_issue_project_delete($node);
       break;
@@ -483,15 +559,6 @@ function project_issue_project_insert($node) {
   $node->mail_copy_filter_state = serialize($node->mail_copy_filter_state);
 
   db_query("INSERT INTO {project_issue_projects} (nid, issues, components, mail_digest, mail_reminder, mail_copy, mail_copy_filter, mail_copy_filter_state, help) VALUES (%d, %d, '%s', '%s', %d, '%s', '%s', '%s', '%s')", $node->nid, $node->issues, $node->components, $node->mail_digest, $node->reminder, $node->mail_copy, $node->mail_copy_filter, $node->mail_copy_filter_state, $node->help);
-}
-
-function project_issue_project_update($node) {
-  project_issue_convert_components($node);
-  $node->components = serialize($node->components);
-  $node->mail_copy_filter = serialize($node->mail_copy_filter);
-  $node->mail_copy_filter_state = serialize($node->mail_copy_filter_state);
-
- db_query("UPDATE {project_issue_projects} SET issues = %d, components = '%s', mail_digest = '%s', mail_reminder = %d, mail_copy = '%s', mail_copy_filter = '%s', mail_copy_filter_state = '%s', help = '%s' WHERE nid = %d", $node->issues, $node->components, $node->mail_digest, $node->mail_reminder, $node->mail_copy, $node->mail_copy_filter, $node->mail_copy_filter_state, $node->help, $node->nid);
 }
 
 function project_issue_project_delete($node) {

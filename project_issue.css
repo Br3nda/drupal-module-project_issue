@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.5 2006/11/12 09:22:54 dww Exp $ */
+/* $Id: project_issue.css,v 1.6 2006/12/18 09:11:08 dww Exp $ */
 /* $Name:  $ */
 
 .project .header {
@@ -21,3 +21,33 @@
 }
 
 .node-form .project .options fieldset {display: inline-table;}
+
+table.projects {
+  width: 100%;
+}
+
+table.projects .project-name {
+  width: 25%;
+}
+
+table.projects .project-issue-updated {
+  width: 14%;
+}
+
+table.projects .project-issues {
+  width: 8%;
+  text-align: right;
+}
+
+table.projects .project-issue-links {
+  width: 20%;
+  padding-left: 0.8em;
+}
+
+table.projects .project-project-updated {
+  width: 15%;
+}
+
+table.projects .project-project-links {
+  width: 18%;
+}

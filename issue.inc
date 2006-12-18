@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.199 2006-11-12 09:22:54 dww Exp $
+// $Id: issue.inc,v 1.200 2006-12-18 09:11:08 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -66,32 +66,31 @@ function project_issue_page() {
 /**
  * Decides what to do with search page request.
  *
- * - if this is not a POST, return project_project_retrieve() after
- *   dealing with $_SESSION['project_issue_search']
+ * - if this is not a POST, just return project_project_retrieve()
  * - if this is a POST, dispatch to handler function based on form id
  *
  * @param $url_arg
  *   Value returned from arg(2)
  */
 function project_issue_build_form_url($url_arg) {
-  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'participated', 
-                       'states', 'categories', 'priorities');
-  $filters = array_slice($adv_filters, 5);
+  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'versions', 'participated', 'states', 'categories', 'priorities');
+  $filters = array_slice($adv_filters, 6);
+  // Remember this is a request for "my issues"
+  if ($url_arg == 'user') {
+    $_REQUEST['participated'] = $GLOBALS['user']->uid;
+  }
 
-  // this isn't a POST, so check session and return project
+  // this isn't a POST, just return project
   if (empty($_POST)) {
-    if (isset($_SESSION['project_issue_search'])) {
-      // put session vars in $_GET for project_issue_query_parse 
-      foreach ($filters as $filter) {
-        if (isset($_SESSION['project_issue_search'][$filter])) {
-          $_GET[$filter] = $_SESSION['project_issue_search'][$filter];
-        }
-      }
-
-      // clean up after ourselves
-      unset($_SESSION['project_issue_search']);
+    if ($url_arg == 'user') {
+      // If this is the "my issues" page, don't query the DB for a
+      // project that matches "user", just return and display all
+      // matching issues regardless of project.
+      return;
     }
-    return project_project_retrieve($url_arg);
+    else {
+      return project_project_retrieve($url_arg);
+    }
   }
   
   // dispatch to hanlders based on value of $_POST['edit']['form_id']
@@ -112,8 +111,12 @@ function project_issue_build_form_url($url_arg) {
  *   Search filters
  */
 function project_issue_quick_search($url_arg, $filters) {
-  // search is for all/multiple projects, so just send to project/issues
-  if ($_POST['edit']['projects'] == 0 || strpos($_POST['edit']['projects'], ',') !== FALSE) {
+  if ($url_arg == 'user') {
+    // My issues query, so stay on the same page
+    $destination = 'project/issues/user';
+  }
+  elseif ($_POST['edit']['projects'] == 0 || strpos($_POST['edit']['projects'], ',') !== FALSE) {
+    // search is for all/multiple projects, so just send to project/issues
     $destination = 'project/issues';
   }
   else {
@@ -130,30 +133,42 @@ function project_issue_quick_search($url_arg, $filters) {
 
     // put $_POST['edit'] where pager will see them 
     foreach ($filters as $filter) {
-      if (isset($_POST['edit'][$filter])) {
+      if (!empty($_POST['edit'][$filter])) {
         $_REQUEST[$filter] = $_POST['edit'][$filter];
       }
     }
 
     // unset $_REQUEST['edit'] so the pager links aren't full of cruft
     unset($_REQUEST['edit']);
+    unset($_REQUEST['op']);
     return isset($project) ? $project : NULL;
   }
 
   // redirecting, so put filters in session
   foreach ($filters as $filter) {
-    if (isset($_POST['edit'][$filter])) {
-      $_SESSION['project_issue_search'][$filter] = $_POST['edit'][$filter];
+    if (!empty($_POST['edit'][$filter])) {
+      $issue_filters[$filter] = $_POST['edit'][$filter];
     }
   }
-  $_REQUEST['destination'] = $destination;
-  drupal_goto();
+  drupal_goto($destination, drupal_query_string_encode($issue_filters));
 }
 
 /**
  * handles the advanced search form
  */
 function project_issue_advanced_search($url_arg, $filters) {
+  // Figure out what issue filters are in place for the query we're showing
+  foreach ($filters as $filter) {
+    if (!empty($_POST['edit'][$filter])) {
+      if (is_array($_POST['edit'][$filter])) {
+        $issue_filters[$filter] = implode(',', $_POST['edit'][$filter]);
+      }
+      else {
+        $issue_filters[$filter] = $_POST['edit'][$filter];
+      }
+    }
+  }
+
   // do we have just one project to search for?
   if (isset($_POST['edit']['projects']) && count($_POST['edit']['projects']) == 1) {
     // try to find the project, and 404 if not found
@@ -161,24 +176,19 @@ function project_issue_advanced_search($url_arg, $filters) {
       drupal_not_found();
       exit;
     }
-
-    // redirecting, so put filters in session
-    foreach ($filters as $filter) {
-      if (isset($_POST['edit'][$filter])) {
-        if (is_array($_POST['edit'][$filter])) {
-          $_SESSION['project_issue_search'][$filter] = implode(',', $_POST['edit'][$filter]);
-        }
-        else {
-          $_SESSION['project_issue_search'][$filter] = $_POST['edit'][$filter];
-        }
-      }
-    }
-    $_REQUEST['destination'] = 'project/issues/'. $project->uri;
-    drupal_goto();
+    $destination = 'project/issues/'. $project->uri;
+    drupal_goto($destination, drupal_query_string_encode($issue_filters));
   }
 
+  // Put the issue filters where the pager links can find them.
+  foreach ($issue_filters as $name => $val) {
+    $_REQUEST[$name] = $val;
+  }
   // unset $_REQUEST['edit'] so the pager links aren't full of cruft
   unset($_REQUEST['edit']);
+  // Get rid of the silly 'op', since it's not a filter.
+  unset($_REQUEST['op']);
+
   return project_project_retrieve($url_arg);
 }
 
@@ -313,7 +323,7 @@ function project_issue_subscribe($project = 0) {
     $form['options']['#tree'] = TRUE;
     $form['options'][$project->nid] = array(
       '#type' => 'radios',
-      '#title' => t('Subscribe to %project issues', array('%project' => $project->title)),
+      '#title' => t('Subscribe to %project issues', array('%project' => check_plain($project->title))),
       '#default_value' => $level,
       '#options' => $levels,
     );
@@ -1212,7 +1222,7 @@ function project_issue_admin_save_states() {
         db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d", $edit['status_add']['name'], $edit['status_add']['weight'], $edit['status_add']['author_has']);
       }
       else {
-        drupal_set_message (t('Status %status already exists.', array ('%status' => $edit['status_add']['name'])));
+        drupal_set_message (t('Status %status already exists.', array ('%status' => theme('placeholder', $edit['status_add']['name']))));
       }
     }
   }
@@ -1231,7 +1241,7 @@ function project_issue_admin_delete_state_confirm() {
       '#title' => t('Reassign status'),
       '#default_value' => $sid,
       '#options' => $states,
-      '#description' => t('There are %total existing issues with the status of %name. Please select a new status for these issues.', array('%total' => $total, '%name' => $name)),
+      '#description' => t('There are %total existing issues with the status of %name. Please select a new status for these issues.', array('%total' => $total, '%name' => check_plain($name))),
     );
   }
     $form['sid'] = array(
@@ -1245,7 +1255,7 @@ function project_issue_admin_delete_state_confirm() {
     return confirm_form(
       'project_issue_admin_delete_state',
       $form,
-      t('Are you sure you want to delete the status option "%name"?', array('%name' => $name)),
+      t('Are you sure you want to delete the status option %name?', array('%name' => theme('placeholder', $name))),
       'admin/settings/project_issue/status',
       t('This action cannot be undone.'),
       t('Delete'),
@@ -1255,13 +1265,14 @@ function project_issue_admin_delete_state_confirm() {
 
 function project_issue_admin_delete_state_submit($form_id, $form_values) {
   if($form_values['new_sid'] == $form_values['sid']) {
-      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_values['name'])));
+      form_set_error('new_sid', t('Choose a new issue status for
+  existing issues of status %name.', array('%name' => theme('placeholder', $form_values['name']))));
   } else {
     if ($form_values['new_sid']) {
       db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_values['new_sid'], $form_values['sid']);
     }
     db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_values['sid']);
-    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_values['name'])));
+    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => theme('placeholder', $form_values['name']))));
     drupal_goto('admin/settings/project_issue/status');
   }
 }
@@ -1288,13 +1299,13 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $query->projects = $project->nid;
     $links = array();
     if (user_access('create project issues')) {
-      $links[] = l(t('submit'), "node/add/project_issue/$project->uri", array('title' => t('Submit a new issue for %project.', array('%project' => $project->uri))));
+      $links[] = l(t('submit'), "node/add/project_issue/$project->uri", array('title' => t('Submit a new issue for %project.', array('%project' => check_plain($project->uri)))));
     }
-    $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => $project->uri))));
+    $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => check_plain($project->uri)))));
     if ($user->uid) {
-      $links[] = l(t('subscribe'), "project/issues/subscribe/$project->uri", array('title' => t('Receive email updates about issues for %project.', array('%project' => $project->uri))));
+      $links[] = l(t('subscribe'), "project/issues/subscribe/$project->uri", array('title' => t('Receive email updates about issues for %project.', array('%project' => check_plain($project->uri)))));
     }
-    $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => $project->uri))));
+    $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => check_plain($project->uri)))));
   }
   else {
     // only set a more descriptive title if we're not looking at "my
@@ -1537,6 +1548,9 @@ function project_issue_query_parse($query = NULL) {
   if (empty($query->states)) {
     $query->states = array(1, 2, 8, 13, 14, 4);
   }
+  if (!empty($_REQUEST['participated']) && empty($query->participated)) {
+    $query->participated = (int)$_REQUEST['participated'];
+  }
 
   return $query;
 }
@@ -1650,7 +1664,7 @@ function project_issue_query_user($value) {
   else {
     $uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $value));
     if (!$uid) {
-      drupal_set_message(t("Username '%user' not found.", array('%user' => $value)), 'error');
+      drupal_set_message(t("Username '%user' not found.", array('%user' => check_plain($value))), 'error');
     }
     return $uid;
   }

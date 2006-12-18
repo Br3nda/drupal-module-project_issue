@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.26 2006/11/17 22:20:14 dww Exp $
+// $Id: issue.inc,v 1.172.2.27 2006/12/18 06:34:29 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -323,7 +323,7 @@ function project_issue_subscribe($project = 0) {
     $form['options']['#tree'] = TRUE;
     $form['options'][$project->nid] = array(
       '#type' => 'radios',
-      '#title' => t('Subscribe to %project issues', array('%project' => $project->title)),
+      '#title' => t('Subscribe to %project issues', array('%project' => check_plain($project->title))),
       '#default_value' => $level,
       '#options' => $levels,
     );
@@ -1221,7 +1221,7 @@ function project_issue_admin_save_states() {
         db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d", $edit['status_add']['name'], $edit['status_add']['weight'], $edit['status_add']['author_has']);
       }
       else {
-        drupal_set_message (t('Status %status already exists.', array ('%status' => $edit['status_add']['name'])));
+        drupal_set_message (t('Status %status already exists.', array ('%status' => theme('placeholder', $edit['status_add']['name']))));
       }
     }
   }
@@ -1240,7 +1240,7 @@ function project_issue_admin_delete_state_confirm() {
       '#title' => t('Reassign status'),
       '#default_value' => $sid,
       '#options' => $states,
-      '#description' => t('There are %total existing issues with the status of %name. Please select a new status for these issues.', array('%total' => $total, '%name' => $name)),
+      '#description' => t('There are %total existing issues with the status of %name. Please select a new status for these issues.', array('%total' => $total, '%name' => check_plain($name))),
     );
   }
     $form['sid'] = array(
@@ -1254,7 +1254,7 @@ function project_issue_admin_delete_state_confirm() {
     return confirm_form(
       'project_issue_admin_delete_state',
       $form,
-      t('Are you sure you want to delete the status option "%name"?', array('%name' => $name)),
+      t('Are you sure you want to delete the status option %name?', array('%name' => theme('placeholder', $name))),
       'admin/settings/project_issue/status',
       t('This action cannot be undone.'),
       t('Delete'),
@@ -1264,13 +1264,13 @@ function project_issue_admin_delete_state_confirm() {
 
 function project_issue_admin_delete_state_submit($form_id, $form_values) {
   if($form_values['new_sid'] == $form_values['sid']) {
-      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_values['name'])));
+      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => theme('placeholder', $form_values['name']))));
   } else {
     if ($form_values['new_sid']) {
       db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_values['new_sid'], $form_values['sid']);
     }
     db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_values['sid']);
-    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_values['name'])));
+    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => theme('placeholder', $form_values['name']))));
     drupal_goto('admin/settings/project_issue/status');
   }
 }
@@ -1297,13 +1297,13 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $query->projects = $project->nid;
     $links = array();
     if (user_access('create project issues')) {
-      $links[] = l(t('submit'), "node/add/project_issue/$project->uri", array('title' => t('Submit a new issue for %project.', array('%project' => $project->uri))));
+      $links[] = l(t('submit'), "node/add/project_issue/$project->uri", array('title' => t('Submit a new issue for %project.', array('%project' => check_plain($project->uri)))));
     }
-    $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => $project->uri))));
+    $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => check_plain($project->uri)))));
     if ($user->uid) {
-      $links[] = l(t('subscribe'), "project/issues/subscribe/$project->uri", array('title' => t('Receive email updates about issues for %project.', array('%project' => $project->uri))));
+      $links[] = l(t('subscribe'), "project/issues/subscribe/$project->uri", array('title' => t('Receive email updates about issues for %project.', array('%project' => check_plain($project->uri)))));
     }
-    $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => $project->uri))));
+    $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => check_plain($project->uri)))));
   }
   else {
     // only set a more descriptive title if we're not looking at "my
@@ -1662,7 +1662,7 @@ function project_issue_query_user($value) {
   else {
     $uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $value));
     if (!$uid) {
-      drupal_set_message(t("Username '%user' not found.", array('%user' => $value)), 'error');
+      drupal_set_message(t("Username '%user' not found.", array('%user' => check_plain($value))), 'error');
     }
     return $uid;
   }

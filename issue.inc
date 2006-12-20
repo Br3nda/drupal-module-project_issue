@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.201 2006-12-18 18:47:51 dww Exp $
+// $Id: issue.inc,v 1.202 2006-12-20 01:27:30 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -394,21 +394,21 @@ function theme_project_issue_subscribe($form) {
 
     $row = array();
     foreach (element_children($form['buttons']) as $key) {
-      $row[] = form_render($form['buttons'][$key]);
+      $row[] = drupal_render($form['buttons'][$key]);
     }
     $rows = array($row);
 
     foreach (element_children($form['project']) as $key) {
-      $row = array(form_render($form['project'][$key]['title']));
+      $row = array(drupal_render($form['project'][$key]['title']));
       foreach ($levels as $level => $name) {
-        $row[] = form_render($form['options'][$key][$level]);
+        $row[] = drupal_render($form['options'][$key][$level]);
       }
       $rows[] = $row;
     }
     $output = theme('table', $headers, $rows);
   }
 
-  $output .= form_render($form);
+  $output .= drupal_render($form);
   return $output;
 }
 
@@ -1050,48 +1050,48 @@ function project_issue_query($project = 0, $query = NULL) {
 function theme_project_issue_query($form) {
 
   $rows[] = array(
-    array('data' => form_render($form['text']), 'colspan' => 3)
+    array('data' => drupal_render($form['text']), 'colspan' => 3)
   );
   $rows[] = array(
-    array('data' => form_render($form['attachment']), 'colspan' => 3)
+    array('data' => drupal_render($form['attachment']), 'colspan' => 3)
   );
   if ($form['projects']) {
     $rows[] = array(
-      form_render($form['projects']),
-      form_render($form['categories']),
+      drupal_render($form['projects']),
+      drupal_render($form['categories']),
       NULL,
     );
   }
   elseif ($form['versions']) {
     $rows[] = array(
-      form_render($form['versions']),
-      form_render($form['components']),
-      form_render($form['categories']),
+      drupal_render($form['versions']),
+      drupal_render($form['components']),
+      drupal_render($form['categories']),
     );
   }
   else {
     $rows[] = array(
-      array('data' => form_render($form['components'])),
-      array('data' => form_render($form['categories']), 'colspan' => 2)
+      array('data' => drupal_render($form['components'])),
+      array('data' => drupal_render($form['categories']), 'colspan' => 2)
     );
   }
   $rows[] = array(
-    array('data' => form_render($form['priorities'])),
-    array('data' => form_render($form['states']), 'colspan' => 2)
+    array('data' => drupal_render($form['priorities'])),
+    array('data' => drupal_render($form['states']), 'colspan' => 2)
   );
   $rows[] = array(
-    form_render($form['submitted']),
-    form_render($form['assigned']),
-    form_render($form['participated'])
+    drupal_render($form['submitted']),
+    drupal_render($form['assigned']),
+    drupal_render($form['participated'])
   );
   $rows[] = array(
-    array('data' => form_render($form['submit']), 'colspan' => 3)
+    array('data' => drupal_render($form['submit']), 'colspan' => 3)
   );
 
   $output = '<div class="project">';
   $output .= theme('table', array(), $rows);
   $output .= '</div>';
-  $output .= form_render($form);
+  $output .= drupal_render($form);
 
   return $output;
 }
@@ -1106,16 +1106,16 @@ function theme_project_issue_admin_states_page($form) {
         array('data' => t('Operations'))
       );
   foreach (element_children($form['status']) as $key) {
-    $rows[] = array(form_render($form['status'][$key]['sid']),
-                    form_render($form['status'][$key]['name']),
-                    form_render($form['status'][$key]['weight']),
-                    form_render($form['status'][$key]['author_has']),
-                    form_render($form['default_state'][$key]),
-                    form_render($form['delete'][$key]));
+    $rows[] = array(drupal_render($form['status'][$key]['sid']),
+                    drupal_render($form['status'][$key]['name']),
+                    drupal_render($form['status'][$key]['weight']),
+                    drupal_render($form['status'][$key]['author_has']),
+                    drupal_render($form['default_state'][$key]),
+                    drupal_render($form['delete'][$key]));
   }
-  $rows[] = array(NULL, form_render($form['status_add']['name']), form_render($form['status_add']['weight']), NULL, NULL, NULL);
+  $rows[] = array(NULL, drupal_render($form['status_add']['name']), drupal_render($form['status_add']['weight']), NULL, NULL, NULL);
   $output = '<div>' . theme('table', $header, $rows) . '</div>';
-  $output .= form_render($form);
+  $output .= drupal_render($form);
   return $output;
 }
 
@@ -1477,14 +1477,14 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
 
 function theme_project_issue_query_result_quick_search($form) {
   $rows[] = array(
-    form_render($form['projects']),
-    form_render($form['states']),
-    form_render($form['categories']),
-    form_render($form['priorities']),
-    form_render($form['users']) . form_render($form['submit']),
+    drupal_render($form['projects']),
+    drupal_render($form['states']),
+    drupal_render($form['categories']),
+    drupal_render($form['priorities']),
+    drupal_render($form['users']) . drupal_render($form['submit']),
   );
   $output = theme('table', array(), $rows);
-  $output .= form_render($form);
+  $output .= drupal_render($form);
   return $output;
 }
 

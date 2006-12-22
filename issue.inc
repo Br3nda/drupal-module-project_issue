@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.202 2006-12-20 01:27:30 dww Exp $
+// $Id: issue.inc,v 1.203 2006-12-22 23:54:14 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -22,10 +22,10 @@ function project_issue_page() {
       $project = project_project_retrieve(arg(3));
       // We assume that a user may create issues for projects that he may view.
       if ($project->nid && node_access('view', $project)) {
-        drupal_goto("node/add/project_issue/$project->uri");
+        drupal_goto("node/add/project-issue/$project->uri");
       }
       else {
-        drupal_goto("node/add/project_issue");
+        drupal_goto("node/add/project-issue");
       }
       break;
     case 'statistics':
@@ -41,10 +41,10 @@ function project_issue_page() {
     case 'subscribe':
       $project = project_project_retrieve(arg(3));
       if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
-        return project_issue_subscribe($project);
+        return drupal_get_form('project_issue_subscribe', $project);
       }
       else {
-        return project_issue_subscribe();
+        return drupal_get_form('project_issue_subscribe');
       }
       break;
     case 'user':
@@ -93,11 +93,11 @@ function project_issue_build_form_url($url_arg) {
     }
   }
   
-  // dispatch to hanlders based on value of $_POST['edit']['form_id']
-  if ($_POST['edit']['form_id'] == 'project_issue_query_result_quick_search') {
+  // dispatch to hanlders based on value of $_POST['form_id']
+  if ($_POST['form_id'] == 'project_issue_query_result_quick_search') {
     return project_issue_quick_search($url_arg, $filters);
   }
-  else if ($_POST['edit']['form_id'] == 'project_issue_query') {
+  else if ($_POST['form_id'] == 'project_issue_query') {
     return project_issue_advanced_search($url_arg, $adv_filters);
   }
 }
@@ -115,13 +115,13 @@ function project_issue_quick_search($url_arg, $filters) {
     // My issues query, so stay on the same page
     $destination = 'project/issues/user';
   }
-  elseif ($_POST['edit']['projects'] == 0 || strpos($_POST['edit']['projects'], ',') !== FALSE) {
+  elseif ($_POST['projects'] == 0 || strpos($_POST['projects'], ',') !== FALSE) {
     // search is for all/multiple projects, so just send to project/issues
     $destination = 'project/issues';
   }
   else {
     // try to find the project, and 404 if not found
-    if (!$project = project_project_retrieve($_POST['edit']['projects'])) {
+    if (!$project = project_project_retrieve($_POST['projects'])) {
       drupal_not_found();
       exit;
     }
@@ -131,10 +131,10 @@ function project_issue_quick_search($url_arg, $filters) {
   // if 'q' is the only thing in $_GET, and it == destination, don't redirect
   if (count($_GET) == 1 && isset($_GET['q']) && $_GET['q'] == $destination) {
 
-    // put $_POST['edit'] where pager will see them 
+    // put $_POST where pager will see them 
     foreach ($filters as $filter) {
-      if (!empty($_POST['edit'][$filter])) {
-        $_REQUEST[$filter] = $_POST['edit'][$filter];
+      if (!empty($_POST[$filter])) {
+        $_REQUEST[$filter] = $_POST[$filter];
       }
     }
 
@@ -146,8 +146,8 @@ function project_issue_quick_search($url_arg, $filters) {
 
   // redirecting, so put filters in session
   foreach ($filters as $filter) {
-    if (!empty($_POST['edit'][$filter])) {
-      $issue_filters[$filter] = $_POST['edit'][$filter];
+    if (!empty($_POST[$filter])) {
+      $issue_filters[$filter] = $_POST[$filter];
     }
   }
   drupal_goto($destination, drupal_query_string_encode($issue_filters));
@@ -159,20 +159,20 @@ function project_issue_quick_search($url_arg, $filters) {
 function project_issue_advanced_search($url_arg, $filters) {
   // Figure out what issue filters are in place for the query we're showing
   foreach ($filters as $filter) {
-    if (!empty($_POST['edit'][$filter])) {
-      if (is_array($_POST['edit'][$filter])) {
-        $issue_filters[$filter] = implode(',', $_POST['edit'][$filter]);
+    if (!empty($_POST[$filter])) {
+      if (is_array($_POST[$filter])) {
+        $issue_filters[$filter] = implode(',', $_POST[$filter]);
       }
       else {
-        $issue_filters[$filter] = $_POST['edit'][$filter];
+        $issue_filters[$filter] = $_POST[$filter];
       }
     }
   }
 
   // do we have just one project to search for?
-  if (isset($_POST['edit']['projects']) && count($_POST['edit']['projects']) == 1) {
+  if (isset($_POST['projects']) && count($_POST['projects']) == 1) {
     // try to find the project, and 404 if not found
-    if (!$project = project_project_retrieve($_POST['edit']['projects'][0])) {
+    if (!$project = project_project_retrieve($_POST['projects'][0])) {
       drupal_not_found();
       exit;
     }
@@ -205,10 +205,10 @@ function project_issue_statistics($project = 0) {
     }
     $breadcrumb[] = $project->nid ? l($project->title, "node/$project->nid") : l(t('All issues'), 'project/issues');
     drupal_set_breadcrumb($breadcrumb);
-    $filter = sprintf(' AND p.pid = %d ', db_escape_string($project->nid));
+    $filter = sprintf(' AND p.pid = %d ', (int)$project->nid);
   }
 
-  $output = '<div class="project">';
+  $output = '<div class="project-issue">';
 
   // Issue lifetime
   $header = array(t('Category'), t('Overall'), t('Last month'));
@@ -323,7 +323,7 @@ function project_issue_subscribe($project = 0) {
     $form['options']['#tree'] = TRUE;
     $form['options'][$project->nid] = array(
       '#type' => 'radios',
-      '#title' => t('Subscribe to %project issues', array('%project' => check_plain($project->title))),
+      '#title' => t('Subscribe to @project issues', array('@project' => $project->title)),
       '#default_value' => $level,
       '#options' => $levels,
     );
@@ -380,7 +380,7 @@ function project_issue_subscribe($project = 0) {
     '#type' => 'submit',
     '#value' => t('Subscribe'),
   );
-  return drupal_get_form('project_issue_subscribe', $form);
+  return $form;
 }
 
 function theme_project_issue_subscribe($form) {
@@ -415,7 +415,7 @@ function theme_project_issue_subscribe($form) {
 /**
  * Implementation of hook_form().
  */
-function project_issue_form(&$node, &$param) {
+function project_issue_form($node, $param) {
   global $user;
 
   $default_state = variable_get('project_issue_default_state', 1);
@@ -427,10 +427,10 @@ function project_issue_form(&$node, &$param) {
 
   $form['page'] = array(
     '#type' => 'hidden',
-    '#value' => isset($_POST['edit']['page']) ? $_POST['edit']['page'] : 1,
+    '#value' => isset($_POST['page']) ? $_POST['page'] : 1,
   );
 
-  $form['#prefix'] = '<div class="project">';
+  $form['#prefix'] = '<div class="project-issue">';
   $form['#suffix'] = '</div>';
 
   // Fetch a list of all projects to make swapping simpler
@@ -446,7 +446,7 @@ function project_issue_form(&$node, &$param) {
       $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $arg), 0);
     }
   }
-  $pid = $node->pid ? $node->pid : $_POST['edit']['pid'];
+  $pid = $node->pid ? $node->pid : $_POST['pid'];
   if ($pid) {
     // Load the project and initialize some support arrays.
     $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
@@ -603,7 +603,7 @@ function project_issue_form_pre_render($form_id, &$form) {
     // have a value for 'Project' (via a submit with project in the
     // URL), we'll already be on page 2 of the form and must increment
     // our page or we'll display the wrong buttons.
-    if (!form_get_errors() && $form['page']['#value'] < 2 && (isset($_POST['edit']['page']) || isset($form['project_info']['pid']['#value']))) {
+    if (!form_get_errors() && $form['page']['#value'] < 2 && (isset($_POST['page']) || isset($form['project_info']['pid']['#value']))) {
       $form['page']['#value'] = $form['page']['#value'] + 1;
     }
 
@@ -664,7 +664,7 @@ function _project_issue_form_add_required_fields(&$form, $needs_body) {
 
 function project_issue_node_form_validate($form_id, $form) {
   global $form_values;
-  $edit = $_POST['edit'];
+  $edit = $_POST;
 
   if (!$form_values['pid']) {
     form_set_error('pid', t('You have to specify a valid project.'));
@@ -762,16 +762,19 @@ function project_issue_comment_validate(&$node) {
   return $node;
 }
 
-function project_issue_view(&$node, $teaser = false, $page = false) {
+function project_issue_view($node, $teaser = false, $page = false) {
   $node = node_prepare($node, $teaser);
 
   if (!$teaser && $page) {
+
+    $node->content['#prefix'] = '<div class="project-issue">';
+    $node->content['#suffix'] = '</div>';
+
     $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
     $release->nid = $node->rid;
     $release = project_release_load($release);
     $assigned = ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned'));
 
-    $output = '<div class="project">';
     $rows = array();
     $rows[] = array('Project:', check_plain($project->title));
     if ($release->version) {
@@ -785,13 +788,18 @@ function project_issue_view(&$node, $teaser = false, $page = false) {
     if ($node->file_path && file_exists($node->file_path)) {
       $rows[] = array(t('Attachment:'), '<a href="'. file_create_url($node->file_path). '">'. basename($node->file_path) .'</a> ('. format_size($node->file_size) .')');
     }
-    $output .= '<div class="summary">'. theme('table', array(), $rows) .'</div>';
-
-    $output .= '<p>'. t('Description') .'</p>';
-    $output .= '<p>'. $node->body .'</p>';
-    $output .= '</div>';
-
-    $node->body = $output;
+    $node->content['project_issue_summary'] = array(
+      '#value' => '<div class="summary">'. theme('table', array(), $rows) .'</div>',
+      '#weight' => -5,
+    );
+    $node->content['project_issue_header'] = array(
+      '#value' => '<p>'. t('Description') .'</p>',
+      '#weight' => -3,
+    );
+    $node->content['project_issue_comments'] = array(
+      '#value' => project_comment_view($node),
+      '#weight' => 2,
+    );
 
     // Breadcrumb navigation
     $breadcrumb[] = array('path' => 'project', 'title' => t('projects'));
@@ -804,9 +812,8 @@ function project_issue_view(&$node, $teaser = false, $page = false) {
     $breadcrumb[] = array('path' => 'project/issues/'. $project->uri, 'title' => t('issues'));
     $breadcrumb[] = array('path' => 'node/'. $node->nid);
     menu_set_location($breadcrumb);
-
-    $node->body .= project_comment_view($node);
   }
+  return $node;
 }
 
 function project_issue_load($node) {
@@ -910,10 +917,10 @@ function project_issue_count($pid) {
 function project_issue_search_page($project_name = NULL, $query = NULL) {
   $project = project_project_retrieve($project_name);
   if ($project->nid && node_access('view', $project)) {
-     return project_issue_query($project, $query);
+    return drupal_get_form('project_issue_query', $project, $query);
   }
   else {
-    return project_issue_query(0, $query);
+    return drupal_get_form('project_issue_query', 0, $query);
   }
 }
 
@@ -921,7 +928,7 @@ function project_issue_query($project = 0, $query = NULL) {
   $categories = project_issue_category();
   $components = array();
   if ($project->nid) {
-    drupal_set_title(t('search issues for %name', array('%name' => theme('placeholder', $project->title))));
+    drupal_set_title(t('search issues for %name', array('%name' => $project->title)));
     foreach ($project->components as $component) {
       $components[$component] = $component;
     }
@@ -1042,10 +1049,8 @@ function project_issue_query($project = 0, $query = NULL) {
     '#type' => 'button',
     '#value' => t('Search'),
   );
-
-  return drupal_get_form('project_issue_query', $form);
+  return $form;
 }
-
 
 function theme_project_issue_query($form) {
 
@@ -1088,7 +1093,7 @@ function theme_project_issue_query($form) {
     array('data' => drupal_render($form['submit']), 'colspan' => 3)
   );
 
-  $output = '<div class="project">';
+  $output = '<div class="project-issue">';
   $output .= theme('table', array(), $rows);
   $output .= '</div>';
   $output .= drupal_render($form);
@@ -1096,7 +1101,7 @@ function theme_project_issue_query($form) {
   return $output;
 }
 
-function theme_project_issue_admin_states_page($form) {
+function theme_project_issue_admin_states_form($form) {
   $header = array(
         array('data' => t('ID')),
         array('data' => t('Name')),
@@ -1113,89 +1118,80 @@ function theme_project_issue_admin_states_page($form) {
                     drupal_render($form['default_state'][$key]),
                     drupal_render($form['delete'][$key]));
   }
-  $rows[] = array(NULL, drupal_render($form['status_add']['name']), drupal_render($form['status_add']['weight']), NULL, NULL, NULL);
+  $rows[] = array(NULL, drupal_render($form['status_add']['name']), drupal_render($form['status_add']['weight']), drupal_render($form['status_add']['author_has']), NULL, NULL);
   $output = '<div>' . theme('table', $header, $rows) . '</div>';
   $output .= drupal_render($form);
   return $output;
 }
 
-function project_issue_admin_states_page() {
-  switch ($_POST['op'] ? $_POST['op'] : arg(4)) {
-    case 'save':
-    case t('Save'):
-      project_issue_admin_save_states();
-      break;
-    case 'delete':
-    case t('Delete'):
-      return project_issue_admin_delete_state_confirm();
-      break;
-    default:
-      $result = db_query('SELECT * FROM {project_issue_state} ORDER BY weight');
-      $default_state = variable_get('project_issue_default_state', 1);
-      $form['status']['#tree'] = TRUE;
-      while ($state = db_fetch_object($result)) {
-        $options[$state->sid] = '';
-        $form['status'][$state->sid]['sid'] = array(
-          '#type' => 'markup',
-          '#value' => $state->sid,
-        );
-        $form['status'][$state->sid]['name'] = array(
-          '#type' => 'textfield',
-          '#default_value' => $state->name,
-          '#size' => 20,
-          '#maxlength' => 255,
-        );
-        $form['status'][$state->sid]['weight'] = array(
-          '#type' => 'weight',
-          '#default_value' => $state->weight,
-          '#delta' => 15,
-        );
-        $form['status'][$state->sid]['author_has'] = array(
-          '#type' => 'checkbox',
-          '#default_value' => $state->author_has,
-        );
-        $form['delete'][$state->sid] = array(
-          '#type' => 'markup',
-          '#value' => ($state->sid != $default_state) ?
-            l(t('delete'), 'admin/settings/project_issue/status/delete/'. $state->sid) :
-            '',
-        );
-      }
-      $form['default_state'] = array(
-        '#type' => 'radios',
-        '#options' => $options,
-        '#default_value' => $default_state,
-      );
-      $form['status_add']['#tree'] = TRUE;
-      $form['status_add']['name'] = array(
-        '#type' => 'textfield',
-        '#size' => 20,
-        '#maxlength' => 255,
-      );
-      $form['status_add']['weight'] = array(
-        '#type' => 'weight',
-        '#default_value' => 0,
-        '#delta' => 15,
-      );
-      $form['submit'] = array(
-        '#type' => 'button',
-        '#value' => t('Save'),
-      );
-
-      return drupal_get_form('project_issue_admin_states_page', $form);
-      break;
+function project_issue_admin_states_form() {
+  $result = db_query('SELECT * FROM {project_issue_state} ORDER BY weight');
+  $default_state = variable_get('project_issue_default_state', 1);
+  $form['status']['#tree'] = TRUE;
+  while ($state = db_fetch_object($result)) {
+    $options[$state->sid] = '';
+    $form['status'][$state->sid]['sid'] = array(
+      '#type' => 'markup',
+      '#value' => $state->sid,
+    );
+    $form['status'][$state->sid]['name'] = array(
+      '#type' => 'textfield',
+      '#default_value' => $state->name,
+      '#size' => 20,
+      '#maxlength' => 255,
+    );
+    $form['status'][$state->sid]['weight'] = array(
+      '#type' => 'weight',
+      '#default_value' => $state->weight,
+      '#delta' => 15,
+    );
+    $form['status'][$state->sid]['author_has'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => $state->author_has,
+    );
+    $del_link = ($state->sid != $default_state) ? l(t('Delete'), 'admin/project/project-issue-status/delete/'. $state->sid) : '';
+    $form['delete'][$state->sid] = array(
+      '#type' => 'markup',
+      '#value' => $del_link,
+    );
   }
+  $form['default_state'] = array(
+    '#type' => 'radios',
+    '#options' => $options,
+    '#default_value' => $default_state,
+  );
+  $form['status_add']['name'] = array(
+    '#type' => 'textfield',
+    '#size' => 20,
+    '#maxlength' => 255,
+  );
+  $form['status_add']['weight'] = array(
+    '#type' => 'weight',
+    '#default_value' => 0,
+    '#delta' => 15,
+  );
+  $form['status_add']['author_has'] = array(
+    '#type' => 'checkbox',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  $form['#tree'] = TRUE;
+  return $form;
 }
 
-function project_issue_admin_save_states() {
+/**
+ * Submit handler for project_issue_admin_states_form.
+ */
+function project_issue_admin_states_form_submit($form_id, $form_values) {
   // Check for and apply changes or additions to project issue status options.
-  $edit = $_POST['edit'];
-  if (isset($edit['default_state'])) {
-    variable_set('project_issue_default_state', $edit['default_state']);
+  if (isset($form_values['default_state'])) {
+    variable_set('project_issue_default_state', $form_values['default_state']);
   }
   // Update existing status options.
-  if($edit['status']) {
-    foreach ($edit['status'] as $sid => $value) {
+  if($form_values['status']) {
+    foreach ($form_values['status'] as $sid => $value) {
       $state = db_fetch_object(db_query('SELECT name, weight, author_has FROM {project_issue_state} WHERE sid = %d', $sid));
       // Check to see whether the record needs updating.
       if (($state->name != $value['name']) || ($state->weight != $value['weight']) || ($state->author_has != $value['author_has'])) {
@@ -1204,23 +1200,20 @@ function project_issue_admin_save_states() {
     }
   }
   // Add any new status options.
-  if($edit['status_add']) {
-    if($edit['status_add']['name']) {
-      // Check to see whether the state already exists:
-      $name = db_result(db_query("SELECT name FROM {project_issue_state} WHERE name = '%s'", $edit['status_add']['name']));
-      if (!db_num_rows($name)) {
-        db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d", $edit['status_add']['name'], $edit['status_add']['weight'], $edit['status_add']['author_has']);
-      }
-      else {
-        drupal_set_message (t('Status %status already exists.', array ('%status' => theme('placeholder', $edit['status_add']['name']))));
-      }
+  if (isset($form_values['status_add']) && !empty($form_values['status_add']['name'])) {
+    // Check to see whether the state already exists:
+    $query = db_query("SELECT name FROM {project_issue_state} WHERE name = '%s'", $form_values['status_add']['name']);
+    if (!db_num_rows($query)) {
+      db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d", $form_values['status_add']['name'], $form_values['status_add']['weight'], $form_values['status_add']['author_has']);
+    }
+    else {
+      drupal_set_message(t('Status %status already exists.', array ('%status' => $form_values['status_add']['name'])));
     }
   }
-  drupal_goto('admin/settings/project_issue/status');
 }
 
-function project_issue_admin_delete_state_confirm() {
-  $sid = arg(5);
+function project_issue_delete_state_confirm($sid) {
+  $sid = arg(4);
   $states = project_issue_state();
   $name = $states[$sid];
 
@@ -1231,39 +1224,37 @@ function project_issue_admin_delete_state_confirm() {
       '#title' => t('Reassign status'),
       '#default_value' => $sid,
       '#options' => $states,
-      '#description' => t('There are %total existing issues with the status of %name. Please select a new status for these issues.', array('%total' => $total, '%name' => check_plain($name))),
+      '#description' => t('There are !total existing issues with the status of @name. Please select a new status for these issues.', array('!total' => $total, '@name' => $name)),
     );
   }
-    $form['sid'] = array(
-      '#type' => 'value',
-      '#value' => $sid,
-    );
-    $form['name'] = array(
-      '#type' => 'hidden',
-      '#value' => $name,
-    );
-    return confirm_form(
-      'project_issue_admin_delete_state',
-      $form,
-      t('Are you sure you want to delete the status option %name?', array('%name' => theme('placeholder', $name))),
-      'admin/settings/project_issue/status',
-      t('This action cannot be undone.'),
-      t('Delete'),
-      t('Cancel')
-    );
+  $form['sid'] = array(
+    '#type' => 'value',
+    '#value' => $sid,
+  );
+  $form['name'] = array(
+    '#type' => 'hidden',
+    '#value' => $name,
+  );
+  return confirm_form(
+    $form,
+    t('Are you sure you want to delete the status option %name?', array('%name' => $name)),
+    'admin/project/project-issue-status',
+    t('This action cannot be undone.'),
+    t('Delete'), t('Cancel')
+  );
 }
 
-function project_issue_admin_delete_state_submit($form_id, $form_values) {
+function project_issue_delete_state_confirm_submit($form_id, $form_values) {
   if($form_values['new_sid'] == $form_values['sid']) {
       form_set_error('new_sid', t('Choose a new issue status for
-  existing issues of status %name.', array('%name' => theme('placeholder', $form_values['name']))));
+  existing issues of status %name.', array('%name' => $form_values['name'])));
   } else {
     if ($form_values['new_sid']) {
       db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_values['new_sid'], $form_values['sid']);
     }
     db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_values['sid']);
-    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => theme('placeholder', $form_values['name']))));
-    drupal_goto('admin/settings/project_issue/status');
+    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_values['name'])));
+    drupal_goto('admin/project/project-issue-status');
   }
 }
 
@@ -1272,11 +1263,10 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   $query = project_issue_query_parse($query);
   // $query must have a real value now, or the rest of this function fails.
 
-  $categories = array(0 => t('<all>')) + project_issue_category();
+  $uris = NULL;
+  $projects = array(0 => t('<all>')) + project_projects_select_options($uris);
   $states = array(implode(',', array_keys(project_issue_state())) => t('<all>')) + project_issue_state();
   $priorities = array(0 => t('<all>')) + project_issue_priority();
-  $project_urls = array();
-  $projects = array(0 => t('<all>')) + project_projects_select_options($project_urls);
 
   // Load active project
   if (count($query->projects) == 1) {
@@ -1284,18 +1274,37 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
 
   if ($project) {
-    drupal_set_title(t('issues for %name', array('%name' => theme('placeholder', $project->title))));
+    drupal_set_title(t('issues for %name', array('%name' => $project->title)));
     $releases = project_release_get_releases($project, 0);
     $query->projects = $project->nid;
     $links = array();
     if (user_access('create project issues')) {
-      $links[] = l(t('submit'), "node/add/project_issue/$project->uri", array('title' => t('Submit a new issue for %project.', array('%project' => check_plain($project->uri)))));
+      $links[] = array(
+        'title' => t('Submit'),
+        'href' => "node/add/project-issue/$project->uri",
+        'attributes' => array('title' => t('Submit a new issue for @project.', array('@project' => $project->uri))),
+      );
     }
-    $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => check_plain($project->uri)))));
+    $links[] = array(
+      'title' => t('Statistics'),
+      'href' => "project/issues/statistics/$project->uri",
+      'attributes' => array('title' => t('See statistics about @project issues.', array('@project' => $project->uri))),
+    );
     if ($user->uid) {
-      $links[] = l(t('subscribe'), "project/issues/subscribe/$project->uri", array('title' => t('Receive email updates about issues for %project.', array('%project' => check_plain($project->uri)))));
+      $links[] = array(
+        'title' => t('Subscribe'),
+        'href' => "project/issues/subscribe/$project->uri",
+        'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $project->uri))),
+      );
     }
-    $links[] = l(t('advanced search'), "project/issues/search/$project->uri", array('title' => t('Use the advanced search page to find %project issues.', array('%project' => check_plain($project->uri)))));
+    $links[] = array(
+      'title' => t('Advanced search'),
+      'href' => "project/issues/search/$project->uri",
+      'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $project->uri))),
+    );
+    if (user_access('create project issues')) {
+
+    }
   }
   else {
     // only set a more descriptive title if we're not looking at "my
@@ -1305,13 +1314,29 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     }
     $links = array();
     if (user_access('create project issues')) {
-      $links[] = l(t('submit'), "node/add/project_issue", array('title' => t('Submit a new issue.')));
+      $links[] = array(
+        'title' => t('Submit'),
+        'href' => "node/add/project-issue",
+        'attributes' => array('title' => t('Submit a new issue.')),
+      );
     }
-    $links[] = l(t('statistics'), "project/issues/statistics", array('title' => t('See statistics about issues.')));
+    $links[] = array(
+      'title' => t('Statistics'),
+      'href' => "project/issues/statistics",
+      'attributes' => array('title' => t('See statistics about issues.')),
+    );
     if ($user->uid) {
-      $links[] = l(t('subscribe'), "project/issues/subscribe", array('title' => t('Receive email updates about issues.')));
+      $links[] = array(
+        'title' => t('Subscribe'),
+        'href' => "project/issues/subscribe",
+        'attributes' => array('title' => t('Receive email updates about issues.')),
+      );
     }
-    $links[] = l(t('advanced search'), "project/issues/search/", array('title' => t('Use the advanced search page for finding issues.')));
+    $links[] = array(
+      'title' => t('Advanced search'),
+      'href' => "project/issues/search/",
+      'attributes' => array('title' => t('Use the advanced search page for finding issues.')),
+    );
   }
 
   $header = array();
@@ -1327,7 +1352,6 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
   $header[] = array('data' => t('Last updated'), 'field' => 'n.changed', 'sort' => 'desc');
   $header[] = array('data' => t('Assigned to'), 'field' => 'u.name');
-  #$header[] = array('data' => t('submitted by'), 'field' => 'n.uid');
 
   $sql = project_issue_query_sql($query);
   $result = pager_query($sql['sql'] . tablesort_sql($header), 20, 0, $sql['count']);
@@ -1335,79 +1359,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   if ($search) {
     // Action links:
     $group = theme('links', $links);
-
-    // Convert array fields to single select form items.
-    $fields = array('projects', 'states', 'priorities', 'categories', 'users');
-    foreach ($fields as $field) {
-      if (is_array($query->$field)) {
-        $option = array();
-        
-        // $query is untrusted, user submitted data
-        foreach ($query->$field as $key => $value) {
-          if (isset(${$field}[$value])) {
-            $option[] = ${$field}[$value];
-          }
-          else {
-            unset($query->$field[$key]);
-          }
-        }
-        $query->$field = implode(',', $query->$field);
-
-        // special case for 'states' so we don't lose <all>
-        if (!isset(${$field}[$query->$field])) {
-          ${$field}[$query->$field] = implode(',', $option);
-        }
-      }
-    }
-
-    // special case for states - we always want the defaults
-    if ($query->states != '1,2,8,13,14,4') {
-      foreach (array(1, 2, 8, 13, 14, 4) as $state) {
-        $options[] = $state;
-        $values[]  = $states[$state];
-      }
-      $options = implode(',', $options);
-      $states[$options] =  implode(',', $values);
-    }
-
-    // Make quick search form:
-    $form['projects'] = array(
-      '#type'=> 'select',
-      '#title' => t('Project'),
-      '#default_value' => $query->projects,
-      '#options' => $projects,
-    );
-    $form['states'] = array(
-      '#type'=> 'select',
-      '#title' => t('Status'),
-      '#default_value' => $query->states,
-      '#options' => $states,
-    );
-    $form['categories'] = array(
-      '#type'=> 'select',
-      '#title' => t('Category'),
-      '#default_value' => $query->categories,
-      '#options' => $categories,
-    );
-    $form['priorities'] = array(
-      '#type'=> 'select',
-      '#title' => t('Priority'),
-      '#default_value' => $query->priorities,
-      '#options' => $priorities,
-    );
-    $form['users'] = array(
-      '#type'=> 'hidden',
-      '#value' => $query->users,
-    );
-    $form['js'] = array(
-      '#type'=> 'hidden',
-      '#value' => '0',
-    );
-    $form['submit'] = array(
-      '#type' => 'button',
-      '#value' => t('Search'),
-    );
-    $group .= drupal_get_form('project_issue_query_result_quick_search', $form);
+    $group .= drupal_get_form('project_issue_query_result_quick_search', $query, $projects, $states, $priorities);
   }
 
   $rows = array();
@@ -1465,7 +1417,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $rows[] = array(array('data' => t('No issues found.'), 'colspan'=> 8));
   }
 
-  $output = '<div class="project">';
+  $output = '<div class="project-issue">';
   $output .= '<div class="quick-search">';
   $output .= $group;
   $output .= '</div>';
@@ -1473,6 +1425,86 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   $output .= "$rss $link";
   $output .= '</div>';
   return $output;
+}
+
+/**
+ * Form builder for the quick-search form when filtering issues on the
+ * issue query result pages.
+ */
+function project_issue_query_result_quick_search($query, $projects, $states, $priorities) {
+  $categories = array(0 => t('<all>')) + project_issue_category();
+
+  // Convert array fields to single select form items.
+  $fields = array('projects', 'states', 'priorities', 'categories', 'users');
+  foreach ($fields as $field) {
+    if (is_array($query->$field)) {
+      $option = array();
+
+      // $query is untrusted, user submitted data
+      foreach ($query->$field as $key => $value) {
+        if (isset(${$field}[$value])) {
+          $option[] = ${$field}[$value];
+        }
+        else {
+          unset($query->$field[$key]);
+        }
+      }
+      $query->$field = implode(',', $query->$field);
+
+      // special case for 'states' so we don't lose <all>
+      if (!isset(${$field}[$query->$field])) {
+        ${$field}[$query->$field] = implode(',', $option);
+      }
+    }
+  }
+
+  // special case for states - we always want the defaults
+  if ($query->states != '1,2,8,13,14,4') {
+    foreach (array(1, 2, 8, 13, 14, 4) as $state) {
+      $options[] = $state;
+      $values[]  = $states[$state];
+    }
+    $options = implode(',', $options);
+    $states[$options] =  implode(',', $values);
+  }
+
+  $form['projects'] = array(
+    '#type'=> 'select',
+    '#title' => t('Project'),
+    '#default_value' => $query->projects,
+    '#options' => $projects,
+  );
+  $form['states'] = array(
+    '#type'=> 'select',
+    '#title' => t('Status'),
+    '#default_value' => $query->states,
+    '#options' => $states,
+  );
+  $form['categories'] = array(
+    '#type'=> 'select',
+    '#title' => t('Category'),
+    '#default_value' => $query->categories,
+    '#options' => $categories,
+  );
+  $form['priorities'] = array(
+    '#type'=> 'select',
+    '#title' => t('Priority'),
+    '#default_value' => $query->priorities,
+    '#options' => $priorities,
+  );
+  $form['users'] = array(
+    '#type'=> 'hidden',
+    '#value' => $query->users,
+  );
+  $form['js'] = array(
+    '#type'=> 'hidden',
+    '#value' => '0',
+  );
+  $form['submit'] = array(
+    '#type' => 'button',
+    '#value' => t('Search'),
+  );
+  return $form;
 }
 
 function theme_project_issue_query_result_quick_search($form) {
@@ -1501,7 +1533,7 @@ function project_issue_query_url($query = 0) {
 }
 
 /**
- * Parses $_POST['edit'] or $_GET and creates the appropriate query
+ * Parses $_POST or $_GET and creates the appropriate query
  * object based on whatever choices a user has made to filter the
  * issue queue. This function *MUST* return a valid $query object,
  * since the rest of project_issue_query_result() assumes that $query
@@ -1520,8 +1552,8 @@ function project_issue_query_url($query = 0) {
  */
 function project_issue_query_parse($query = NULL) {
   $fields = array('projects', 'text', 'attachment', 'summary', 'comment', 'categories', 'components', 'versions', 'states', 'priorities', 'users', 'assigned', 'submitted', 'participated');
-  if ($_SERVER['REQUEST_METHOD'] == 'POST' && is_array($_POST['edit'])) {
-    foreach ($_POST['edit'] as $key => $value) {
+  if ($_SERVER['REQUEST_METHOD'] == 'POST' && is_array($_POST)) {
+    foreach ($_POST as $key => $value) {
       if (!empty($value) && in_array($key, $fields)) {
         $query->$key = !is_array($value) ? explode(',', $value) : $value;
       }
@@ -1654,7 +1686,7 @@ function project_issue_query_user($value) {
   else {
     $uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $value));
     if (!$uid) {
-      drupal_set_message(t("Username '%user' not found.", array('%user' => check_plain($value))), 'error');
+      drupal_set_message(t("Username '@user' not found.", array('@user' => $value)), 'error');
     }
     return $uid;
   }

@@ -1,11 +1,11 @@
 <?php
-// $Id: comment.inc,v 1.72 2006-12-18 09:11:08 dww Exp $
+// $Id: comment.inc,v 1.73 2006-12-22 23:54:14 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
   
   if (user_access('create project issues')) {
-    $edit = (object) $_POST['edit'];
+    $edit = (object)$_POST;
     $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
 
     if ($_POST['op'] == t('Preview') || $_POST['op'] == t('Submit')) {
@@ -16,7 +16,7 @@ function project_comment_page() {
       }
       project_comment_validate($edit);
     }
-    $output .= project_comment_form($edit, $param);
+    $output .= drupal_get_form('project_comment_form', $edit);
 
     $breadcrumb = drupal_get_breadcrumb();
     $breadcrumb[] = l($node->title, "node/$node->nid");
@@ -44,7 +44,7 @@ function project_comment_page() {
   }
 }
 
-function project_comment_form(&$edit, &$param) {
+function project_comment_form($edit, $param = NULL) {
   $op = $_POST['op'];
   if (isset($param)) {
     $form = array(
@@ -55,9 +55,12 @@ function project_comment_form(&$edit, &$param) {
   } else {
     $form['#attributes'] = array('enctype' => 'multipart/form-data');
   }
-  $form['#prefix'] = '<div class="node-form"><div class="standard">';
-  $form['#suffix'] = '</div></div>';
+  $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
+  $form['#suffix'] = '</div></div></div>';
   $form['project_issue_form'] = project_issue_form($edit, $param);
+  unset($form['project_issue_form']['#prefix']);
+  unset($form['project_issue_form']['#suffix']);
+
   _project_issue_form_add_required_fields($form['project_issue_form'], FALSE);
   if ($edit->cid) {
     $form['cid']= array('#type' => 'hidden', '#value' => $edit->cid);
@@ -69,7 +72,7 @@ function project_comment_form(&$edit, &$param) {
   if ($op == t('Preview')) {
     $form['#after_build'] = array('project_comment_form_add_preview');
   }
-  return drupal_get_form('project_comment_form', $form);
+  return $form;
 }
 
 function project_comment_validate(&$edit) {
@@ -91,7 +94,6 @@ function project_comment_validate(&$edit) {
 
 function project_comment_view($node, $main = 0) {
   global $user;
-  $links = array();
   $rows = array();
   $result = db_query('SELECT p.*, u.name FROM {project_comments} p INNER JOIN {users} u USING (uid) WHERE p.nid = %d ORDER BY p.created ASC', $node->nid);
   if (db_num_rows($result)) {
@@ -169,7 +171,7 @@ function _project_comment_view_single($comment, $count) {
   if ($summary || $comment->body) {
     if ($count) {
       $output .= '<div class="header">';
-      $output .= t('%count submitted by %user on %date', array('%count' => l("#$count", "node/$comment->nid", array ('id' => "comment-$comment->cid", 'name' => "comment-$comment->cid"), NULL, "comment-$comment->cid"), '%user' => theme('username', $comment), '%date' => format_date($comment->created))) . theme('mark', node_mark($comment->nid, $comment->changed));
+      $output .= t('!count submitted by !user on !date', array('!count' => l("#$count", "node/$comment->nid", array ('id' => "comment-$comment->cid", 'name' => "comment-$comment->cid"), NULL, "comment-$comment->cid"), '!user' => theme('username', $comment), '!date' => format_date($comment->created))) . theme('mark', node_mark($comment->nid, $comment->changed));
       $output .= '</div>';
     }
     if ($summary) {
@@ -216,7 +218,7 @@ function project_comment_save($edit) {
       }
     }
 
-    watchdog('content', t('project_issue: added comment %title', array('%title' => theme('placeholder', $edit->title))), WATCHDOG_NOTICE, l('view', "node/$node->nid"));
+    watchdog('content', t('project_issue: added comment %title', array('%title' => $edit->title)), WATCHDOG_NOTICE, l('view', "node/$node->nid"));
     $node->changed = time();
     db_query("INSERT INTO {project_comments} (cid, nid, uid, created, changed, body, data, file_path, file_mime, file_size) VALUES (%d, %d, %d, %d, %d, '%s', '%s', '%s', '%s', %d)", $edit->cid, $edit->nid, $edit->uid, $node->changed, $node->changed, $edit->body, serialize($data), $file->filepath, $file->filemime, $file->filesize);
 

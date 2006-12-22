@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.65 2006/12/18 09:11:08 dww Exp $
+// $Id: mail.inc,v 1.66 2006/12/22 23:54:14 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -111,7 +111,7 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
         $body .= "\n * $field: $text";
       }
 
-      user_mail($mailto, t('Email submission to %sn failed - %subj', array ('%sn' => variable_get('site_name', 'Drupal'), '%subj' => $header->subject)), $body, $headers);
+      drupal_mail('project_issue_mailhandler_error', $mailto, t('Email submission to !sn failed - !subj', array('!sn' => variable_get('site_name', 'Drupal'), '!subj' => $header->subject)), $body, $headers);
     }
 
     // Return a NULL result so mailhandler doesn't save the node using the default methods.
@@ -237,8 +237,8 @@ function project_mail_notify($node) {
   }
 
   // Create link to related node
-  $links = t('Issue status update for %link', array('%link' => "\n". url("node/$node->nid", NULL, NULL, 1))) ."\n";
-  $links .= t('Post a follow up: %link', array('%link' => "\n". url("project/comments/add/$node->nid", NULL, NULL, 1))) ."\n";
+  $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", NULL, NULL, 1))) ."\n";
+  $links .= t('Post a follow up: !link', array('!link' => "\n". url("project/comments/add/$node->nid", NULL, NULL, 1))) ."\n";
 
   // Mail summary (status values)
   foreach ($fields as $field => $text) {
@@ -319,7 +319,7 @@ function project_mail_notify($node) {
   $node->title = "[$project->title " . t("$node->category") ."] $node->title";
 
   while ($recipient = db_fetch_object($result)) {
-    user_mail($recipient->mail, $node->title, $body, implode("\n", $header));
+    drupal_mail('project_issue_update', $recipient->mail, $node->title, $body, implode("\n", $header));
   }
 
   if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {
@@ -331,7 +331,7 @@ function project_mail_notify($node) {
   }
 
   if ($project->mail_copy) {
-    user_mail($project->mail_copy, $node->title, $body, implode("\n", $header));
+    drupal_mail('project_issue_update', $project->mail_copy, $node->title, $body, implode("\n", $header));
 
   }
 }
@@ -361,7 +361,7 @@ function project_mail_reminder() {
           'List-Archive: <'. url('project', NULL, NULL, 1) .'>',
         );
 
-        user_mail($mail, t('Your submitted bugs for %date', array('%date' => date('F d, Y', time()))), $body, implode("\n", $header));
+        drupal_mail('project_issue_reminder', $mail, t('Your submitted bugs for !date', array('!date' => date('F d, Y', time()))), $body, implode("\n", $header));
 
         $body = '';
       }
@@ -420,6 +420,6 @@ function project_mail_digest() {
     $header['from'] = "From: $mailto";
     $header['return-path'] = "Return-Path: <$mailto>";
 
-    user_mail($mailto, t('Release critical bugs for %date', array('%date' => date('F d, Y', time()))), $text, implode("\n", $header));
+    drupal_mail('project_issue_critical_summary', $mailto, t('Release critical bugs for !date', array('!date' => date('F d, Y', time()))), $text, implode("\n", $header));
   }
 }

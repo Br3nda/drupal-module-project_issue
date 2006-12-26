@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.204 2006-12-25 19:06:57 dww Exp $
+// $Id: issue.inc,v 1.205 2006-12-26 00:40:10 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -453,7 +453,7 @@ function project_issue_form($node, $param) {
     if (trim($project->help)) {
       drupal_set_message($project->help);
     }
-    if (module_exist('project_release') && 
+    if (module_exists('project_release') && 
         $releases = project_release_get_releases($project, 0)) {
       $releases = array(t('<none>')) + $releases;
     }
@@ -674,7 +674,7 @@ function project_issue_node_form_validate($form_id, $form) {
   if ($form_values['page'] == 2) {
     if ($form_values['pid'] && $project = node_load($form_values['pid'])) {
       $node->title = $form_values['title'];
-      if (module_exist('project_release') && 
+      if (module_exists('project_release') && 
           $releases = project_release_get_releases($project, 0)) {
         if (!$form_values['rid'] || !$releases[$form_values['rid']]) {
           $form_values['rid'] = $project->version;
@@ -715,7 +715,7 @@ function project_issue_comment_validate(&$node) {
   // Validate the rest of the form.
   if (isset($node->title) && !$node->validated) {
     if ($node->pid && $project = node_load($node->pid)) {
-      if (module_exist('project_release') &&
+      if (module_exists('project_release') &&
           $releases = project_release_get_releases($project, 0)) {
         if (!$node->rid || !$releases[$node->rid]) {
           $node->rid = $project->version;
@@ -775,7 +775,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
 
     $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
     $release->nid = $node->rid;
-    if (module_exist('project_release')) {
+    if (module_exists('project_release')) {
       $release = project_release_load($release);
     }
     $assigned = ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned'));
@@ -937,7 +937,7 @@ function project_issue_query($project = 0, $query = NULL) {
     foreach ($project->components as $component) {
       $components[$component] = $component;
     }
-    if (module_exist('project_release')) {
+    if (module_exists('project_release')) {
       $versions = project_release_get_releases($project, 0);
     }
   }
@@ -1282,7 +1282,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
 
   if ($project) {
     drupal_set_title(t('issues for %name', array('%name' => $project->title)));
-    if (module_exist('project_release')) {
+    if (module_exists('project_release')) {
       $releases = project_release_get_releases($project, 0);
     }
     $query->projects = $project->nid;

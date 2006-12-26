@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.67 2006/12/25 19:06:57 dww Exp $
+// $Id: mail.inc,v 1.68 2006/12/26 00:40:10 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -174,7 +174,7 @@ function project_mail_summary($field, $value) {
     case 'rid':
       if ($value) {
         $release->nid = $value;
-        if (module_exist('project_release')) {
+        if (module_exists('project_release')) {
           $release = project_release_load($release);
         }
         else {

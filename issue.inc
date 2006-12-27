@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.28 2006/12/18 18:46:44 dww Exp $
+// $Id: issue.inc,v 1.172.2.29 2006/12/27 19:18:32 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -437,16 +437,24 @@ function project_issue_form(&$node, &$param) {
   $uris = NULL;
   $projects = array(t('<none>')) + project_projects_select_options($uris);
 
-  // Try to find the active project
-  if (empty($node->pid) && $arg = arg(3)) {
-    if (is_numeric($arg)) {
-      $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $arg), 0);
+  // Try to find the active project, if not already known.
+  if (empty($node->pid)) {
+    if (isset($_POST['edit']['pid'])) {
+      $pid = $_POST['edit']['pid'];
     }
     else {
-      $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $arg), 0);
+      $pid = arg(3);
+    }
+    if (isset($pid)) {
+      if (is_numeric($pid)) {
+        $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
+      }
+      else {
+        $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid), 0);
+      }
     }
   }
-  $pid = $node->pid ? $node->pid : $_POST['edit']['pid'];
+  $pid = $node->pid;
   if ($pid) {
     // Load the project and initialize some support arrays.
     $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
@@ -580,11 +588,9 @@ function project_issue_form(&$node, &$param) {
 
   }
   else {
-
     $form['pid'] = array(
       '#type' => 'select',
       '#title' => t('Project'),
-      '#default_value' => $node->pid,
       '#options' => $projects,
       '#required' => TRUE,
     );
@@ -701,12 +707,20 @@ function project_issue_comment_validate(&$node) {
   empty($node->sid) and $node->sid = 1;
 
   // Try to find the active project
-  if (empty($node->pid) && $arg = arg(3)) {
-    if (is_numeric($arg)) {
-      $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $arg), 0);
+  if (empty($node->pid)) {
+    if (isset($_POST['edit']['pid'])) {
+      $pid = $_POST['edit']['pid'];
     }
     else {
-      $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $arg), 0);
+      $pid = arg(3);
+    }
+    if (isset($pid)) {
+      if (is_numeric($pid)) {
+        $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
+      }
+      else {
+        $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid), 0);
+      }
     }
   }
 

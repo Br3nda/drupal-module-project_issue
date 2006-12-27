@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.206 2006-12-27 19:19:01 dww Exp $
+// $Id: issue.inc,v 1.207 2006-12-27 19:44:40 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -61,6 +61,71 @@ function project_issue_page() {
         return project_issue_query_result();
       }
   }
+}
+
+/**
+ * JS callback method to return updated elements on the issue form
+ * when someone changes the "Project" selector. See project_issue.js.
+ */
+function project_issue_update_project($pid, $cid = NULL, $rid = NULL) {
+  // Release id options ("Version" selector).
+  $return['rid'] = '';
+
+  // Only generate release stuff if the project_release module is enabled.
+  if (module_exists('project_release')) {
+    $project->nid = $pid;
+    if ($releases = project_release_get_releases($project, 0)) {
+      $releases = array(t('<none>')) + $releases;
+      // Since the value of releases is by nid, try to match release
+      // based on the label instead.
+      $default = 0;
+      foreach ($releases as $key => $label) {
+        if ($rid == $label) {
+          $default = $key;
+        }
+      }
+      $form = array();
+      $form['rid'] = array(
+        '#type' => 'select',
+        '#title' => t('Version'),
+        '#default_value' => $default,
+        '#options' => $releases,
+        '#required' => TRUE,
+      );
+
+      // Build the HTML output for the rid select.
+      $form = form_builder('rid', $form);
+      $return['rid'] .= drupal_render($form);
+    }
+  }
+
+  // Components.
+  $return['component'] = '';
+  $project = db_fetch_object(db_query('SELECT * FROM {project_issue_projects} WHERE nid = %d', $pid));
+  $components = array();
+  if ($project->components) {
+    $components = array(t('<none>'));
+    foreach (unserialize($project->components) as $component) {
+      $components[$component] = $component;
+    }
+  }
+
+  $form = array();
+  $form['component'] = array(
+    '#type' => 'select',
+    '#title' => t('Component'),
+    '#default_value' => $cid,
+    '#options' => $components,
+    '#required' => TRUE,
+  );
+
+  // Build the HTML output for the component select.
+  $form = form_builder('component', $form);
+  $return['component'] .= drupal_render($form);
+
+  // Translate to js before output, so the calling js can work with the data.
+  print drupal_to_js($return);
+  exit();
 }
 
 /**
@@ -418,6 +483,8 @@ function theme_project_issue_subscribe($form) {
 function project_issue_form($node, $param) {
   global $user;
 
+  drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
+
   $default_state = variable_get('project_issue_default_state', 1);
   // Set form parameters so we can accept file uploads.
   $form['#attributes'] = array('enctype' => 'multipart/form-data');
@@ -498,6 +565,7 @@ function project_issue_form($node, $param) {
       '#default_value' => $node->pid,
       '#options' => $projects,
       '#required' => TRUE,
+      '#attributes' => array('onchange' => 'mod_project("'. base_path() .'project/issues/update_project/", this.value);'),
     );
     if ($releases) {
       $form['project_info']['rid'] = array(

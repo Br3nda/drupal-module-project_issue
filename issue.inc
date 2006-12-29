@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.209 2006/12/29 03:22:26 dww Exp $
+// $Id: issue.inc,v 1.210 2006/12/29 04:03:32 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -753,9 +753,6 @@ function project_issue_node_form_validate($form_id, $form) {
       $node->title = $form_values['title'];
       if (module_exists('project_release') && 
           $releases = project_release_get_releases($project, 0)) {
-        if (!$form_values['rid'] || !$releases[$form_values['rid']]) {
-          $form_values['rid'] = $project->version;
-        }
         empty($form_values['rid']) and form_set_error('rid', t('You have to specify a valid version.'));
       }
       if ($form_values['component'] && !in_array($form_values['component'], $project->components)) {
@@ -802,9 +799,6 @@ function project_issue_comment_validate(&$node) {
     if ($node->pid && $project = node_load($node->pid)) {
       if (module_exists('project_release') &&
           $releases = project_release_get_releases($project, 0)) {
-        if (!$node->rid || !$releases[$node->rid]) {
-          $node->rid = $project->version;
-        }
         empty($node->rid) and form_set_error('rid', t('You have to specify a valid version.'));
       }
       else {

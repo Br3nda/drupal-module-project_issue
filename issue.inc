@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.208 2006/12/29 02:27:48 dww Exp $
+// $Id: issue.inc,v 1.209 2006/12/29 03:22:26 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -246,8 +246,10 @@ function project_issue_advanced_search($url_arg, $filters) {
   }
 
   // Put the issue filters where the pager links can find them.
-  foreach ($issue_filters as $name => $val) {
-    $_REQUEST[$name] = $val;
+  if (isset($issue_filters)) {
+    foreach ($issue_filters as $name => $val) {
+      $_REQUEST[$name] = $val;
+    }
   }
   // unset $_REQUEST['edit'] so the pager links aren't full of cruft
   unset($_REQUEST['edit']);

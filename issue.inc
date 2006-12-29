@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.207 2006-12-27 19:44:40 dww Exp $
+// $Id: issue.inc,v 1.208 2006-12-29 02:27:48 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -483,8 +483,6 @@ function theme_project_issue_subscribe($form) {
 function project_issue_form($node, $param) {
   global $user;
 
-  drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
-
   $default_state = variable_get('project_issue_default_state', 1);
   // Set form parameters so we can accept file uploads.
   $form['#attributes'] = array('enctype' => 'multipart/form-data');
@@ -523,6 +521,10 @@ function project_issue_form($node, $param) {
   }
   $pid = $node->pid;
   if ($pid) {
+    // Load Javascript. This is needed only if we already have a project selected.
+    drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
+    drupal_add_js(array('projectUrl' => url('project/issues/update_project')), 'setting');
+
     // Load the project and initialize some support arrays.
     $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
     if (trim($project->help)) {
@@ -565,7 +567,6 @@ function project_issue_form($node, $param) {
       '#default_value' => $node->pid,
       '#options' => $projects,
       '#required' => TRUE,
-      '#attributes' => array('onchange' => 'mod_project("'. base_path() .'project/issues/update_project/", this.value);'),
     );
     if ($releases) {
       $form['project_info']['rid'] = array(

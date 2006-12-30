@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.70.2.4 2006/12/14 20:09:00 dww Exp $
+// $Id: comment.inc,v 1.70.2.5 2006/12/30 18:26:38 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -55,8 +55,10 @@ function project_comment_form(&$edit, &$param) {
   } else {
     $form['#attributes'] = array('enctype' => 'multipart/form-data');
   }
-  $form['#prefix'] = '<div class="node-form"><div class="standard">';
-  $form['#suffix'] = '</div></div>';
+  $form['#prefix'] = '<div class="project"><div class="node-form"><div class="standard">';
+  $form['#suffix'] = '</div></div></div>';
+  unset($form['project_issue_form']['#prefix']);
+  unset($form['project_issue_form']['#suffix']);
   $form['project_issue_form'] = project_issue_form($edit, $param);
   _project_issue_form_add_required_fields($form['project_issue_form'], FALSE);
   if ($edit->cid) {

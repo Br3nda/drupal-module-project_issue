@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.31 2006/12/29 04:03:53 dww Exp $
+// $Id: issue.inc,v 1.172.2.32 2007/01/03 15:10:30 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -490,7 +490,7 @@ function project_issue_form(&$node, &$param) {
     $form['project_info'] = array(
       '#type' => 'fieldset',
       '#title' => t('Project information'),
-      '#prefix' => '<div class="options">',
+      '#prefix' => '<div class="inline-options">',
       '#suffix' => '</div>',
     );
     $form['project_info']['pid'] = array(
@@ -518,7 +518,7 @@ function project_issue_form(&$node, &$param) {
     $form['issue_info'] = array(
       '#type' => 'fieldset',
       '#title' => t('Issue information'),
-      '#prefix' => '<div class="options">',
+      '#prefix' => '<div class="inline-options">',
       '#suffix' => '</div>',
     );
     $form['issue_info']['category'] = array(

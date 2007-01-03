@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.1.2.3.2.4 2006/12/30 18:26:43 dww Exp $ */
+/* $Id: project_issue.css,v 1.1.2.3.2.5 2007/01/03 15:10:34 dww Exp $ */
 /* $Name:  $ */
 
 .project .header {
@@ -6,7 +6,7 @@
   padding-top: 0.5em;
 }
 
-.project .node-form .options fieldset .form-item {
+.project .node-form .inline-options fieldset .form-item {
   float: left;
   padding-right: 0.8em;
   margin: 0.05em 0.1em;
@@ -20,7 +20,7 @@
   visibility: hidden;
 }
 
-.project .node-form .options fieldset {
+.project .node-form .insline-options fieldset {
   display: inline-table;
 }
 

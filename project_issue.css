@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.8 2007/01/03 15:10:56 dww Exp $ */
+/* $Id: project_issue.css,v 1.9 2007/01/04 11:05:46 dww Exp $ */
 /* $Name:  $ */
 
 .project .header {
@@ -18,10 +18,6 @@
   height: 0;
   clear: both;
   visibility: hidden;
-}
-
-.project-issue .node-form .inline-options fieldset {
-  display: inline-table;
 }
 
 table.projects {

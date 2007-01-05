@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.212 2007-01-05 00:21:08 dww Exp $
+// $Id: issue.inc,v 1.213 2007-01-05 22:49:41 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1012,7 +1012,7 @@ function project_issue_query($project = 0, $query = NULL) {
   $categories = project_issue_category();
   $components = array();
   if ($project->nid) {
-    drupal_set_title(t('search issues for %name', array('%name' => $project->title)));
+    drupal_set_title(t('Search issues for %name', array('%name' => $project->title)));
     foreach ($project->components as $component) {
       $components[$component] = $component;
     }
@@ -1023,7 +1023,7 @@ function project_issue_query($project = 0, $query = NULL) {
   else {
     $uris = NULL;
     $projects = project_projects_select_options($uris);
-    drupal_set_title(t('search issues for all projects'));
+    drupal_set_title(t('Search issues for all projects'));
   }
   if (is_null($query)) {
     $query = new StdClass();

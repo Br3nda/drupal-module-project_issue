@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.211 2007-01-03 15:10:56 dww Exp $
+// $Id: issue.inc,v 1.212 2007-01-05 00:21:08 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -303,13 +303,13 @@ function project_issue_statistics($project = 0) {
   $result = db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total, p.sid FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s GROUP BY p.sid', 'p'), $filter);
   while ($stat = db_fetch_object($result)) {
     $rows[$stat->sid][0] = project_issue_state($stat->sid);;
-    $rows[$stat->sid][1] = array('data' => $stat->total, 'class' => 'project-numeric');
-    $rows[$stat->sid][2] = array('data' => number_format($stat->total / $total * 100) .'%', 'class' => 'project-numeric2');
+    $rows[$stat->sid][1] = array('data' => $stat->total, 'class' => 'project-issue-numeric');
+    $rows[$stat->sid][2] = array('data' => number_format($stat->total / $total * 100) .'%', 'class' => 'project-issue-numeric-light');
   }
   // Activity this week
   $result = db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total, p.sid FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND n.changed > %d GROUP BY p.sid', 'p'), $filter, $duration);
   while ($stat = db_fetch_object($result)) {
-    $rows[$stat->sid][3] = array('data' => $stat->total, 'class' => 'project-numeric');
+    $rows[$stat->sid][3] = array('data' => $stat->total, 'class' => 'project-issue-numeric');
   }
   $output .= '<h2>'. t('Issue activity') .'</h2>';
   $output .= theme('table', $header, $rows);
@@ -322,9 +322,9 @@ function project_issue_statistics($project = 0) {
 
     $orig = array('project' => array('data' => 0));
     foreach (project_issue_state() as $key => $value) {
-      $orig[$key] = array('data' => '', 'class' => 'project-numeric');
+      $orig[$key] = array('data' => '', 'class' => 'project-issue-numeric');
     }
-    $orig['total'] = array('data' => '', 'class' => 'project-numeric');
+    $orig['total'] = array('data' => '', 'class' => 'project-issue-numeric');
 
     while ($stat = db_fetch_object($result)) {
       if (!$rows[$stat->nid]['project']) {
@@ -877,7 +877,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
       '#weight' => -5,
     );
     $node->content['project_issue_header'] = array(
-      '#value' => '<p>'. t('Description') .'</p>',
+      '#value' => '<div class="header">'. t('Description') .'</div>',
       '#weight' => -3,
     );
     $node->content['project_issue_comments'] = array(
@@ -1474,8 +1474,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     while ($node = db_fetch_object($result)) {
       $node = node_load($node->nid);
       $row = array();
-      $number++;
-      $class = 'state_'. ($number % 2 ? 'light' : 'dark') ."_$node->sid";
+      $class = "state-$node->sid";
       if (!$project->nid) {
         $row[] = l($projects[$node->pid], "project/issues/$node->pid");
       }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.215 2007-01-06 01:01:19 dww Exp $
+// $Id: issue.inc,v 1.216 2007-01-06 03:48:44 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -888,14 +888,14 @@ function project_issue_view($node, $teaser = false, $page = false) {
     );
 
     // Breadcrumb navigation
-    $breadcrumb[] = array('path' => 'project', 'title' => t('projects'));
+    $breadcrumb[] = array('path' => 'project', 'title' => t('Projects'));
     if (project_use_taxonomy()) {
       $taxonomy_terms = taxonomy_node_get_terms($node->pid);
       $term = reset($taxonomy_terms);
       $breadcrumb[] = array('path' => 'project/'. $term->name, 'title' => $term->name);
     }
     $breadcrumb[] = array('path' => 'node/'. $project->nid, 'title' => $project->title);
-    $breadcrumb[] = array('path' => 'project/issues/'. $project->uri, 'title' => t('issues'));
+    $breadcrumb[] = array('path' => 'project/issues/'. $project->uri, 'title' => t('Issues'));
     $breadcrumb[] = array('path' => 'node/'. $node->nid);
     menu_set_location($breadcrumb);
   }
@@ -1363,7 +1363,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
 
   if ($project) {
-    drupal_set_title(t('issues for %name', array('%name' => $project->title)));
+    drupal_set_title(t('Issues for %name', array('%name' => $project->title)));
     if (module_exists('project_release')) {
       $releases = project_release_get_releases($project, 0);
     }
@@ -1401,7 +1401,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     // only set a more descriptive title if we're not looking at "my
     // issues" or "my projects", since those set their own title already.
     if (!isset($_GET['q']) || !strpos($_GET['q'], '/user')) {
-      drupal_set_title(t('issues for all projects'));
+      drupal_set_title(t('Issues for all projects'));
     }
     $links = array();
     if (user_access('create project issues')) {

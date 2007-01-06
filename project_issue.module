@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.15 2007-01-06 03:53:54 dww Exp $
+// $Id: project_issue.module,v 1.16 2007-01-06 19:17:10 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -622,7 +622,7 @@ function project_issue_user_page($arg = 0) {
   $output = theme('table', $header, $rows, array('class' => 'projects'));
   $output .= l('#', "project/user/$user->name");
 
-  $output .= theme('box', t('Issues'), project_issue_query_result($query, 'html', false));
+  $output .= theme('box', t('Issues'), project_issue_query_result($query, 'html', false, false));
 
   return $output;
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.13 2007/01/05 23:21:51 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.14 2007/01/06 01:01:16 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -471,6 +471,7 @@ function project_issue_form(&$node, &$param) {
     if ($project->components) {
       $components = array(t('<none>'));
       foreach ($project->components as $component) {
+        $component = check_plain($component);
         $components[$component] = $component;
       }
     }
@@ -938,6 +939,7 @@ function project_issue_query($project = 0, $query = NULL) {
   if ($project->nid) {
     drupal_set_title(t('search issues for %name', array('%name' => theme('placeholder', $project->title))));
     foreach ($project->components as $component) {
+      $component = check_plain($component);
       $components[$component] = $component;
     }
     if (module_exist('project_release')) {

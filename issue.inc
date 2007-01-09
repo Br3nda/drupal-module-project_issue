@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.14 2007/01/06 01:01:16 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.15 2007/01/09 06:49:31 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1286,7 +1286,7 @@ function project_issue_admin_delete_state_submit($form_id, $form_values) {
   }
 }
 
-function project_issue_query_result($query = NULL, $format = 'html', $search = true) {
+function project_issue_query_result($query = NULL, $format = 'html', $search = true, $set_title = true) {
   global $user;
   $query = project_issue_query_parse($query);
   // $query must have a real value now, or the rest of this function fails.
@@ -1303,7 +1303,9 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
 
   if ($project) {
-    drupal_set_title(t('issues for %name', array('%name' => theme('placeholder', $project->title))));
+    if ($set_title) {
+      drupal_set_title(t('issues for %name', array('%name' => theme('placeholder', $project->title))));
+    }
     if (module_exist('project_release')) {
       $releases = project_release_get_releases($project, 0);
     }

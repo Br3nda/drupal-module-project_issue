@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.68 2006/12/26 00:40:10 dww Exp $
+// $Id: mail.inc,v 1.69 2007/01/15 08:43:48 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -104,14 +104,16 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
       // Send the user his errors
       $mailto = mailhandler_get_fromaddress($header, $mailbox);
       $mailfrom = variable_get('site_mail', ini_get('sendmail_from'));
-      $headers = "From: $mailfrom\nReply-to: $mailfrom\nX-Mailer: Drupal Project module (http://drupal.org/project/project)\nReturn-path: $mailfrom\nErrors-to: $mailfrom";
+      $headers = array(
+        'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
+      );
 
       $body = t('You had some errors in your submission:');
       foreach ($error as $field => $text) {
         $body .= "\n * $field: $text";
       }
 
-      drupal_mail('project_issue_mailhandler_error', $mailto, t('Email submission to !sn failed - !subj', array('!sn' => variable_get('site_name', 'Drupal'), '!subj' => $header->subject)), $body, $headers);
+      drupal_mail('project_issue_mailhandler_error', $mailto, t('Email submission to !sn failed - !subj', array('!sn' => variable_get('site_name', 'Drupal'), '!subj' => $header->subject)), $body, $mailfrom, $headers);
     }
 
     // Return a NULL result so mailhandler doesn't save the node using the default methods.
@@ -271,24 +273,24 @@ function project_mail_notify($node) {
   $sender->mail = $project->mail;
   $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']);
   $header = array(
-    "Return-Path: <$sender->mail>",
-    'Date: '. date('r'),
-    "From: $sender->name <$sender->mail>",
-    'X-Mailer: Drupal Project module (http://drupal.org/project/project)',
-    "List-Id: $project->title <$project->uri-issues-$domain>",
-    'List-Archive: <'. url("project/issues/$project->uri", NULL, NULL, 1) .'>',
-    'List-Subscribe: <'. url("node/$project->uri", NULL, NULL, 1) .'>',
-    'List-Unsubscribe: <'. url("node/$project->uri", NULL, NULL, 1) .'>'
+    'Return-Path' => "<$sender->mail>",
+    'Date' => date('r'),
+    'From' => "$sender->name <$sender->mail>",
+    'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
+    'List-Id' => "$project->title <$project->uri-issues-$domain>",
+    'List-Archive' => '<'. url("project/issues/$project->uri", NULL, NULL, 1) .'>',
+    'List-Subscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>',
+    'List-Unsubscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>'
   );
   if ($replyto = variable_get('project_reply_to', '')) {
-    $header[] = "Reply-To: $project->title <$replyto>";
+    $header['Reply-To'] = "$project->title <$replyto>";
   }
 
   if (count($history)) {
     $prev = end($history);
-    $header[] = "Message-Id: <type=project&nid=$node->nid&cid=$entry->cid&host=@$domain>";
-    $header[] = "In-Reply-To: <type=project&nid=$node->nid&host=@$domain>";
-    $header[] = "References: <type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$prev->cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
+    $header['Message-Id'] = "<type=project&nid=$node->nid&cid=$entry->cid&host=@$domain>";
+    $header['In-Reply-To'] = "<type=project&nid=$node->nid&host=@$domain>";
+    $header['References'] = "<type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$prev->cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
 
     $body .= "\n\n\n";
     $body .= t('Previous comments:');
@@ -308,7 +310,7 @@ function project_mail_notify($node) {
     }
   }
   else {
-    $header[] = "Message-Id: <type=project&nid=$node->nid&host=@$domain>";
+    $header['Message-Id'] = "<type=project&nid=$node->nid&host=@$domain>";
   }
 
   $body = "$links\n$summary\n$body";
@@ -324,7 +326,7 @@ function project_mail_notify($node) {
   $node->title = "[$project->title " . t("$node->category") ."] $node->title";
 
   while ($recipient = db_fetch_object($result)) {
-    drupal_mail('project_issue_update', $recipient->mail, $node->title, $body, implode("\n", $header));
+    drupal_mail('project_issue_update', $recipient->mail, $node->title, $body, NULL, $header);
   }
 
   if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {
@@ -336,8 +338,7 @@ function project_mail_notify($node) {
   }
 
   if ($project->mail_copy) {
-    drupal_mail('project_issue_update', $project->mail_copy, $node->title, $body, implode("\n", $header));
-
+    drupal_mail('project_issue_update', $project->mail_copy, $node->title, $body, NULL, $header);
   }
 }
 
@@ -358,15 +359,15 @@ function project_mail_reminder() {
     while (($node = db_fetch_object($result)) || !empty($body)) {
       if ($body && $mail && ((!$node) || ($mail != $node->mail))) {
         $header = array(
-          "Return-Path: <$sender->mail;>",
-          'Date: '. date('r'),
-          "From: $sender->name <$sender->mail>",
-          'X-Mailer: Drupal Project Issues module (http://drupal.org/project/project_issue)',
-          "List-Id: $sender->name <project-reminder-". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']) .'>',
-          'List-Archive: <'. url('project', NULL, NULL, 1) .'>',
+          'Return-Path' => "<$sender->mail;>",
+          'Date' => date('r'),
+          'From' => "$sender->name <$sender->mail>",
+          'X-Mailer' => 'Drupal Project Issues module (http://drupal.org/project/project_issue)',
+          'List-Id' => "$sender->name <project-reminder-". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']) .'>',
+          'List-Archive' => '<'. url('project', NULL, NULL, 1) .'>',
         );
 
-        drupal_mail('project_issue_reminder', $mail, t('Your submitted bugs for !date', array('!date' => date('F d, Y', time()))), $body, implode("\n", $header));
+        drupal_mail('project_issue_reminder', $mail, t('Your submitted bugs for !date', array('!date' => date('F d, Y', time()))), $body, NULL, $header);
 
         $body = '';
       }
@@ -395,10 +396,10 @@ function project_mail_reminder() {
 function project_mail_digest() {
   $body = array();
   $header = array(
-    'Date: '. date('r'),
-    'X-Mailer: Drupal Project Issues module (http://drupal.org/project/project_issue)',
-    "List-Id: $project->title <". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']) .'-project-issues-digest>',
-    'List-Archive: <'. url('project/issues?priorities=1', NULL, NULL, 1) .'>',
+    'Date' => date('r'),
+    'X-Mailer' => 'Drupal Project Issues module (http://drupal.org/project/project_issue)',
+    'List-Id' => "$project->title <". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']) .'-project-issues-digest>',
+    'List-Archive' => '<'. url('project/issues?priorities=1', NULL, NULL, 1) .'>',
   );
 
   $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.* FROM {node} n INNER JOIN {project_issue_projects} p ON n.nid = p.nid WHERE n.status = 1 AND p.mail_digest <> '' ORDER BY n.title, p.mail_digest"));
@@ -422,9 +423,9 @@ function project_mail_digest() {
   }
 
   foreach ($body as $mailto => $text) {
-    $header['from'] = "From: $mailto";
-    $header['return-path'] = "Return-Path: <$mailto>";
+    $header['From'] = $mailto;
+    $header['Return-Path'] = "<$mailto>";
 
-    drupal_mail('project_issue_critical_summary', $mailto, t('Release critical bugs for !date', array('!date' => date('F d, Y', time()))), $text, implode("\n", $header));
+    drupal_mail('project_issue_critical_summary', $mailto, t('Release critical bugs for !date', array('!date' => date('F d, Y', time()))), $text, NULL, $header);
   }
 }

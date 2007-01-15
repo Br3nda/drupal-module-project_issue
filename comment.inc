@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.74 2007/01/05 00:21:08 dww Exp $
+// $Id: comment.inc,v 1.75 2007/01/15 23:53:08 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -272,5 +272,6 @@ function project_comment_form_add_preview($form, $edit) {
     $output .= node_view($node, NULL, TRUE);
     $form['comment_preview_below'] = array('#value' => $output, '#weight' => 100);
   }
+  unset($form['#sorted']);
   return $form;
 }

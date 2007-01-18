@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.16 2007/01/06 19:17:10 dww Exp $
+// $Id: project_issue.module,v 1.17 2007/01/18 10:17:33 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -72,10 +72,6 @@ function project_issue_perm() {
  * Callback for the main settings page.
  */
 function project_issue_settings_form() {
-  $project_directory = file_create_path(variable_get('project_directory_issues', 'issues'));
-  if (!file_check_directory($project_directory)) {
-    $error['project_directory_issues'] = theme('error', t('Directory does not exist, or is not writable.'));
-  }
 
   $form['project_directory_issues']  = array(
     '#type' => 'textfield',
@@ -84,6 +80,7 @@ function project_issue_settings_form() {
     '#size' => 30,
     '#maxlength' => 255,
     '#description' => t("Subdirectory in the directory '%dir' where attachments to issues will be stored.", array('%dir' => variable_get('file_directory_path', 'files') . '/')),
+    '#after_build' => array('project_issue_check_directory'),
   );
 
   if (module_exists('mailhandler')) {
@@ -690,3 +687,13 @@ function project_issue_project_delete($node) {
   db_query('DELETE FROM {project_issues} WHERE pid = %d', $node->nid);
   db_query('DELETE FROM {project_subscriptions} WHERE nid = %d', $node->nid);
 }
+
+/**
+ * Check whether the intended issues directory exists and ensure it is writable.
+ */
+function project_issue_check_directory($form_element) {
+  $directory = file_create_path($form_element['#value']);
+  file_check_directory($directory, FILE_CREATE_DIRECTORY, $form_element['#parents'][0]);
+  return $form_element;
+}
+

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.37 2007/01/15 10:09:40 dww Exp $
+// $Id: issue.inc,v 1.172.2.38 2007/01/18 10:17:52 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -582,13 +582,25 @@ function project_issue_form(&$node, &$param) {
       '#rows' => 10,
     );
     $form['issue_details']['format'] = filter_form($node->format);
+
+    if (file_check_directory(file_create_path(variable_get('project_directory_issues', 'issues')), 0)) {
     $form['issue_details']['file_issue'] = array(
       '#type' => 'file',
       '#title' => t('File attachment'),
       '#size' => 40,
       '#description' => ($node->file || $node->file_path ? t('A file already exists, if you upload another file the current file will be replaced.') : t('Optionally attach a file, for example a patch or a screenshot.')),
     );
-
+    }
+    else {
+      $msg = t('File attachments are disabled. The issue directory has not been properly configured.');
+      if (user_access('administer site configuration')) {
+        $msg .= ' '. t('Please visit the %admin-settings-project-issue page.', array('%admin-settings-project-issue' => l(t('project_issue settings'), 'admin/settings/project_issue')));
+      }
+      else {
+        $msg .= ' '. t('Please contact the site administrator.');
+      }
+      drupal_set_message($msg, 'warning');
+    }
   }
   else {
     $form['pid'] = array(

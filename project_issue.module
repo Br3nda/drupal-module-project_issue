@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.4.2.3.2.16 2007/01/18 12:04:02 dww Exp $
+// $Id: project_issue.module,v 1.4.2.3.2.17 2007/01/23 23:51:17 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -94,6 +94,28 @@ function project_issue_settings() {
       '#options' => $items,
     );
   }
+
+  $upload_extensions_default = variable_get('upload_extensions_default', 'patch jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp');
+
+  $roles = user_roles(0, 'create project issues');
+  $form['roles'] = array('#type' => 'value', '#value' => $roles);
+
+  foreach ($roles as $rid => $role) {
+    $form['project_issues_settings_role_'. $rid] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Settings for @role', array('@role' => $role)),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['project_issues_settings_role_'. $rid]['project_issues_extensions_'. $rid] = array(
+      '#type' => 'textfield',
+      '#title' => t('Permitted file extensions'),
+      '#default_value' => variable_get('project_issues_extensions_'. $rid, $upload_extensions_default),
+      '#maxlength' => 255,
+      '#description' => t('Extensions that users in this role can upload. Separate extensions with a space and do not include the leading dot.'),
+    );
+  }
+
   return $form;
 }
 
@@ -649,3 +671,45 @@ function project_issue_check_directory($form_element) {
   return $form_element;
 }
 
+/**
+ * Munge the filename as needed for security purposes.
+ *
+ * Copied from the core upload module.
+ *
+ * @param $filename
+ *   The name of a file to modify.
+ *
+ * @return $filename
+ *   The potentially modified $filename.
+ */
+function project_issue_munge_filename($filename) {
+  global $user;
+
+  $original = $filename;
+
+  // Allow potentially insecure uploads for very savvy users and admin
+  if (!variable_get('allow_insecure_uploads', 0)) {
+
+    $extensions = '';
+    foreach ($user->roles as $rid => $name) {
+      $extensions .= ' '. variable_get("project_issues_extensions_$rid", variable_get('project_issues_extensions_default', 'patch jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp'));
+    }
+
+    $whitelist = array_unique(explode(' ', trim($extensions)));
+
+    $filename_parts = explode('.', $filename);
+
+    $new_filename = array_shift($filename_parts); // Remove file basename.
+    $final_extension = array_pop($filename_parts); // Remove final extension.
+
+    foreach ($filename_parts as $filename_part) {
+      $new_filename .= ".$filename_part";
+      if (!in_array($filename_part, $whitelist) && preg_match("/^[a-zA-Z]{2,5}\d?$/", $filename_part)) {
+        $new_filename .= '_';
+      }
+    }
+    $filename = "$new_filename.$final_extension";
+  }
+
+  return $filename;
+}

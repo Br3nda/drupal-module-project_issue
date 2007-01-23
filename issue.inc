@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.18 2007/01/18 10:17:36 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.19 2007/01/23 23:51:17 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -707,8 +707,11 @@ function project_issue_node_form_validate($form_id, $form) {
       empty($form_values['title']) && form_set_error('title', t('You have to specify a valid title.'));
       empty($form_values['body']) && form_set_error('body', t('You have to specify a valid description.'));
 
-      $file = file_check_upload('file_issue');
-      $form_values['file'] = file_save_upload($file);
+      if ($file = file_check_upload('file_issue')) {
+        if (project_issue_validate_file($file)) {
+          $form_values['file'] = file_save_upload($file);
+        }
+      }
     }
   }
 }
@@ -778,7 +781,9 @@ function project_issue_comment_validate(&$node) {
       }
 
       $file = file_check_upload('file_issue');
-      $node->file = file_save_upload($file);
+      if ($file && project_issue_validate_file($file)) {
+        $node->file = file_save_upload($file);
+      }
     }
     elseif (isset($node->pid)) {
       form_set_error('pid', t('You have to specify a valid project.'));
@@ -786,6 +791,23 @@ function project_issue_comment_validate(&$node) {
   }
 
   return $node;
+}
+
+/**
+ * Ensure only files with allowed extension are uploaded.
+ *
+ */
+function project_issue_validate_file($file) {
+  global $user;
+  foreach ($user->roles as $rid => $name) {
+    $extensions = variable_get("project_issues_extensions_$rid", variable_get('project_issues_extensions_default', 'patch jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp'));
+    $regex = '/\.('. ereg_replace(' +', '|', preg_quote($extensions)) .')$/i';
+    if (!preg_match($regex, $file->filename)) {
+      form_set_error('file_issue', t('The selected file %name can not be attached to this post, because it is only possible to attach files with the following extensions: %files-allowed.', array('%name' => $file->filename, '%files-allowed' => $extensions)));
+      return FALSE;
+    }
+  }
+  return TRUE;
 }
 
 function project_issue_view(&$node, $teaser = false, $page = false) {
@@ -844,9 +866,10 @@ function project_issue_load($node) {
 
 function project_issue_insert($node) {
   if ($node->file) {
-    $file = file_save_upload($node->file, variable_get('project_directory_issues', 'issues'));
+    $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
+    $node->file->filename = project_issue_munge_filename($node->file->filename);
+    $file = file_save_upload($node->file, $directory);
   }
-
   db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, file_path, file_mime, file_size) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', '%s', %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize);
   project_mail_notify($node);
 }

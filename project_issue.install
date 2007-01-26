@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.6 2006/12/22 23:54:14 dww Exp $
+// $Id: project_issue.install,v 1.7 2007/01/26 08:05:01 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -66,6 +66,7 @@ function project_issue_install() {
           name varchar(32) NOT NULL default '',
           weight tinyint(2) DEFAULT '0' NOT NULL,
           author_has tinyint(2) DEFAULT '0' NOT NULL,
+          default_query tinyint(2) DEFAULT '0' NOT NULL,
           PRIMARY KEY (sid)
         ) TYPE=MyISAM
         /*!40100 DEFAULT CHARACTER SET utf8 */;");
@@ -131,6 +132,7 @@ function project_issue_install() {
             name varchar(32) NOT NULL default '',
             weight smallint DEFAULT '0' NOT NULL,
             author_has smallint DEFAULT '0' NOT NULL,
+            default_query smallint DEFAULT '0' NOT NULL,
             PRIMARY KEY  (sid)
           );");
       }
@@ -200,5 +202,19 @@ function project_issue_update_1() {
 function project_issue_update_500() {
   $ret = array();
   $ret[] = update_sql("UPDATE {system} SET weight = 2 WHERE name = 'project_issue'");
+  return $ret;
+}
+
+function project_issue_update_501() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql('ALTER TABLE {project_issue_state} ADD default_query tinyint NOT NULL');
+      break;
+    case 'pgsql':
+      $ret[] = update_sql('ALTER TABLE {project_issue_state} ADD default_query smallint');
+      break;
+  }
   return $ret;
 }

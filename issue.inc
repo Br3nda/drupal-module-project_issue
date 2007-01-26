@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.221 2007/01/23 23:51:12 dww Exp $
+// $Id: issue.inc,v 1.222 2007/01/26 08:05:01 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -997,7 +997,26 @@ function project_issue_access($op, $node) {
 }
 
 // Support stuff
-function project_issue_state($sid = 0, $restrict = false, $is_author = false) {
+
+/**
+ * Return information about project issue state values.
+ *
+ * @param $sid
+ *   Integer state id to return information about, or 0 for all states.
+ * @param $restrict
+ *   Boolean to determine if states should be restricted based on the
+ *   permissions of the current user.
+ * @param $is_author
+ *   Boolean that indicates if the current user is the author of the
+ *   issue, which can potentially grant a wider selection of states.
+ * @param $defaults
+ *   Boolean to request the states used for default issue queries.
+ *
+ * @return
+ *   An array of states (sid as key, name as value) that match the
+ *   given filters, or the name of the requested state. 
+ */
+function project_issue_state($sid = 0, $restrict = false, $is_author = false, $defaults = false) {
   static $options;
 
   if (!$options) {
@@ -1015,12 +1034,29 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false) {
         $states[$state->sid] = $state->name;
       }
     }
+    else if ($defaults) {
+      if ($state->default_query) {
+        $states[$state->sid] = $state->name;
+      }
+    }
     else {
       $states[$state->sid] = $state->name;
     }
   }
 
   return $sid ? $states[$sid] : $states;
+}
+
+/**
+ * Return an array of state ids that should be used for default queries.
+ */
+function project_issue_default_states() {
+  static $defaults;
+  if (empty($defaults)) {
+    $states = project_issue_state(0, false, false, true);
+    $defaults = !empty($states) ? array_keys($states) : array(1, 2, 4);
+  }
+  return $defaults;
 }
 
 function project_issue_priority($priority = 0) {
@@ -1152,8 +1188,8 @@ function project_issue_query($project = 0, $query = NULL) {
   $form['states'] = array(
     '#type' => 'select',
     '#title' => t('Status'),
-    '#default_value' => ($query->states) ? $query->states : array(1, 2, 8, 13, 14),
     '#options' => $states,
+    '#default_value' => ($query->states) ? $query->states : project_issue_default_states(),
     '#attributes' => array('size' => 5),
     '#multiple' => TRUE,
   );
@@ -1239,22 +1275,33 @@ function theme_project_issue_query($form) {
 
 function theme_project_issue_admin_states_form($form) {
   $header = array(
-        array('data' => t('ID')),
-        array('data' => t('Name')),
-        array('data' => t('Weight')),
-        array('data' => t('Author may set')),
-        array('data' => t('Default')),
-        array('data' => t('Operations'))
-      );
+    array('data' => t('ID')),
+    array('data' => t('Name')),
+    array('data' => t('Weight')),
+    array('data' => t('Author may set')),
+    array('data' => t('In default queries')),
+    array('data' => t('Default status')),
+    array('data' => t('Operations'))
+  );
   foreach (element_children($form['status']) as $key) {
-    $rows[] = array(drupal_render($form['status'][$key]['sid']),
-                    drupal_render($form['status'][$key]['name']),
-                    drupal_render($form['status'][$key]['weight']),
-                    drupal_render($form['status'][$key]['author_has']),
-                    drupal_render($form['default_state'][$key]),
-                    drupal_render($form['delete'][$key]));
+    $rows[] = array(
+      drupal_render($form['status'][$key]['sid']),
+      drupal_render($form['status'][$key]['name']),
+      drupal_render($form['status'][$key]['weight']),
+      drupal_render($form['status'][$key]['author_has']),
+      drupal_render($form['status'][$key]['default_query']),
+      drupal_render($form['default_state'][$key]),
+      drupal_render($form['delete'][$key])
+    );
   }
-  $rows[] = array(NULL, drupal_render($form['status_add']['name']), drupal_render($form['status_add']['weight']), drupal_render($form['status_add']['author_has']), NULL, NULL);
+  $rows[] = array(
+    NULL,
+    drupal_render($form['status_add']['name']),
+    drupal_render($form['status_add']['weight']),
+    drupal_render($form['status_add']['author_has']),
+    drupal_render($form['status_add']['default_query']),
+    NULL, NULL,
+  );
   $output = '<div>' . theme('table', $header, $rows) . '</div>';
   $output .= drupal_render($form);
   return $output;
@@ -1263,6 +1310,7 @@ function theme_project_issue_admin_states_form($form) {
 function project_issue_admin_states_form() {
   $result = db_query('SELECT * FROM {project_issue_state} ORDER BY weight');
   $default_state = variable_get('project_issue_default_state', 1);
+  $default_states = project_issue_default_states();
   $form['status']['#tree'] = TRUE;
   while ($state = db_fetch_object($result)) {
     $options[$state->sid] = '';
@@ -1284,6 +1332,10 @@ function project_issue_admin_states_form() {
     $form['status'][$state->sid]['author_has'] = array(
       '#type' => 'checkbox',
       '#default_value' => $state->author_has,
+    );
+    $form['status'][$state->sid]['default_query'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => in_array($state->sid, $default_states),
     );
     $del_link = ($state->sid != $default_state) ? l(t('Delete'), 'admin/project/project-issue-status/delete/'. $state->sid) : '';
     $form['delete'][$state->sid] = array(
@@ -1309,6 +1361,9 @@ function project_issue_admin_states_form() {
   $form['status_add']['author_has'] = array(
     '#type' => 'checkbox',
   );
+  $form['status_add']['default_query'] = array(
+    '#type' => 'checkbox',
+  );
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -1328,10 +1383,10 @@ function project_issue_admin_states_form_submit($form_id, $form_values) {
   // Update existing status options.
   if($form_values['status']) {
     foreach ($form_values['status'] as $sid => $value) {
-      $state = db_fetch_object(db_query('SELECT name, weight, author_has FROM {project_issue_state} WHERE sid = %d', $sid));
+      $state = db_fetch_object(db_query('SELECT name, weight, author_has, default_query FROM {project_issue_state} WHERE sid = %d', $sid));
       // Check to see whether the record needs updating.
-      if (($state->name != $value['name']) || ($state->weight != $value['weight']) || ($state->author_has != $value['author_has'])) {
-        db_query("UPDATE {project_issue_state} SET name = '%s', weight = %d, author_has = %d WHERE sid = %d", $value['name'], $value['weight'], $value['author_has'], $sid);
+      if (($state->name != $value['name']) || ($state->weight != $value['weight']) || ($state->author_has != $value['author_has']) || ($state->default_query != $value['default_query'])) {
+        db_query("UPDATE {project_issue_state} SET name = '%s', weight = %d, author_has = %d, default_query = %d WHERE sid = %d", $value['name'], $value['weight'], $value['author_has'], $value['default_query'], $sid);
       }
     }
   }
@@ -1340,7 +1395,7 @@ function project_issue_admin_states_form_submit($form_id, $form_values) {
     // Check to see whether the state already exists:
     $query = db_query("SELECT name FROM {project_issue_state} WHERE name = '%s'", $form_values['status_add']['name']);
     if (!db_num_rows($query)) {
-      db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d", $form_values['status_add']['name'], $form_values['status_add']['weight'], $form_values['status_add']['author_has']);
+      db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d, default_query = %d", $form_values['status_add']['name'], $form_values['status_add']['weight'], $form_values['status_add']['author_has'], $form_values['status_add']['default_query']);
     }
     else {
       drupal_set_message(t('Status %status already exists.', array ('%status' => $form_values['status_add']['name'])));
@@ -1598,8 +1653,9 @@ function project_issue_query_result_quick_search($query, $projects, $states, $pr
   }
 
   // special case for states - we always want the defaults
-  if ($query->states != '1,2,8,13,14,4') {
-    foreach (array(1, 2, 8, 13, 14, 4) as $state) {
+  $default_states = project_issue_default_states();
+  if ($query->states != implode(',', $default_states)) {
+    foreach ($default_states as $state) {
       $options[] = $state;
       $values[]  = $states[$state];
     }
@@ -1707,7 +1763,7 @@ function project_issue_query_parse($query = NULL) {
   }
 
   if (empty($query->states)) {
-    $query->states = array(1, 2, 8, 13, 14, 4);
+    $query->states = project_issue_default_states();
   }
   if (!empty($_REQUEST['participated']) && empty($query->participated)) {
     $query->participated = (int)$_REQUEST['participated'];

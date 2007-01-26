@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.20 2007-01-26 08:05:01 dww Exp $
+// $Id: project_issue.module,v 1.21 2007-01-26 08:28:05 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -555,7 +555,7 @@ function project_issue_user_page($arg = 0) {
       'class' => 'project-project-updated',
     ),
   );
-  $default_states = project_issue_default_states(FALSE);
+  $default_states = implode(',', project_issue_default_states());
   $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, n.changed, COUNT(p.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} p ON n.nid = p.pid AND p.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = p.nid WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title, n.changed") . tablesort_sql($header), $user->uid);
 
   if (!db_num_rows($result)) {

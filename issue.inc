@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.223 2007/01/28 18:48:53 dww Exp $
+// $Id: issue.inc,v 1.224 2007/01/28 23:49:41 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -39,6 +39,7 @@ function project_issue_page() {
       break;
     case t('Subscribe'):
     case 'subscribe':
+    case 'subscribe-mail':
       $project = project_project_retrieve(arg(3));
       if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
         return drupal_get_form('project_issue_subscribe', $project);
@@ -369,7 +370,7 @@ function project_issue_subscribe_submit($form_id, $form_values) {
       }
     }
     drupal_set_message(t('Subscription settings saved.'));
-    drupal_goto('project/issues/subscribe');
+    drupal_goto('project/issues/subscribe-mail');
 }
 
 
@@ -1488,7 +1489,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     if ($user->uid) {
       $links[] = array(
         'title' => t('Subscribe'),
-        'href' => "project/issues/subscribe/$project->uri",
+        'href' => "project/issues/subscribe-mail/$project->uri",
         'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $project->uri))),
       );
     }
@@ -1523,7 +1524,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     if ($user->uid) {
       $links[] = array(
         'title' => t('Subscribe'),
-        'href' => "project/issues/subscribe",
+        'href' => "project/issues/subscribe-mail",
         'attributes' => array('title' => t('Receive email updates about issues.')),
       );
     }

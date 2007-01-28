@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.222 2007-01-26 08:05:01 dww Exp $
+// $Id: issue.inc,v 1.223 2007-01-28 18:48:53 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1764,6 +1764,9 @@ function project_issue_query_parse($query = NULL) {
 
   if (empty($query->states)) {
     $query->states = project_issue_default_states();
+  }
+  if ($query->states[0] == 'all') {
+    $query->states = array_keys(project_issue_state());
   }
   if (!empty($_REQUEST['participated']) && empty($query->participated)) {
     $query->participated = (int)$_REQUEST['participated'];

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.224 2007/01/28 23:49:41 dww Exp $
+// $Id: issue.inc,v 1.225 2007/01/29 00:07:54 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1396,7 +1396,7 @@ function project_issue_admin_states_form_submit($form_id, $form_values) {
     // Check to see whether the state already exists:
     $query = db_query("SELECT name FROM {project_issue_state} WHERE name = '%s'", $form_values['status_add']['name']);
     if (!db_num_rows($query)) {
-      db_query("INSERT INTO {project_issue_state} SET name = '%s', weight = %d, author_has = %d, default_query = %d", $form_values['status_add']['name'], $form_values['status_add']['weight'], $form_values['status_add']['author_has'], $form_values['status_add']['default_query']);
+      db_query("INSERT INTO {project_issue_state} (name, weight, author_has, default_query) VALUES ('%s', %d, %d, %d)", $form_values['status_add']['name'], $form_values['status_add']['weight'], $form_values['status_add']['author_has'], $form_values['status_add']['default_query']);
     }
     else {
       drupal_set_message(t('Status %status already exists.', array ('%status' => $form_values['status_add']['name'])));

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.7 2007/01/26 08:05:01 dww Exp $
+// $Id: project_issue.install,v 1.8 2007/01/29 00:07:54 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -140,19 +140,27 @@ function project_issue_install() {
   }
 
   if (!$project_issue_state_existed) {
-    db_query("INSERT INTO {project_issue_state} VALUES (1, 'active', -13, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (2, 'fixed', 1, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (3, 'duplicate', 4, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (4, 'postponed', 6, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (5, 'won\'t fix', 9, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (6, 'by design', 11, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (7, 'closed', 13, 1)");
-    db_query("INSERT INTO {project_issue_state} VALUES (8, 'patch (code needs review)', -8, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (13, 'patch (code needs work)', -6, 0)");
-    db_query("INSERT INTO {project_issue_state} VALUES (14, 'patch (ready to commit)', -2, 0)");
+    // sid, name, weight, author-can-set, in-default-queries
+    project_issue_init_state(1, 'active', -13, 0, 1);
+    project_issue_init_state(2, 'fixed', 1, 0, 1);
+    project_issue_init_state(3, 'duplicate', 4, 0, 0);
+    project_issue_init_state(4, 'postponed', 6, 0, 1);
+    project_issue_init_state(5, 'won\'t fix', 9, 0, 0);
+    project_issue_init_state(6, 'by design', 11, 0, 0);
+    project_issue_init_state(7, 'closed', 13, 1, 0);
+    project_issue_init_state(8, 'patch (code needs review)', -8, 0, 0);
+    project_issue_init_state(13, 'patch (code needs work)', -6, 0, 0);
+    project_issue_init_state(14, 'patch (ready to commit)', -2, 0, 0);
   }
 
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'project_issue'");
+}
+
+/**
+ * Initialize a given issue state in the database.
+ */
+function project_issue_init_state($sid, $name, $weight, $author, $query) {
+  db_query("INSERT INTO {project_issue_state} (sid, name, weight, author_has, default_query) VALUES (%d, '%s', %d, %d, %d)", $sid, $name, $weight, $author, $query);
 }
 
 /**
@@ -218,3 +226,4 @@ function project_issue_update_501() {
   }
   return $ret;
 }
+

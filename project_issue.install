@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.1.2.3 2006/11/12 09:19:34 dww Exp $
+// $Id: project_issue.install,v 1.1.2.4 2007/03/01 22:01:43 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -117,6 +117,7 @@ function project_issue_install() {
             file_size int default 0 NOT NULL,
             PRIMARY KEY (cid)
           );");
+        db_query("CREATE SEQUENCE {project}_cid_seq INCREMENT 1 START 1");
       }
       if (!project_issue_db_table_exists('project_subscriptions')) {
         db_query("CREATE TABLE {project_subscriptions} (
@@ -187,6 +188,23 @@ function project_issue_update_1() {
   return $ret;
 }
 
+/**
+ * Add missing sequence for project comments on pgsql.  To avoid SQL
+ * errors when update.php runs (in case the update is run multiple
+ * times, or a site manually fixed this bug already, etc), we make
+ * sure this sequence doesn't already exist before we try to create it.
+ */
+function project_issue_update_2() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'pgsql':
+      if (!db_num_rows(db_query("SELECT relname FROM pg_class WHERE relname = '{project}_cid_seq' AND relkind='S'"))) {
+        $ret[] = update_sql("CREATE SEQUENCE {project}_cid_seq INCREMENT 1 START 1");
+      }
+      break;
+  }
+  return $ret;
+}
 
 function project_issue_db_table_exists($table) {
   switch ($GLOBALS['db_type']) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.225 2007-01-29 00:07:54 dww Exp $
+// $Id: issue.inc,v 1.226 2007-03-01 08:46:57 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1872,7 +1872,7 @@ function project_issue_query_sql($query) {
   }
   else {
     return array(
-      'sql' => db_rewrite_sql('SELECT DISTINCT(n.nid) FROM {node} n INNER JOIN {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {project_comments} c ON c.nid = p.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')'),
+      'sql' => db_rewrite_sql('SELECT DISTINCT(n.nid), n.changed FROM {node} n INNER JOIN {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {project_comments} c ON c.nid = p.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')'),
       'count' => db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN  {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {project_comments} c ON c.nid = p.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')')
     );
   }

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.70.4.6 2007/01/23 23:51:17 dww Exp $
+// $Id: comment.inc,v 1.70.4.7 2007/03/08 08:02:18 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -7,6 +7,10 @@ function project_comment_page() {
   if (user_access('create project issues')) {
     $edit = (object) $_POST['edit'];
     $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
+    if (!node_access('view', $node)) {
+      drupal_access_denied();
+      return;
+    }
 
     if ($_POST['op'] == t('Preview') || $_POST['op'] == t('Submit')) {
       project_comment_validate($edit);

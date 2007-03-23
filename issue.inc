@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.226 2007/03/01 08:46:57 dww Exp $
+// $Id: issue.inc,v 1.227 2007/03/23 17:47:42 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -655,7 +655,8 @@ function project_issue_form($node, $param) {
     );
     $form['issue_details']['format'] = filter_form($node->format);
 
-    if (file_check_directory(file_create_path(variable_get('project_directory_issues', 'issues')), 0)) {
+    $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
+    if (file_check_directory($directory, 0)) {
     $form['issue_details']['file_issue'] = array(
       '#type' => 'file',
       '#title' => t('File attachment'),

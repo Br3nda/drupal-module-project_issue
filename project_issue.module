@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.23 2007-03-28 00:34:38 dww Exp $
+// $Id: project_issue.module,v 1.24 2007-04-18 01:46:29 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -148,13 +148,14 @@ function project_issue_link($type, $node = 0, $main = 0) {
   $links = array();
   switch ($type) {
     case 'node':
-      if ($node->type == 'project_issue') {
-        if (user_access('create project issues')) {
-          $links['project_issue_follow_up'] = array(
-            'title' => t('Follow up'),
-            'href' => "project/comments/add/$node->nid",
-          );
-        }
+      if ($node->type == 'project_issue' &&
+          user_access('create project issues') &&
+          !(arg(0) == 'project' && arg(1) == 'comments')) {
+        // Only add the link if we're not already on an issue follow-up.
+        $links['project_issue_follow_up'] = array(
+          'title' => t('Follow up'),
+          'href' => "project/comments/add/$node->nid",
+        );
       }
       break;
   }

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.77 2007/03/08 08:02:14 dww Exp $
+// $Id: comment.inc,v 1.78 2007/04/29 17:33:52 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -105,6 +105,7 @@ function project_comment_view($node, $main = 0) {
     $i = 0;
     while ($comment = db_fetch_object($result)) {
       $comment->body = db_decode_blob($comment->body);
+      $comment->data = db_decode_blob($comment->data);
       $i++;
       $output .= _project_comment_view_single($comment, $i);
     }
@@ -195,6 +196,7 @@ function _project_comment_view_single($comment, $count) {
 function project_comment_load($cid) {
   $object = db_fetch_object(db_query('SELECT p.*, u.name FROM {project_comments} p INNER JOIN {users} u USING (uid) WHERE p.cid = %d ORDER BY p.created DESC', $cid));
   $object->body = db_decode_blob($object->body);
+  $object->data = db_decode_blob($object->data);
   return $object;
 }
 
@@ -226,7 +228,7 @@ function project_comment_save($edit) {
 
     watchdog('content', t('project_issue: added comment %title', array('%title' => $edit->title)), WATCHDOG_NOTICE, l('view', "node/$node->nid"));
     $node->changed = time();
-    db_query("INSERT INTO {project_comments} (cid, nid, uid, created, changed, body, data, file_path, file_mime, file_size) VALUES (%d, %d, %d, %d, %d, '%s', '%s', '%s', '%s', %d)", $edit->cid, $edit->nid, $edit->uid, $node->changed, $node->changed, $edit->body, serialize($data), $file->filepath, $file->filemime, $file->filesize);
+    db_query("INSERT INTO {project_comments} (cid, nid, uid, created, changed, body, data, file_path, file_mime, file_size) VALUES (%d, %d, %d, %d, %d, %b, %b, '%s', '%s', %d)", $edit->cid, $edit->nid, $edit->uid, $node->changed, $node->changed, $edit->body, serialize($data), $file->filepath, $file->filemime, $file->filesize);
 
     // Update node_comment_statistics so the tracker page lists the number of comments
     $count = db_result(db_query('SELECT COUNT(cid) FROM {project_comments} WHERE nid = %d', $edit->nid));

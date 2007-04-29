@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.227 2007/03/23 17:47:42 dww Exp $
+// $Id: issue.inc,v 1.228 2007/04/29 17:41:39 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1587,7 +1587,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
       if (!$project->nid) {
         $row[] = l($projects[$node->pid], "project/issues/$node->pid");
       }
-      $row[] = l(substr($node->title, 0, 50), "node/$node->nid") . theme('mark', node_mark($node->nid, $node->changed));
+      $row[] = l(drupal_substr($node->title, 0, 50), "node/$node->nid") . theme('mark', node_mark($node->nid, $node->changed));
       $row[] = $states[$node->sid];
       $row[] = $priorities[$node->priority];
       $row[] = t($node->category);

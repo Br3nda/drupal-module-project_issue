@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.6 2006/12/07 23:07:41 dww Exp $
+// $Id: mail.inc,v 1.60.2.7 2007/04/29 17:34:01 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -211,6 +211,8 @@ function project_mail_notify($node) {
   $result = db_query('SELECT * FROM {project_comments} WHERE nid = %d ORDER BY changed', $node->nid);
   if (db_num_rows($result)) {
     while ($comment = db_fetch_object($result)) {
+      $comment->body = db_decode_blob($comment->body);
+      $comment->data = db_decode_blob($comment->data);
       $no_content = empty($comment->body) && empty($comment->file_path);
       if (!$no_content) {
         $history[] = project_comment_load($comment->cid);

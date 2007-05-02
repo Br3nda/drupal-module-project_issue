@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.24 2007-04-18 01:46:29 dww Exp $
+// $Id: project_issue.module,v 1.25 2007-05-02 19:35:33 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -239,19 +239,8 @@ function project_issue_menu($may_cache) {
       'type' => MENU_NORMAL_ITEM,
     );
 
-    $access = user_access('create project issues');
-    // Backwards-compatibility menu item so node/add/project_issue
-    // still works, even though the official type is "project-issue"
-    $items[] = array(
-      'path' => 'node/add/project_issue',
-      'title' => t('Issue'),
-      'callback' => 'project_issue_add_page',
-      'access' => $access,
-      'type' => MENU_CALLBACK,
-      'weight' => 1,
-    );
-
      // Reply to issues
+    $access = user_access('create project issues');
     $items[] = array(
       'path' => 'project/comments',
       'title' => t('Comments'),
@@ -312,21 +301,6 @@ function project_issue_menu($may_cache) {
     drupal_add_css(drupal_get_path('module', 'project_issue') .'/project_issue.css');
   }
   return $items;
-}
-
-/**
- * Backwards compatbility menu callback so node/add/project_issue
- * still works, even though the default is now "project-issue".
- */
-function project_issue_add_page($project = NULL, $category = NULL) {
-  $url = 'node/add/project-issue';
-  if (!empty($project)) {
-    $url .= '/' . $project;
-  }
-  if (!empty($category)) {
-    $url .= '/' . $category;
-  }
-  drupal_goto(check_url($url));
 }
 
 /**

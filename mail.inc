@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.71 2007/04/29 17:41:39 dww Exp $
+// $Id: mail.inc,v 1.72 2007/05/07 19:47:09 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -199,7 +199,6 @@ function project_mail_notify($node) {
   if (defined('PROJECT_NOMAIL')) {
     return;
   }
-  $node = node_load(array('nid' => $node->nid, 'type' => 'project_issue'));
   $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
 
   $fields = array(

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.26 2007-05-13 21:48:40 dww Exp $
+// $Id: project_issue.module,v 1.27 2007-05-15 23:10:20 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -176,6 +176,7 @@ function project_issue_menu($may_cache) {
       'callback' => 'project_issue_page',
       'access' => $access,
       'type' => MENU_NORMAL_ITEM,
+      'weight' => -50,
     );
     $items[] = array(
       'path' => 'project/issues/add',
@@ -229,6 +230,7 @@ function project_issue_menu($may_cache) {
       'callback' => 'project_issue_user_page',
       'access' => $user->uid && $access,
       'type' => MENU_NORMAL_ITEM,
+      'weight' => -49,
     );
 
     $items[] = array(

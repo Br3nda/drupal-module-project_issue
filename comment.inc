@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.78 2007/04/29 17:33:52 dww Exp $
+// $Id: comment.inc,v 1.79 2007/06/04 23:33:05 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -224,6 +224,15 @@ function project_comment_save($edit) {
         $data['new']->$var = $edit->$var;
         $node->$var = $edit->$var;
       }
+    }
+
+    // Add processed cck info into the node object for node_save
+    if (function_exists('_content_widget_invoke')) {
+      $type = content_types($node->type);
+      while (list($field, $val) = each($type['fields'])) {
+        $node->$field = $edit->$field;
+      }
+      _content_widget_invoke('process form values', $node);
     }
 
     watchdog('content', t('project_issue: added comment %title', array('%title' => $edit->title)), WATCHDOG_NOTICE, l('view', "node/$node->nid"));

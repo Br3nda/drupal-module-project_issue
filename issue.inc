@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.230 2007/06/19 23:35:45 dww Exp $
+// $Id: issue.inc,v 1.231 2007/06/21 15:47:29 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -10,12 +10,10 @@ function project_issue_page() {
         $query = new StdClass();
         $query->projects = array($project->nid);
 
-        header('Content-Type: text/xml');
-        print project_issue_query_result($query, 'rss');
+        project_issue_query_result($query, 'rss');
       }
       else {
-        header('Content-Type: text/xml');
-        print project_issue_query_result(NULL, 'rss');
+        project_issue_query_result(NULL, 'rss');
       }
       break;
     case 'add':
@@ -1587,7 +1585,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
 
   if ($format == 'rss') {
-    return project_issue_query_rss($projects, $result);
+    project_issue_query_rss($result, $project);
   }
   elseif (db_num_rows($result)) {
     while ($node = db_fetch_object($result)) {
@@ -1902,41 +1900,16 @@ function project_issue_query_user($value) {
   }
 }
 
-function project_issue_query_rss($projects, $result) {
-  global $base_url, $locale;
-
-  if (db_num_rows($result)) {
-    while ($node = db_fetch_object($result)) {
-      $node = node_load($node->nid);
-
-      $body = $node->teaser ? $node->teaser : $node->body;
-
-      $items .= format_rss_item(
-        $node->title,
-        url("node/$node->nid", NULL, NULL, true),
-        $body,
-        array(
-          'pubDate' => date('r', ($node->updated > $node->created) ? $node->updated : $node->created),
-          'comments' => url("node/$node->nid", NULL, NULL, true),
-          'category' => $projects[$node->pid]
-        )
-      );
-    }
+function project_issue_query_rss($result, $project) {
+  if ($project) {
+    $channel['title'] = variable_get('site_name', 'drupal') .' - '. t('issues for !name', array('!name' => $project->title));
   }
   else {
-    $rows[] = array(array('data' => t('No issues found.'), 'colspan'=> 8));
+    $channel['title'] = variable_get('site_name', 'drupal') .' - '. t('issues');
   }
-
-  $title = variable_get('site_name', 'drupal') .' - '. t('issues');
-  $link = url('project/issues', NULL, NULL, TRUE); // not 100% correct
-  $description = variable_get('site_mission', '');
-
-  $output .= "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-  $output .= "<rss version=\"0.92\" xml:base=\"". $base_url ."\">\n";
-  $output .= format_rss_channel($title, $link, $description, $items, $locale);
-  $output .= "</rss>\n";
-
-  return $output;
+  $channel['link'] = url('project/issues', NULL, NULL, TRUE); // not 100% correct
+    
+  node_feed($result, $channel);
 }
 
 function project_issue_tracker_comments($node) {

@@ -1,4 +1,4 @@
-# $Id: project_issue.pot,v 1.2 2007/07/07 12:22:08 hass Exp $
+# $Id: project_issue.pot,v 1.3 2007/07/07 12:54:48 hass Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
@@ -13,7 +13,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2007-07-07 14:20+0200\n"
+"POT-Creation-Date: 2007-07-07 14:53+0200\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Preview"
 msgstr ""
 
-#: comment.inc:15;37;74 issue.inc:1488;1523 project_issue.module:171;417;549
+#: comment.inc:15;37;74 issue.inc:1488;1523 project_issue.module:163;409;541
 msgid "Submit"
 msgstr ""
 
@@ -58,11 +58,11 @@ msgstr ""
 msgid "content"
 msgstr ""
 
-#: issue.inc:38;448;1500;1535 project_issue.module:208
+#: issue.inc:38;448;1500;1535 project_issue.module:200
 msgid "Subscribe"
 msgstr ""
 
-#: issue.inc:77;106;505;537;541;547 mail.inc:173;175;187;192 project_issue.module:77
+#: issue.inc:77;106;505;537;541;547 mail.inc:173;175;187;192 project_issue.module:69
 msgid "<none>"
 msgstr ""
 
@@ -110,7 +110,7 @@ msgstr ""
 msgid "Issue activity"
 msgstr ""
 
-#: issue.inc:319;460;569;687;1549;1684 mail.inc:20;205 project_issue.module:503 project_issue.info:0
+#: issue.inc:319;460;569;687;1549;1684 mail.inc:20;205 project_issue.module:495 project_issue.info:0
 msgid "Project"
 msgstr ""
 
@@ -158,7 +158,7 @@ msgstr ""
 msgid "Project information"
 msgstr ""
 
-#: issue.inc:591 project_issue.module:317
+#: issue.inc:591 project_issue.module:309
 msgid "Issue information"
 msgstr ""
 
@@ -206,7 +206,7 @@ msgstr ""
 msgid "Please visit the !admin-project-issue-settings page."
 msgstr ""
 
-#: issue.inc:668 project_issue.module:246
+#: issue.inc:668 project_issue.module:238
 msgid "Project issue settings"
 msgstr ""
 
@@ -270,7 +270,7 @@ msgstr ""
 msgid "Status:"
 msgstr ""
 
-#: issue.inc:940 project_issue.module:163;199;284;510;608
+#: issue.inc:940 project_issue.module:155;191;276;502;600
 msgid "Issues"
 msgstr ""
 
@@ -322,7 +322,7 @@ msgstr ""
 msgid "Has attachment."
 msgstr ""
 
-#: issue.inc:1154;1182 project_issue.module:371
+#: issue.inc:1154;1182 project_issue.module:363
 msgid "Categories"
 msgstr ""
 
@@ -330,7 +330,7 @@ msgstr ""
 msgid "Versions"
 msgstr ""
 
-#: issue.inc:1174 project_issue.module:333
+#: issue.inc:1174 project_issue.module:325
 msgid "Components"
 msgstr ""
 
@@ -346,7 +346,7 @@ msgstr ""
 msgid "Participant"
 msgstr ""
 
-#: issue.inc:1231;1716 project_issue.module:191;545
+#: issue.inc:1231;1716 project_issue.module:183;537
 msgid "Search"
 msgstr ""
 
@@ -378,7 +378,7 @@ msgstr ""
 msgid "Operations"
 msgstr ""
 
-#: issue.inc:1349;1443 project_issue.module:268
+#: issue.inc:1349;1443 project_issue.module:260
 msgid "Delete"
 msgstr ""
 
@@ -430,7 +430,7 @@ msgstr ""
 msgid "Submit a new issue for @project."
 msgstr ""
 
-#: issue.inc:1494;1529 project_issue.module:184
+#: issue.inc:1494;1529 project_issue.module:176
 msgid "Statistics"
 msgstr ""
 
@@ -559,7 +559,7 @@ msgid "Release critical bugs for !date"
 msgstr ""
 
 #: project_issue.module:18
-msgid "<h3>Mailhandler support</h3><p>Basic mail format:</p><pre>Type: project\\nProject: chatbox\\nCategory: bug report\\nVersion: cvs\\nPriority: normal\\nStatus: active\\nComponent: code\\n\\nWhatever I type here will be the body of the node.\\n</pre><p>See the mailhandler help for more information on using the mailhandler module.</p>\\n"
+msgid "<h3>Mailhandler support</h3><p>Basic mail format:</p><pre>Type: project\nProject: chatbox\nCategory: bug report\nVersion: cvs\nPriority: normal\nStatus: active\nComponent: code\n\nWhatever I type here will be the body of the node.\n</pre><p>See the mailhandler help for more information on using the mailhandler module.</p>\n"
 msgstr ""
 
 #: project_issue.module:21
@@ -567,210 +567,210 @@ msgid "Add a new issue (bug report, feature request, etc) to an existing project
 msgstr ""
 
 #: project_issue.module:23
-msgid "<p>Use this page to add new status options for project issues or to change or delete existing options.<dl>\r\n      <dt>Adding</dt><dd>To add a new status option, put its name in one of the blank places at the bottom of the form and assign it a weight.</dd></p>\r\n      <dt>Updating</dt><dd>When renaming existing issues, keep in mind that issues with the existing name will receive the new one.</dd>\r\n      <dt>Deleting</dt><dd>If you delete an existing issue status, you will be prompted for a new status to assign to existing issues with the deleted status.</dd>\r\n      <dt>Weight</dt><dd>The weight of an issue determines the order it appears in lists, like in the select box where users designate a status for their issue.</dd>\r\n      <dt>Author may set</dt><dd>Check this option to give the original poster of an issue the right to set a status option, even if she or he isn't part of a role with this permission.  You may wish, for example, to allow issue authors to close their own issues.</dd>\r\n      <dt>In default queries</dt><dd>There are a number of pages that display a list of issues based on a certain query. For all of these views of the issue queues, if no status options are explicitly selected, a certain set of defaults will be used to construct the query.</dd>\r\n      <dt>Default status</dt><dd>The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status.  The default issue status cannot be deleted.  If you wish to delete this status, first set a different status to default.</dd>\r\n      </dl></p>"
+msgid "<p>Use this page to add new status options for project issues or to change or delete existing options.<dl><dt>Adding</dt><dd>To add a new status option, put its name in one of the blank places at the bottom of the form and assign it a weight.</dd></p><dt>Updating</dt><dd>When renaming existing issues, keep in mind that issues with the existing name will receive the new one.</dd><dt>Deleting</dt><dd>If you delete an existing issue status, you will be prompted for a new status to assign to existing issues with the deleted status.</dd><dt>Weight</dt><dd>The weight of an issue determines the order it appears in lists, like in the select box where users designate a status for their issue.</dd><dt>Author may set</dt><dd>Check this option to give the original poster of an issue the right to set a status option, even if she or he isn't part of a role with this permission.  You may wish, for example, to allow issue authors to close their own issues.</dd><dt>In default queries</dt><dd>There are a number of pages that display a list of issues based on a certain query. For all of these views of the issue queues, if no status options are explicitly selected, a certain set of defaults will be used to construct the query.</dd><dt>Default status</dt><dd>The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status.  The default issue status cannot be deleted.  If you wish to delete this status, first set a different status to default.</dd></dl></p>"
 msgstr ""
 
-#: project_issue.module:39
+#: project_issue.module:31
 msgid "Issue"
 msgstr ""
 
-#: project_issue.module:41
+#: project_issue.module:33
 msgid "An issue that can be tracked, such as a bug report, feature request, or task."
 msgstr ""
 
-#: project_issue.module:67
+#: project_issue.module:59
 msgid "Issue directory"
 msgstr ""
 
-#: project_issue.module:71
+#: project_issue.module:63
 msgid "Subdirectory in the directory '%dir' where attachments to issues will be stored."
 msgstr ""
 
-#: project_issue.module:84
+#: project_issue.module:76
 msgid "Reply-to address on e-mail notifications"
 msgstr ""
 
-#: project_issue.module:98
+#: project_issue.module:90
 msgid "Settings for @role"
 msgstr ""
 
-#: project_issue.module:104
+#: project_issue.module:96
 msgid "Permitted file extensions"
 msgstr ""
 
-#: project_issue.module:107
+#: project_issue.module:99
 msgid "Extensions that users in this role can upload. Separate extensions with a space and do not include the leading dot."
 msgstr ""
 
-#: project_issue.module:144
+#: project_issue.module:136
 msgid "Follow up"
 msgstr ""
 
-#: project_issue.module:217
+#: project_issue.module:209
 msgid "My projects"
 msgstr ""
 
-#: project_issue.module:226
+#: project_issue.module:218
 msgid "My issues"
 msgstr ""
 
-#: project_issue.module:236
+#: project_issue.module:228
 msgid "Comments"
 msgstr ""
 
-#: project_issue.module:247
+#: project_issue.module:239
 msgid "Specify where attachments to issues should be stored on your site, and what filename extensions should be allowed."
 msgstr ""
 
-#: project_issue.module:258
+#: project_issue.module:250
 msgid "Project issue status options"
 msgstr ""
 
-#: project_issue.module:259
+#: project_issue.module:251
 msgid "Configure what issue status values should be used on your site."
 msgstr ""
 
-#: project_issue.module:322
+#: project_issue.module:314
 msgid "Issue tracker"
 msgstr ""
 
-#: project_issue.module:326
+#: project_issue.module:318
 msgid "Enable issue tracker"
 msgstr ""
 
-#: project_issue.module:329
+#: project_issue.module:321
 msgid "Let users submit bug requests, patches, feature requests, support requests, etc."
 msgstr ""
 
-#: project_issue.module:340
+#: project_issue.module:332
 msgid "Submission guidelines"
 msgstr ""
 
-#: project_issue.module:349
+#: project_issue.module:341
 msgid "Issue e-mail options"
 msgstr ""
 
-#: project_issue.module:354
+#: project_issue.module:346
 msgid "Weekly critical issues report"
 msgstr ""
 
-#: project_issue.module:358
+#: project_issue.module:350
 msgid "To get a weekly digest of critical issues specify an e-mail address."
 msgstr ""
 
-#: project_issue.module:362
+#: project_issue.module:354
 msgid "Issues e-mail address"
 msgstr ""
 
-#: project_issue.module:366
+#: project_issue.module:358
 msgid "If you wish to receive a copy of all the issues to a central location specify an address here."
 msgstr ""
 
-#: project_issue.module:372
+#: project_issue.module:364
 msgid "Which issue categories to e-mail. If none is checked all categories will be posted."
 msgstr ""
 
-#: project_issue.module:387
+#: project_issue.module:379
 msgid "States"
 msgstr ""
 
-#: project_issue.module:388
+#: project_issue.module:380
 msgid "Which issue states to e-mail. If none is checked all states will be posted."
 msgstr ""
 
-#: project_issue.module:403
+#: project_issue.module:395
 msgid "Monthly reminder"
 msgstr ""
 
-#: project_issue.module:407
+#: project_issue.module:399
 msgid "Send monthly reminders to users"
 msgstr ""
 
-#: project_issue.module:410
+#: project_issue.module:402
 msgid "Enabling this will send a monthly reminder to users that have open issues registered."
 msgstr ""
 
-#: project_issue.module:435
+#: project_issue.module:427
 msgid "Issue settings have been saved."
 msgstr ""
 
-#: project_issue.module:471
+#: project_issue.module:463
 msgid "Invalid issue status %status: you do not have permission to set this status"
 msgstr ""
 
-#: project_issue.module:489
+#: project_issue.module:481
 msgid "Projects by @user"
 msgstr ""
 
-#: project_issue.module:499
+#: project_issue.module:491
 msgid "You need to log in to see your projects."
 msgstr ""
 
-#: project_issue.module:505
+#: project_issue.module:497
 msgid "Last issue update"
 msgstr ""
 
-#: project_issue.module:514
+#: project_issue.module:506
 msgid "Issue links"
 msgstr ""
 
-#: project_issue.module:516
+#: project_issue.module:508
 msgid "Project updated"
 msgstr ""
 
-#: project_issue.module:525
+#: project_issue.module:517
 msgid "You have no projects."
 msgstr ""
 
-#: project_issue.module:525
+#: project_issue.module:517
 msgid "This user has no projects."
 msgstr ""
 
-#: project_issue.module:541
+#: project_issue.module:533
 msgid "View"
 msgstr ""
 
-#: project_issue.module:556
+#: project_issue.module:548
 msgid "Edit"
 msgstr ""
 
-#: project_issue.module:562
+#: project_issue.module:554
 msgid "Add release"
 msgstr ""
 
-#: project_issue.module:573
+#: project_issue.module:565
 msgid "n/a"
 msgstr ""
 
-#: project_issue.module:603
+#: project_issue.module:595
 msgid "Project links"
 msgstr ""
 
-#: project_issue.module:48
+#: project_issue.module:40
 msgid "create project issues"
 msgstr ""
 
-#: project_issue.module:49
+#: project_issue.module:41
 msgid "access project issues"
 msgstr ""
 
-#: project_issue.module:50
+#: project_issue.module:42
 msgid "edit own project issues"
 msgstr ""
 
-#: project_issue.module:51
+#: project_issue.module:43
 msgid "access own project issues"
 msgstr ""
 
-#: project_issue.module:55
+#: project_issue.module:47
 msgid "set issue status "
 msgstr ""
 
-#: project_issue.module:55
+#: project_issue.module:47
 msgid "'"
 msgstr ""
 
-#: project_issue.module:55
+#: project_issue.module:47
 msgid ""
 msgstr ""
 

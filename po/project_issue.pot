@@ -1,4 +1,4 @@
-# $Id: project_issue.pot,v 1.3 2007/07/07 12:54:48 hass Exp $
+# $Id: project_issue.pot,v 1.4 2007/07/07 15:04:45 hass Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
@@ -13,7 +13,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2007-07-07 14:53+0200\n"
+"POT-Creation-Date: 2007-07-07 15:55+0200\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Preview"
 msgstr ""
 
-#: comment.inc:15;37;74 issue.inc:1488;1523 project_issue.module:163;409;541
+#: comment.inc:15;37;74 issue.inc:1487;1522 project_issue.module:163;409;541
 msgid "Submit"
 msgstr ""
 
@@ -58,7 +58,7 @@ msgstr ""
 msgid "content"
 msgstr ""
 
-#: issue.inc:38;448;1500;1535 project_issue.module:200
+#: issue.inc:38;448;1499;1534 project_issue.module:200
 msgid "Subscribe"
 msgstr ""
 
@@ -66,7 +66,7 @@ msgstr ""
 msgid "<none>"
 msgstr ""
 
-#: issue.inc:89;577;1556 mail.inc:24;206
+#: issue.inc:89;577;1555 mail.inc:24;206
 msgid "Version"
 msgstr ""
 
@@ -86,7 +86,7 @@ msgstr ""
 msgid "All issues"
 msgstr ""
 
-#: issue.inc:281;597;1554;1696 mail.inc:21;208
+#: issue.inc:281;597;1553;1695 mail.inc:21;208
 msgid "Category"
 msgstr ""
 
@@ -102,7 +102,7 @@ msgstr ""
 msgid "Average lifetime"
 msgstr ""
 
-#: issue.inc:299;616;628;1199;1552;1690 mail.inc:26;213
+#: issue.inc:299;616;628;1199;1551;1689 mail.inc:26;213
 msgid "Status"
 msgstr ""
 
@@ -110,7 +110,7 @@ msgstr ""
 msgid "Issue activity"
 msgstr ""
 
-#: issue.inc:319;460;569;687;1549;1684 mail.inc:20;205 project_issue.module:495 project_issue.info:0
+#: issue.inc:319;460;569;687;1548;1683 mail.inc:20;205 project_issue.module:495 project_issue.info:0
 msgid "Project"
 msgstr ""
 
@@ -162,7 +162,7 @@ msgstr ""
 msgid "Issue information"
 msgstr ""
 
-#: issue.inc:603;1702 mail.inc:23;209
+#: issue.inc:603;1552;1701 mail.inc:23;209
 msgid "Priority"
 msgstr ""
 
@@ -346,7 +346,7 @@ msgstr ""
 msgid "Participant"
 msgstr ""
 
-#: issue.inc:1231;1716 project_issue.module:183;537
+#: issue.inc:1231;1715 project_issue.module:183;537
 msgid "Search"
 msgstr ""
 
@@ -411,102 +411,94 @@ msgid "Cancel"
 msgstr ""
 
 #: issue.inc:1449
-msgid "Choose a new issue status for\r\n  existing issues of status %name."
+msgid "Choose a new issue status for existing issues of status %name."
 msgstr ""
 
-#: issue.inc:1456
+#: issue.inc:1455
 msgid "Project issue status %issue deleted."
 msgstr ""
 
-#: issue.inc:1467;1468;1469;1645
+#: issue.inc:1466;1467;1468;1644
 msgid "<all>"
 msgstr ""
 
-#: issue.inc:1478
+#: issue.inc:1477
 msgid "Issues for %name"
 msgstr ""
 
-#: issue.inc:1490
+#: issue.inc:1489
 msgid "Submit a new issue for @project."
 msgstr ""
 
-#: issue.inc:1494;1529 project_issue.module:176
+#: issue.inc:1493;1528 project_issue.module:176
 msgid "Statistics"
 msgstr ""
 
-#: issue.inc:1496
+#: issue.inc:1495
 msgid "See statistics about @project issues."
 msgstr ""
 
-#: issue.inc:1502
+#: issue.inc:1501
 msgid "Receive email updates about @project issues."
 msgstr ""
 
-#: issue.inc:1506;1541
+#: issue.inc:1505;1540
 msgid "Advanced search"
 msgstr ""
 
-#: issue.inc:1508
+#: issue.inc:1507
 msgid "Use the advanced search page to find @project issues."
 msgstr ""
 
-#: issue.inc:1518
+#: issue.inc:1517
 msgid "Issues for all projects"
 msgstr ""
 
-#: issue.inc:1525
+#: issue.inc:1524
 msgid "Submit a new issue."
 msgstr ""
 
-#: issue.inc:1531
+#: issue.inc:1530
 msgid "See statistics about issues."
 msgstr ""
 
-#: issue.inc:1537
+#: issue.inc:1536
 msgid "Receive email updates about issues."
 msgstr ""
 
-#: issue.inc:1543
+#: issue.inc:1542
 msgid "Use the advanced search page for finding issues."
 msgstr ""
 
-#: issue.inc:1551
+#: issue.inc:1550
 msgid "Summary"
 msgstr ""
 
-#: issue.inc:1553
-msgid "Pri"
-msgstr ""
-
-#: issue.inc:1558
+#: issue.inc:1557
 msgid "Last updated"
 msgstr ""
 
-#: issue.inc:1559 mail.inc:25;210
+#: issue.inc:1558 mail.inc:25;210
 msgid "Assigned to"
 msgstr ""
 
-#: issue.inc:1621
-msgid "#"
-msgstr ""
-
-#: issue.inc:1621
+#: issue.inc:1620
 msgid "Permalink to search query."
 msgstr ""
 
-#: issue.inc:1627
+#: issue.inc:1626
 msgid "No issues found."
 msgstr ""
 
-#: issue.inc:1903
+#: issue.inc:1902
 msgid "Username '@user' not found."
 msgstr ""
 
-#: issue.inc:1911
+#: issue.inc:1910
 msgid "issues for !name"
 msgstr ""
 
-#: issue.inc:1914
+#: issue.inc:1913
 msgid "issues"
 msgstr ""
 

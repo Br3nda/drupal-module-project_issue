@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.79 2007-06-04 23:33:05 dww Exp $
+// $Id: comment.inc,v 1.80 2007-07-10 05:46:26 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -22,9 +22,13 @@ function project_comment_page() {
     }
     $output .= drupal_get_form('project_comment_form', $edit);
 
-    $breadcrumb = drupal_get_breadcrumb();
-    $breadcrumb[] = l($node->title, "node/$node->nid");
-    drupal_set_breadcrumb($breadcrumb);
+    // set breadcrumb
+    $project = node_load(array('nid' => $node->pid));
+    $breadcrumb[] = l($project->title, 'node/'. $project->nid);
+    $breadcrumb[] = l(t('Issues'), 'project/issues/'. $project->uri);
+    $breadcrumb[] = l($node->title, 'node/'. $node->nid);
+    project_project_set_breadcrumb($project, $breadcrumb);
+
     drupal_set_title(t('New comment'));
     switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
       case 'add':

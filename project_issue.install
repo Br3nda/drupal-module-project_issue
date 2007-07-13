@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.1.2.2.2.2 2007/03/01 22:01:38 dww Exp $
+// $Id: project_issue.install,v 1.1.2.2.2.3 2007/07/13 03:29:29 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -20,8 +20,7 @@ function project_issue_install() {
           mail_copy_filter_state varchar(255) NOT NULL default '',
           mail_reminder tinyint(4) NOT NULL default '0',
           PRIMARY KEY (nid)
-        ) TYPE=MyISAM
-        /*!40100 DEFAULT CHARACTER SET utf8 */;");
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_issues} (
           nid int(10) unsigned NOT NULL default '0',
           pid int(10) unsigned NOT NULL default '0',
@@ -36,8 +35,7 @@ function project_issue_install() {
           file_size int NOT NULL default 0,
           PRIMARY KEY (nid),
           KEY project_issues_pid (pid)
-        ) TYPE=MyISAM
-        /*!40100 DEFAULT CHARACTER SET utf8 */;");
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_comments} (
           cid int(10) unsigned NOT NULL default '0',
           nid int(10) unsigned NOT NULL default '0',
@@ -52,23 +50,20 @@ function project_issue_install() {
           file_size int NOT NULL default 0,
           PRIMARY KEY (cid),
           KEY project_comments_nid (nid)
-        ) TYPE=MyISAM
-        /*!40100 DEFAULT CHARACTER SET utf8 */;");
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_subscriptions} (
           nid int(10) unsigned NOT NULL default '0',
           uid int(10) unsigned NOT NULL default '0',
           level tinyint(3) unsigned NOT NULL default '0',
           KEY project_subscriptions_nid_uid_level (nid, uid, level)
-        ) TYPE=MyISAM
-        /*!40100 DEFAULT CHARACTER SET utf8 */;");
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_issue_state} (
           sid int(10) unsigned NOT NULL auto_increment,
           name varchar(32) NOT NULL default '',
           weight tinyint(2) DEFAULT '0' NOT NULL,
           author_has tinyint(2) DEFAULT '0' NOT NULL,
           PRIMARY KEY (sid)
-        ) TYPE=MyISAM
-        /*!40100 DEFAULT CHARACTER SET utf8 */;");
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       break;
 
     case 'pgsql':

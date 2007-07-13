@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.27 2007-05-15 23:10:20 dww Exp $
+// $Id: project_issue.module,v 1.28 2007-07-13 04:03:02 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -313,7 +313,7 @@ function project_issue_project_edit_issues() {
   project_project_set_breadcrumb($node);
   drupal_set_title(check_plain($node->title));
 
-  if (is_array($node->components)) {
+  if (isset($node->components) && is_array($node->components)) {
     $node->components = implode("\n", $node->components);
   }
   return drupal_get_form('project_issue_project_edit_form', $node);
@@ -343,14 +343,14 @@ function project_issue_project_edit_form($node) {
   $form['issue']['components'] = array(
     '#type' => 'textarea',
     '#title' => t('Components'),
-    '#default_value' => $node->components,
+    '#default_value' => isset($node->components) ? $node->components : NULL,
     '#cols' => 20,
     '#rows' => 5,
   );
   $form['issue']['help'] = array(
     '#type' => 'textarea',
     '#title' => t('Submission guidelines'),
-    '#default_value' => $node->help,
+    '#default_value' => isset($node->help) ? $node->help : NULL,
     '#cols' => 20,
     '#rows' => 5,
   );
@@ -364,7 +364,7 @@ function project_issue_project_edit_form($node) {
   $form['email']['mail_digest'] = array(
     '#type' => 'textfield',
     '#title' => t('Weekly critical issues report'),
-    '#default_value' => $node->mail_digest,
+    '#default_value' => isset($node->mail_digest) ? $node->mail_digest : NULL,
     '#size' => 20,
     '#maxlength' => 255,
     '#description' => t('To get a weekly digest of critical issues specify an e-mail address.'),
@@ -372,7 +372,7 @@ function project_issue_project_edit_form($node) {
   $form['email']['mail_copy'] = array(
     '#type' => 'textfield',
     '#title' => t('Issues e-mail address'),
-    '#default_value' => $node->mail_copy,
+    '#default_value' => isset($node->mail_copy) ? $node->mail_copy : NULL,
     '#size' => 20,
     '#maxlength' => 255,
     '#description' => t('If you wish to receive a copy of all the issues to a central location specify an address here.'),
@@ -390,7 +390,7 @@ function project_issue_project_edit_form($node) {
       '#type' => 'checkbox',
       '#title' => $choice,
       '#return_value' => $key,
-      '#default_value' => $node->mail_copy_filter[$key],
+      '#default_value' => isset($node->mail_copy_filter[$key]) ? $node->mail_copy_filter[$key] : NULL,
     );
   }
   $options = project_issue_state();
@@ -405,7 +405,7 @@ function project_issue_project_edit_form($node) {
       '#type' => 'checkbox',
       '#title' => $choice,
       '#return_value' => $key,
-      '#default_value' => $node->mail_copy_filter_state[$key],
+      '#default_value' => isset($node->mail_copy_filter_state[$key]) ? $node->mail_copy_filter_state[$key] : NULL,
     );
   }
 
@@ -418,7 +418,7 @@ function project_issue_project_edit_form($node) {
       '#type' => 'checkbox',
       '#title' => t('Send monthly reminders to users'),
       '#return_value' => 1,
-      '#default_value' => $node->mail_reminder,
+      '#default_value' => isset($node->mail_reminder) ? $node->mail_reminder : NULL,
       '#description' => t('Enabling this will send a monthly reminder to users that have open issues registered.'),
     );
   }
@@ -502,7 +502,7 @@ function project_issue_user_page($arg = 0) {
     }
   }
 
-  if (!$user) {
+  if (empty($user)) {
     global $user;
     $current_user = TRUE;
   }
@@ -671,6 +671,11 @@ function project_issue_project_nodeapi(&$node, $op, $arg) {
 
 function project_issue_project_load(&$node, $arg) {
   $project = db_fetch_object(db_query('SELECT * FROM {project_issue_projects} WHERE nid = %d', $node->nid));
+  // If nothing loaded, bail immediately
+  if (!$project) {
+    return $node;
+  }
+  //assert($project);
   $node->components = unserialize($project->components);
   $node->mail_copy_filter = unserialize($project->mail_copy_filter);
   $node->mail_copy_filter_state = unserialize($project->mail_copy_filter_state);

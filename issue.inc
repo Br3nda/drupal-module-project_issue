@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.232 2007/06/22 12:05:18 dww Exp $
+// $Id: issue.inc,v 1.233 2007/07/13 05:00:18 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -546,7 +546,7 @@ function project_issue_form($node, $param) {
     }
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
-    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid));
+    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
 
     if ($user->uid == $node->assigned) {
       $assigned = array(0 => t('Unassign'), $user->uid => $user->name);
@@ -1024,7 +1024,7 @@ function project_issue_access($op, $node) {
  *   An array of states (sid as key, name as value) that match the
  *   given filters, or the name of the requested state. 
  */
-function project_issue_state($sid = 0, $restrict = false, $is_author = false, $defaults = false) {
+function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false) {
   static $options;
 
   if (!$options) {
@@ -1036,9 +1036,15 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false, $d
 
   foreach($options as $state) {
     if ($restrict) {
-      // Check if user has access, or if status is default status and therefore available to all,
-      // or if user is original issue poster and poster is granted access
-      if (user_access('set issue status '. str_replace("'", "", $state->name)) || ($state->sid == variable_get('project_issue_default_state', 1)) || ($state->author_has && $is_author)) {
+      // Check if user has access,
+      // or if status is default status and therefore available to all,
+      // or if user is original issue author and author has access,
+      // or if the issue is already in a state, even if the user doesn't have
+      //   access to that state themselves.
+      if (user_access('set issue status '. str_replace("'", "", $state->name))
+          || ($state->sid == variable_get('project_issue_default_state', 1))
+          || ($state->author_has && $is_author)
+          || ($state->sid == $current_sid) ) {
         $states[$state->sid] = $state->name;
       }
     }
@@ -1061,7 +1067,7 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false, $d
 function project_issue_default_states() {
   static $defaults;
   if (empty($defaults)) {
-    $states = project_issue_state(0, false, false, true);
+    $states = project_issue_state(0, false, false, 0, true);
     $defaults = !empty($states) ? array_keys($states) : array(1, 2, 4);
   }
   return $defaults;

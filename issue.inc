@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.24 2007/06/19 23:35:56 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.25 2007/07/13 05:00:42 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -477,7 +477,7 @@ function project_issue_form(&$node, &$param) {
     }
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
-    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid));
+    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
 
     if ($user->uid == $node->assigned) {
       $assigned = array(0 => t('Unassign'), $user->uid => $user->name);
@@ -921,7 +921,7 @@ function project_issue_access($op, $node) {
 }
 
 // Support stuff
-function project_issue_state($sid = 0, $restrict = false, $is_author = false) {
+function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0) {
   static $options;
 
   if (!$options) {
@@ -933,9 +933,15 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false) {
 
   foreach($options as $state) {
     if ($restrict) {
-      // Check if user has access, or if status is default status and therefore available to all,
-      // or if user is original issue poster and poster is granted access
-      if (user_access('set issue status '. str_replace("'", "", $state->name)) || ($state->sid == variable_get('project_issue_default_state', 1)) || ($state->author_has && $is_author)) {
+      // Check if user has access,
+      // or if status is default status and therefore available to all,
+      // or if user is original issue author and author has access,
+      // or if the issue is already in a state, even if the user doesn't have
+      //   access to that state themselves.
+      if (user_access('set issue status '. str_replace("'", "", $state->name))
+          || ($state->sid == variable_get('project_issue_default_state', 1))
+          || ($state->author_has && $is_author)
+          || ($state->sid == $current_sid) ) {
         $states[$state->sid] = $state->name;
       }
     }

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.28 2007-07-13 04:03:02 dww Exp $
+// $Id: project_issue.module,v 1.29 2007-07-16 07:01:11 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -15,33 +15,30 @@ if (file_exists("$path/issue.inc")) {
 function project_issue_help($section) {
   switch ($section) {
     case 'admin/help#project_issue':
-      $help = t('<h3>Mailhandler support</h3>'.
-              '<p>Basic mail format:</p>'.
-              '<pre>'.
-              "Type: project\n".
-              "Project: chatbox\n".
-              "Category: bug report\n".
-              "Version: cvs\n".
-              "Priority: normal\n".
-              "Status: active\n".
-              "Component: code\n\n".
-              "Whatever I type here will be the body of the node.\n".
-              '</pre>'.
-              "<p>See the mailhandler help for more information on using the mailhandler module.</p>\n");
-      return $help;
+      return '<h3>'. t('Mailhandler support') .'</h3>'.
+        '<p>'. t('Basic mail format:') .'</p>'.
+        '<pre>'. t("Type: project\nProject: chatbox\nCategory: bug report\nVersion: cvs\nPriority: normal\nStatus: active\nComponent: code\n\nWhatever I type here will be the body of the node.\n") .'</pre>'.
+        '<p>'. t('See the mailhandler help for more information on using the mailhandler module.') .'</p>';
     case 'node/add#project_issue':
       return t('Add a new issue (bug report, feature request, etc) to an existing project.');
     case 'admin/project/project-issue-status':
-      return t('<p>Use this page to add new status options for project issues or to change or delete existing options.<dl>
-      <dt>Adding</dt><dd>To add a new status option, put its name in one of the blank places at the bottom of the form and assign it a weight.</dd></p>
-      <dt>Updating</dt><dd>When renaming existing issues, keep in mind that issues with the existing name will receive the new one.</dd>
-      <dt>Deleting</dt><dd>If you delete an existing issue status, you will be prompted for a new status to assign to existing issues with the deleted status.</dd>
-      <dt>Weight</dt><dd>The weight of an issue determines the order it appears in lists, like in the select box where users designate a status for their issue.</dd>
-      <dt>Author may set</dt><dd>Check this option to give the original poster of an issue the right to set a status option, even if she or he isn\'t part of a role with this permission.  You may wish, for example, to allow issue authors to close their own issues.</dd>
-      <dt>In default queries</dt><dd>There are a number of pages that display a list of issues based on a certain query. For all of these views of the issue queues, if no status options are explicitly selected, a certain set of defaults will be used to construct the query.</dd>
-      <dt>Default status</dt><dd>The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status.  The default issue status cannot be deleted.  If you wish to delete this status, first set a different status to default.</dd>
-      </dl></p>');
-      break;
+      return '<p>'. t('Use this page to add new status options for project issues or to change or delete existing options.') .'</p>'.
+        '<dl>'.
+        '<dt>'. t('Adding') .'</dt>'.
+        '<dd>'. t('To add a new status option, put its name in one of the blank places at the bottom of the form and assign it a weight.') .'</dd>'.
+        '<dt>'. t('Updating') .'</dt>'.
+        '<dd>'. t('When renaming existing issues, keep in mind that issues with the existing name will receive the new one.') .'</dd>'.
+        '<dt>'. t('Deleting') .'</dt>'.
+        '<dd>'. t('If you delete an existing issue status, you will be prompted for a new status to assign to existing issues with the deleted status.') .'</dd>'.
+        '<dt>'. t('Weight') .'</dt>'.
+        '<dd>'. t('The weight of an issue determines the order it appears in lists, like in the select box where users designate a status for their issue.') .'</dd>'.
+        '<dt>'. t('Author may set') .'</dt>'.
+        '<dd>'. t("Check this option to give the original poster of an issue the right to set a status option, even if she or he isn't part of a role with this permission. You may wish, for example, to allow issue authors to close their own issues.") .'</dd>'.
+        '<dt>'. t('In default queries') .'</dt>'.
+        '<dd>'. t('There are a number of pages that display a list of issues based on a certain query. For all of these views of the issue queues, if no status options are explicitly selected, a certain set of defaults will be used to construct the query.') .'</dd>'.
+        '<dt>'. t('Default status') .'</dt>'.
+        '<dd>'. t('The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status. The default issue status cannot be deleted. If you wish to delete this status, first set a different status to default.') .'</dd>'.
+        '</dl>';
   }
 }
 

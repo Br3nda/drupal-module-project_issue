@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.234 2007/07/16 07:01:11 dww Exp $
+// $Id: issue.inc,v 1.235 2007/07/16 19:11:50 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1490,9 +1490,9 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $links = array();
     if (user_access('create project issues')) {
       $links[] = array(
-        'title' => t('Submit'),
+        'title' => t('Create'),
         'href' => "node/add/project-issue/$project->uri",
-        'attributes' => array('title' => t('Submit a new issue for @project.', array('@project' => $project->uri))),
+        'attributes' => array('title' => t('Create a new issue for @project.', array('@project' => $project->uri))),
       );
     }
     $links[] = array(
@@ -1525,9 +1525,9 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $links = array();
     if (user_access('create project issues')) {
       $links[] = array(
-        'title' => t('Submit'),
+        'title' => t('Create'),
         'href' => "node/add/project-issue",
-        'attributes' => array('title' => t('Submit a new issue.')),
+        'attributes' => array('title' => t('Create a new issue.')),
       );
     }
     $links[] = array(

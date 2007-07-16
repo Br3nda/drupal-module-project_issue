@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.233 2007/07/13 05:00:18 dww Exp $
+// $Id: issue.inc,v 1.234 2007/07/16 07:01:11 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1452,8 +1452,7 @@ function project_issue_delete_state_confirm($sid) {
 
 function project_issue_delete_state_confirm_submit($form_id, $form_values) {
   if($form_values['new_sid'] == $form_values['sid']) {
-      form_set_error('new_sid', t('Choose a new issue status for
-  existing issues of status %name.', array('%name' => $form_values['name'])));
+      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_values['name'])));
   } else {
     if ($form_values['new_sid']) {
       db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_values['new_sid'], $form_values['sid']);

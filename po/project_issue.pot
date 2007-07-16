@@ -1,11 +1,11 @@
-# $Id: project_issue.pot,v 1.6 2007-07-16 07:01:11 dww Exp $
+# $Id: project_issue.pot,v 1.7 2007-07-16 07:10:33 dww Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
 #  comment.inc,v 1.80 2007/07/10 05:46:26 dww
-#  issue.inc,v 1.233 2007/07/13 05:00:18 dww
-#  project_issue.module,v 1.28 2007/07/13 04:03:02 dww
+#  issue.inc,v 1.234 2007/07/16 07:01:11 dww
+#  project_issue.module,v 1.29 2007/07/16 07:01:11 dww
 #  mail.inc,v 1.72 2007/05/07 19:47:09 dww
 #  project_issue.info,v 1.3 2007/06/13 19:33:51 dww
 #
@@ -13,7 +13,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2007-07-15 23:59-0700\n"
+"POT-Creation-Date: 2007-07-16 00:09-0700\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -40,6 +40,38 @@ msgstr ""
 
 #: comment.inc:117
 msgid "Updates"
+msgstr ""
+
+#: comment.inc:139 issue.inc:640
+msgid "Title"
+msgstr ""
+
+#: comment.inc:140 issue.inc:319;460;569;687;1554;1689 mail.inc:20;205 project_issue.module:512 project_issue.info:0
+msgid "Project"
+msgstr ""
+
+#: comment.inc:141 issue.inc:89;577;1561 mail.inc:24;206
+msgid "Version"
+msgstr ""
+
+#: comment.inc:142 issue.inc:116;584 mail.inc:22;207
+msgid "Component"
+msgstr ""
+
+#: comment.inc:143 issue.inc:281;597;1559;1701 mail.inc:21;208
+msgid "Category"
+msgstr ""
+
+#: comment.inc:144 issue.inc:603;1707 mail.inc:23;209
+msgid "Priority"
+msgstr ""
+
+#: comment.inc:145 issue.inc:1564 mail.inc:25;210
+msgid "Assigned to"
+msgstr ""
+
+#: comment.inc:146 issue.inc:299;616;628;1205;1557;1695 mail.inc:26;213
+msgid "Status"
 msgstr ""
 
 #: comment.inc:177 issue.inc:917
@@ -70,14 +102,6 @@ msgstr ""
 msgid "<none>"
 msgstr ""
 
-#: issue.inc:89;577;1561 mail.inc:24;206
-msgid "Version"
-msgstr ""
-
-#: issue.inc:116;584 mail.inc:22;207
-msgid "Component"
-msgstr ""
-
 #: issue.inc:265
 msgid "Home"
 msgstr ""
@@ -88,10 +112,6 @@ msgstr ""
 
 #: issue.inc:273;351;378;459
 msgid "All issues"
-msgstr ""
-
-#: issue.inc:281;597;1559;1701 mail.inc:21;208
-msgid "Category"
 msgstr ""
 
 #: issue.inc:281;299
@@ -106,16 +126,8 @@ msgstr ""
 msgid "Average lifetime"
 msgstr ""
 
-#: issue.inc:299;616;628;1205;1557;1695 mail.inc:26;213
-msgid "Status"
-msgstr ""
-
 #: issue.inc:314
 msgid "Issue activity"
-msgstr ""
-
-#: issue.inc:319;460;569;687;1554;1689 mail.inc:20;205 project_issue.module:512 project_issue.info:0
-msgid "Project"
 msgstr ""
 
 #: issue.inc:319
@@ -166,20 +178,12 @@ msgstr ""
 msgid "Issue information"
 msgstr ""
 
-#: issue.inc:603;1707 mail.inc:23;209
-msgid "Priority"
-msgstr ""
-
 #: issue.inc:609;1221
 msgid "Assigned"
 msgstr ""
 
 #: issue.inc:635
 msgid "Issue details"
-msgstr ""
-
-#: issue.inc:640
-msgid "Title"
 msgstr ""
 
 #: issue.inc:646
@@ -480,10 +484,6 @@ msgstr ""
 
 #: issue.inc:1563
 msgid "Last updated"
-msgstr ""
-
-#: issue.inc:1564 mail.inc:25;210
-msgid "Assigned to"
 msgstr ""
 
 #: issue.inc:1626

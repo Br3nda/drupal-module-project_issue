@@ -1,11 +1,11 @@
-# $Id: project_issue.pot,v 1.7 2007-07-16 07:10:33 dww Exp $
+# $Id: project_issue.pot,v 1.8 2007-07-16 19:11:51 dww Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  comment.inc,v 1.80 2007/07/10 05:46:26 dww
-#  issue.inc,v 1.234 2007/07/16 07:01:11 dww
+#  comment.inc,v 1.81 2007/07/16 07:10:33 dww
 #  project_issue.module,v 1.29 2007/07/16 07:01:11 dww
+#  issue.inc,v 1.234 2007/07/16 07:01:11 dww
 #  mail.inc,v 1.72 2007/05/07 19:47:09 dww
 #  project_issue.info,v 1.3 2007/06/13 19:33:51 dww
 #
@@ -13,7 +13,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2007-07-16 00:09-0700\n"
+"POT-Creation-Date: 2007-07-16 12:10-0700\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Preview"
 msgstr ""
 
-#: comment.inc:15;41;78 issue.inc:1493;1528 project_issue.module:180;426;558
+#: comment.inc:15;41;78 project_issue.module:426
 msgid "Submit"
 msgstr ""
 
@@ -430,8 +430,12 @@ msgstr ""
 msgid "Issues for %name"
 msgstr ""
 
+#: issue.inc:1493;1528 project_issue.module:180;558
+msgid "Create"
+msgstr ""
+
 #: issue.inc:1495
-msgid "Submit a new issue for @project."
+msgid "Create a new issue for @project."
 msgstr ""
 
 #: issue.inc:1499;1534 project_issue.module:193
@@ -459,7 +463,7 @@ msgid "Issues for all projects"
 msgstr ""
 
 #: issue.inc:1530
-msgid "Submit a new issue."
+msgid "Create a new issue."
 msgstr ""
 
 #: issue.inc:1536

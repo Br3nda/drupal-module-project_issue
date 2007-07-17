@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.235 2007-07-16 19:11:50 dww Exp $
+// $Id: issue.inc,v 1.236 2007-07-17 00:58:08 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1495,6 +1495,12 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
         'attributes' => array('title' => t('Create a new issue for @project.', array('@project' => $project->uri))),
       );
     }
+    else {
+      $links[] = array(
+        'title' => theme('project_issue_create_forbidden', $project->uri),
+        'html'  => TRUE,
+      );
+    }
     $links[] = array(
       'title' => t('Statistics'),
       'href' => "project/issues/statistics/$project->uri",
@@ -1528,6 +1534,12 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
         'title' => t('Create'),
         'href' => "node/add/project-issue",
         'attributes' => array('title' => t('Create a new issue.')),
+      );
+    }
+    else {
+      $links[] = array(
+        'title' => theme('project_issue_create_forbidden', $project->uri),
+        'html'  => TRUE,
       );
     }
     $links[] = array(
@@ -1925,4 +1937,38 @@ function project_issue_query_rss($result, $project) {
 
 function project_issue_tracker_comments($node) {
   return db_query(db_rewrite_sql("SELECT c.nid, c.cid, c.uid, c.created AS timestamp, '%s' AS subject, u.name FROM {project_comments} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.nid = %d ORDER BY c.cid DESC", 'c'), $node->title, $node->nid);
+}
+
+function theme_project_issue_follow_up_forbidden($nid) {
+  global $user;
+  if ($user->uid) {
+    return '';
+  }
+
+  // We cannot use drupal_get_destination() because these links sometimes appear on /node and taxo listing pages.
+  $destination = "destination=". drupal_urlencode("project/comments/add/$nid");
+
+  if (variable_get('user_register', 1)) {
+    return t('<a href="@login">Login</a> or <a href="@register">register</a> to follow up', array('@login' => url('user/login', $destination), '@register' => url('user/register', $destination)));
+  }
+  else {
+    return t('<a href="@login">Login</a> to follow up', array('@login' => url('user/login', $destination)));
+  }
+}
+
+function theme_project_issue_create_forbidden($uri) {
+  global $user;
+  if ($user->uid) {
+    return '';
+  }
+
+  // We cannot use drupal_get_destination() because these links sometimes appear on /node and taxo listing pages.
+  $destination = "destination=". drupal_urlencode("node/add/project-issue/$uri");
+
+  if (variable_get('user_register', 1)) {
+    return t('<a href="@login">Login</a> or <a href="@register">register</a> to create an issue', array('@login' => url('user/login', $destination), '@register' => url('user/register', $destination)));
+  }
+  else {
+    return t('<a href="@login">Login</a> to create an issue', array('@login' => url('user/login', $destination)));
+  }
 }

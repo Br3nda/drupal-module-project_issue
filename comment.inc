@@ -1,16 +1,14 @@
 <?php
-// $Id: comment.inc,v 1.81 2007-07-16 07:10:33 dww Exp $
+// $Id: comment.inc,v 1.82 2007-07-17 00:58:08 dww Exp $
 // $Name:  $
 
-function project_comment_page() {
+function project_comment_page($op, $nid) {
   
+  // Load the parent node.
+  $node = node_load($nid);
+
   if (user_access('create project issues')) {
     $edit = (object)$_POST;
-    $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
-    if (!node_access('view', $node)) {
-      drupal_access_denied();
-      return;
-    }
 
     if ($_POST['op'] == t('Preview') || $_POST['op'] == t('Submit')) {
       project_comment_validate($edit);
@@ -49,6 +47,10 @@ function project_comment_page() {
           }
         break;
     }
+  }
+  else {
+    drupal_set_message(t('You are not authorized to follow up on issues.'), 'error');
+    drupal_goto("node/$nid");
   }
 }
 

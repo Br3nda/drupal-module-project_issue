@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.25 2007/07/13 05:00:42 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.26 2007/07/17 01:44:41 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1399,7 +1399,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   }
   $header[] = array('data' => t('Summary'), 'field' => 'n.title');
   $header[] = array('data' => t('Status'), 'field' => 'p.sid');
-  $header[] = array('data' => t('Pri'), 'field' => 'p.priority');
+  $header[] = array('data' => t('Priority'), 'field' => 'p.priority');
   $header[] = array('data' => t('Category'), 'field' => 'p.category');
   if (count($releases)) {
     $header[] = array('data' => t('Version'), 'field' => 'p.rid');

@@ -1,11 +1,11 @@
-# $Id: project_issue.pot,v 1.9 2007/07/17 00:58:08 dww Exp $
+# $Id: project_issue.pot,v 1.10 2007/07/17 01:42:36 dww Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  comment.inc,v 1.81 2007/07/16 07:10:33 dww
-#  project_issue.module,v 1.30 2007/07/16 19:11:50 dww
-#  issue.inc,v 1.235 2007/07/16 19:11:50 dww
+#  comment.inc,v 1.82 2007/07/17 00:58:08 dww
+#  project_issue.module,v 1.31 2007/07/17 00:58:08 dww
+#  issue.inc,v 1.236 2007/07/17 00:58:08 dww
 #  mail.inc,v 1.72 2007/05/07 19:47:09 dww
 #  project_issue.info,v 1.3 2007/06/13 19:33:51 dww
 #
@@ -13,7 +13,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2007-07-16 17:56-0700\n"
+"POT-Creation-Date: 2007-07-16 18:42-0700\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -66,7 +66,7 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
-#: comment.inc:146 issue.inc:603;1719 mail.inc:23;209
+#: comment.inc:146 issue.inc:603;1570;1719 mail.inc:23;209
 msgid "Priority"
 msgstr ""
 
@@ -484,10 +484,6 @@ msgstr ""
 
 #: issue.inc:1568
 msgid "Summary"
-msgstr ""
-
-#: issue.inc:1570
-msgid "Pri"
 msgstr ""
 
 #: issue.inc:1575

@@ -6,7 +6,7 @@ Send feature requests and bug reports to the issue tracking system for
 the project module: http://drupal.org/node/add/project_issue/project_issue.
 
 The project module is currently being maintained by:
-Derek Wright <drupal-project@dwwright.net> 
+Derek Wright <drupal-project@dwwright.net>
 "dww" on drupal.org (http://drupal.org/user/46549).
 
 
@@ -29,5 +29,5 @@ Wish list
  - Make components sub-projects with their own defaults.
  - Enable taxonomy support.
 
-$Id: README.txt,v 1.1.2.1 2006/11/12 09:19:34 dww Exp $
+$Id: README.txt,v 1.1.2.2 2007/07/30 14:57:15 dww Exp $
 $Name:  $

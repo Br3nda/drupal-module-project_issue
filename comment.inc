@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.70.4.10 2007/07/16 07:10:57 dww Exp $
+// $Id: comment.inc,v 1.70.4.11 2007/07/30 14:57:09 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
@@ -35,7 +35,7 @@ function project_comment_page() {
         $output .= node_view($node, NULL, TRUE);
         return $output;
         break;
-      case t('Preview'):      
+      case t('Preview'):
           return $output;
         break;
       case t('Submit'):

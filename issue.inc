@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.26 2007/07/17 01:44:41 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.27 2007/07/30 14:57:09 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -103,7 +103,7 @@ function project_issue_build_form_url($url_arg) {
 }
 
 /**
- * Handles quick search form 
+ * Handles quick search form
  *
  * @param $url_arg
  *   Value returned from arg(2)
@@ -131,7 +131,7 @@ function project_issue_quick_search($url_arg, $filters) {
   // if 'q' is the only thing in $_GET, and it == destination, don't redirect
   if (count($_GET) == 1 && isset($_GET['q']) && $_GET['q'] == $destination) {
 
-    // put $_POST['edit'] where pager will see them 
+    // put $_POST['edit'] where pager will see them
     foreach ($filters as $filter) {
       if (!empty($_POST['edit'][$filter])) {
         $_REQUEST[$filter] = $_POST['edit'][$filter];
@@ -463,7 +463,7 @@ function project_issue_form(&$node, &$param) {
     if (trim($project->help)) {
       drupal_set_message(filter_xss($project->help));
     }
-    if (module_exist('project_release') && 
+    if (module_exist('project_release') &&
         $releases = project_release_get_releases($project, 0)) {
       $releases = array(t('<none>')) + $releases;
     }
@@ -620,7 +620,7 @@ function project_issue_form(&$node, &$param) {
 function project_issue_form_pre_render($form_id, &$form) {
   if ($form_id == 'project_issue_node_form') {
 
-    // Only move to the next page if there were no form errors.  
+    // Only move to the next page if there were no form errors.
     // We don't want to keep incrementing page forever, since users
     // can successfully preview many times.  However, if we already
     // have a value for 'Project' (via a submit with project in the
@@ -696,7 +696,7 @@ function project_issue_node_form_validate($form_id, $form) {
   if ($form_values['page'] == 2) {
     if ($form_values['pid'] && $project = node_load($form_values['pid'])) {
       $node->title = $form_values['title'];
-      if (module_exist('project_release') && 
+      if (module_exist('project_release') &&
           $releases = project_release_get_releases($project, 0)) {
         empty($form_values['rid']) and form_set_error('rid', t('You have to specify a valid version.'));
       }
@@ -765,7 +765,7 @@ function project_issue_comment_validate(&$node) {
 
       // make sure this followup changes something or has a body
       if (!empty($_POST) && empty($node->body)) {
-        if (is_numeric(arg(3))) { 
+        if (is_numeric(arg(3))) {
           $issue = node_load(arg(3));
         }
         if (isset($issue)
@@ -1495,7 +1495,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   // array to map pids to project names. If we're using the project
   // taxonomy, it will really be an array of arrays, where each
   // project type is itself an array. So, we flatten the array once
-  // and then can use it safely in the rest of this method. 
+  // and then can use it safely in the rest of this method.
   if (project_use_taxonomy()) {
     $flat_projects = array();
     foreach ($projects as $tmp) {
@@ -1587,7 +1587,7 @@ function project_issue_query_url($query = 0) {
  * exists and contains some data. If the query was otherwise going to
  * be empty, this function will automatically add the default set of
  * issue states (active, fixed, patch needs work, etc).
- *  
+ *
  * @param $query
  *   The existing query object we're adding to. (This should probably
  *   be a reference, instead of returning the object again).

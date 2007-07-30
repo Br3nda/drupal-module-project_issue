@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.3.2.8 2007/05/07 19:47:12 dww Exp $
+// $Id: mail.inc,v 1.60.2.3.2.9 2007/07/30 14:57:09 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {

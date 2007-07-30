@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.4.2.3.2.19 2007/07/16 07:01:16 dww Exp $
+// $Id: project_issue.module,v 1.4.2.3.2.20 2007/07/30 14:57:09 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -203,7 +203,7 @@ function project_issue_menu($may_cache) {
       'access' => $access,
       'type' => MENU_NORMAL_ITEM,
     );
-    if (module_exist('search')) { 
+    if (module_exist('search')) {
       $items[] = array(
         'path' => 'search/issues',
         'title' => t('issues'),

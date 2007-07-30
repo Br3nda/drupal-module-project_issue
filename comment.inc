@@ -1,9 +1,9 @@
 <?php
-// $Id: comment.inc,v 1.82 2007/07/17 00:58:08 dww Exp $
+// $Id: comment.inc,v 1.83 2007/07/30 14:31:36 dww Exp $
 // $Name:  $
 
 function project_comment_page($op, $nid) {
-  
+
   // Load the parent node.
   $node = node_load($nid);
 
@@ -33,7 +33,7 @@ function project_comment_page($op, $nid) {
         $output .= node_view($node, NULL, TRUE);
         return $output;
         break;
-      case t('Preview'):      
+      case t('Preview'):
           return $output;
         break;
       case t('Submit'):

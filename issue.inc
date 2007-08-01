@@ -1,64 +1,84 @@
 <?php
-// $Id: issue.inc,v 1.238 2007-07-30 14:31:36 dww Exp $
+// $Id: issue.inc,v 1.239 2007-08-01 18:15:21 dww Exp $
 // $Name:  $
 
-function project_issue_page() {
-  switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
-    case 'rss':
-      $project = project_project_retrieve(arg(3));
-      if ($project->nid && node_access('view', $project)) {
-        $query = new StdClass();
-        $query->projects = array($project->nid);
+/**
+ * Menu callback; rss feed for a project's issues.
+ */
+function project_issue_page_rss($nid = 0) {
+  $project = project_project_retrieve($nid);
+  if ($project->nid && node_access('view', $project)) {
+    $query = new StdClass();
+    $query->projects = array($project->nid);
+  
+    project_issue_query_result($query, 'rss');
+  }
+  else {
+    project_issue_query_result(NULL, 'rss');
+  }
+}
 
-        project_issue_query_result($query, 'rss');
-      }
-      else {
-        project_issue_query_result(NULL, 'rss');
-      }
-      break;
-    case 'add':
-      $project = project_project_retrieve(arg(3));
-      // We assume that a user may create issues for projects that he may view.
-      if ($project->nid && node_access('view', $project)) {
-        drupal_goto("node/add/project-issue/$project->uri");
-      }
-      else {
-        drupal_goto("node/add/project-issue");
-      }
-      break;
-    case 'statistics':
-      $project = project_project_retrieve(arg(3));
-      if ($project->nid && node_access('view', $project)) {
-        return project_issue_statistics($project);
-      }
-      else {
-        return project_issue_statistics();
-      }
-      break;
-    case t('Subscribe'):
-    case 'subscribe':
-    case 'subscribe-mail':
-      $project = project_project_retrieve(arg(3));
-      if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
-        return drupal_get_form('project_issue_subscribe', $project);
-      }
-      else {
-        return drupal_get_form('project_issue_subscribe');
-      }
-      break;
-    case 'user':
-       $_GET['participated'] = $GLOBALS['user']->uid;
-    default:
-      $project = project_issue_build_form_url(arg(2));
-      if ($project->nid && node_access('view', $project)) {
-        $query = new StdClass();
-        $query->projects = array($project->nid);
+/**
+ * Menu callback; redirect to add a new issue.
+ */
+function project_issue_page_add($nid = 0) {
+  $project = project_project_retrieve($nid);
+  // We assume that a user may create issues for projects that he may view.
+  if ($project->nid && node_access('view', $project)) {
+    drupal_goto("node/add/project-issue/$project->uri");
+  }
+  else {
+    drupal_goto("node/add/project-issue");
+  }
+}
 
-        return project_issue_query_result($query);
-      }
-      else {
-        return project_issue_query_result();
-      }
+/**
+ * Menu callback; show a project's statistics.
+ */
+function project_issue_page_statistics($nid = 0) {
+  $project = project_project_retrieve($nid);
+  if ($project->nid && node_access('view', $project)) {
+    return project_issue_statistics($project);
+  }
+  else {
+    return project_issue_statistics();
+  }
+}
+
+/**
+ * Menu callback; allow the user to subscribe to issue queues.
+ */
+function project_issue_page_subscribe($nid = 0) {
+  $project = project_project_retrieve($nid);
+  if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
+    return drupal_get_form('project_issue_subscribe', $project);
+  }
+  else {
+    return drupal_get_form('project_issue_subscribe');
+  }
+}
+
+/**
+ * Menu callback; show all issues the user has participated in.
+ */
+function project_issue_page_myissues() {
+  $_GET['participated'] = $GLOBALS['user']->uid;
+  return project_issue_query_result();
+}
+
+/**
+ * Menu callback; show all issues or the issue for a specific project.
+ */
+function project_issue_page($nid = 0) {
+  $project = project_issue_build_form_url($nid);
+  if ($project->nid && node_access('view', $project)) {
+    $query = new StdClass();
+    $query->projects = array($project->nid);
+  
+    return project_issue_query_result($query);
+  }
+  else {
+    return project_issue_query_result();
   }
 }
 

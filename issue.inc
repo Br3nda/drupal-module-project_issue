@@ -1,11 +1,11 @@
 <?php
-// $Id: issue.inc,v 1.239 2007-08-01 18:15:21 dww Exp $
+// $Id: issue.inc,v 1.240 2007-08-02 05:47:11 dww Exp $
 // $Name:  $
 
 /**
  * Menu callback; rss feed for a project's issues.
  */
-function project_issue_page_rss($nid = 0) {
+function project_issue_page_rss($nid = NULL) {
   $project = project_project_retrieve($nid);
   if ($project->nid && node_access('view', $project)) {
     $query = new StdClass();
@@ -21,7 +21,7 @@ function project_issue_page_rss($nid = 0) {
 /**
  * Menu callback; redirect to add a new issue.
  */
-function project_issue_page_add($nid = 0) {
+function project_issue_page_add($nid = NULL) {
   $project = project_project_retrieve($nid);
   // We assume that a user may create issues for projects that he may view.
   if ($project->nid && node_access('view', $project)) {
@@ -35,7 +35,7 @@ function project_issue_page_add($nid = 0) {
 /**
  * Menu callback; show a project's statistics.
  */
-function project_issue_page_statistics($nid = 0) {
+function project_issue_page_statistics($nid = NULL) {
   $project = project_project_retrieve($nid);
   if ($project->nid && node_access('view', $project)) {
     return project_issue_statistics($project);
@@ -48,7 +48,7 @@ function project_issue_page_statistics($nid = 0) {
 /**
  * Menu callback; allow the user to subscribe to issue queues.
  */
-function project_issue_page_subscribe($nid = 0) {
+function project_issue_page_subscribe($nid = NULL) {
   $project = project_project_retrieve($nid);
   if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
     return drupal_get_form('project_issue_subscribe', $project);
@@ -69,7 +69,7 @@ function project_issue_page_myissues() {
 /**
  * Menu callback; show all issues or the issue for a specific project.
  */
-function project_issue_page($nid = 0) {
+function project_issue_page($nid = NULL) {
   $project = project_issue_build_form_url($nid);
   if ($project->nid && node_access('view', $project)) {
     $query = new StdClass();
@@ -196,7 +196,7 @@ function project_issue_build_form_url($url_arg) {
  *   Search filters
  */
 function project_issue_quick_search($url_arg, $filters) {
-  if ($url_arg == 'user') {
+  if ($url_arg === 'user') {
     // My issues query, so stay on the same page
     $destination = 'project/issues/user';
   }

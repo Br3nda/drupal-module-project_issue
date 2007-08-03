@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.33 2007/08/01 18:15:21 dww Exp $
+// $Id: project_issue.module,v 1.34 2007/08/03 01:19:10 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -185,7 +185,7 @@ function project_issue_menu($may_cache) {
     $items[] = array(
       'path' => 'project/issues/add',
       'title' => t('Create'),
-      'callback' => 'project_issue_page_add',
+      'callback' => 'project_issue_page',
       'access' => $access,
       'type' => MENU_NORMAL_ITEM,
     );
@@ -196,15 +196,9 @@ function project_issue_menu($may_cache) {
       'type' => MENU_CALLBACK,
     );
     $items[] = array(
-      'path' => 'project/issues/rss',
-      'callback' => 'project_issue_page_rss',
-      'access' => $access,
-      'type' => MENU_CALLBACK,
-    );
-    $items[] = array(
       'path' => 'project/issues/statistics',
       'title' => t('Statistics'),
-      'callback' => 'project_issue_page_statistics',
+      'callback' => 'project_issue_page',
       'access' => $access,
       'type' => MENU_NORMAL_ITEM,
     );
@@ -228,10 +222,11 @@ function project_issue_menu($may_cache) {
     $items[] = array(
       'path' => 'project/issues/subscribe-mail',
       'title' => t('Subscribe'),
-      'callback' => 'project_issue_page_subscribe',
+      'callback' => 'project_issue_page',
       'access' => $GLOBALS['user']->uid && $access,
       'type' => MENU_NORMAL_ITEM,
     );
+
     // "My projects" page (which shows all issues for all your projects)
     $items[] = array(
       'path' => 'project/user',
@@ -245,7 +240,7 @@ function project_issue_menu($may_cache) {
     $items[] = array(
       'path' => 'project/issues/user',
       'title' => t('My issues'),
-      'callback' => 'project_issue_page_myissues',
+      'callback' => 'project_issue_page',
       'access' => $GLOBALS['user']->uid && $access,
       'type' => MENU_NORMAL_ITEM,
     );

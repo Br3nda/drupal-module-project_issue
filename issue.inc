@@ -1,84 +1,64 @@
 <?php
-// $Id: issue.inc,v 1.240 2007/08/02 05:47:11 dww Exp $
+// $Id: issue.inc,v 1.241 2007/08/03 01:19:10 dww Exp $
 // $Name:  $
 
-/**
- * Menu callback; rss feed for a project's issues.
- */
-function project_issue_page_rss($nid = NULL) {
-  $project = project_project_retrieve($nid);
-  if ($project->nid && node_access('view', $project)) {
-    $query = new StdClass();
-    $query->projects = array($project->nid);
-  
-    project_issue_query_result($query, 'rss');
-  }
-  else {
-    project_issue_query_result(NULL, 'rss');
-  }
-}
+function project_issue_page() {
+  switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
+    case 'rss':
+      $project = project_project_retrieve(arg(3));
+      if ($project->nid && node_access('view', $project)) {
+        $query = new StdClass();
+        $query->projects = array($project->nid);
 
-/**
- * Menu callback; redirect to add a new issue.
- */
-function project_issue_page_add($nid = NULL) {
-  $project = project_project_retrieve($nid);
-  // We assume that a user may create issues for projects that he may view.
-  if ($project->nid && node_access('view', $project)) {
-    drupal_goto("node/add/project-issue/$project->uri");
-  }
-  else {
-    drupal_goto("node/add/project-issue");
-  }
-}
+        project_issue_query_result($query, 'rss');
+      }
+      else {
+        project_issue_query_result(NULL, 'rss');
+      }
+      break;
+    case 'add':
+      $project = project_project_retrieve(arg(3));
+      // We assume that a user may create issues for projects that he may view.
+      if ($project->nid && node_access('view', $project)) {
+        drupal_goto("node/add/project-issue/$project->uri");
+      }
+      else {
+        drupal_goto("node/add/project-issue");
+      }
+      break;
+    case 'statistics':
+      $project = project_project_retrieve(arg(3));
+      if ($project->nid && node_access('view', $project)) {
+        return project_issue_statistics($project);
+      }
+      else {
+        return project_issue_statistics();
+      }
+      break;
+    case t('Subscribe'):
+    case 'subscribe':
+    case 'subscribe-mail':
+      $project = project_project_retrieve(arg(3));
+      if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
+        return drupal_get_form('project_issue_subscribe', $project);
+      }
+      else {
+        return drupal_get_form('project_issue_subscribe');
+      }
+      break;
+    case 'user':
+       $_GET['participated'] = $GLOBALS['user']->uid;
+    default:
+      $project = project_issue_build_form_url(arg(2));
+      if ($project->nid && node_access('view', $project)) {
+        $query = new StdClass();
+        $query->projects = array($project->nid);
 
-/**
- * Menu callback; show a project's statistics.
- */
-function project_issue_page_statistics($nid = NULL) {
-  $project = project_project_retrieve($nid);
-  if ($project->nid && node_access('view', $project)) {
-    return project_issue_statistics($project);
-  }
-  else {
-    return project_issue_statistics();
-  }
-}
-
-/**
- * Menu callback; allow the user to subscribe to issue queues.
- */
-function project_issue_page_subscribe($nid = NULL) {
-  $project = project_project_retrieve($nid);
-  if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
-    return drupal_get_form('project_issue_subscribe', $project);
-  }
-  else {
-    return drupal_get_form('project_issue_subscribe');
-  }
-}
-
-/**
- * Menu callback; show all issues the user has participated in.
- */
-function project_issue_page_myissues() {
-  $_GET['participated'] = $GLOBALS['user']->uid;
-  return project_issue_query_result();
-}
-
-/**
- * Menu callback; show all issues or the issue for a specific project.
- */
-function project_issue_page($nid = NULL) {
-  $project = project_issue_build_form_url($nid);
-  if ($project->nid && node_access('view', $project)) {
-    $query = new StdClass();
-    $query->projects = array($project->nid);
-  
-    return project_issue_query_result($query);
-  }
-  else {
-    return project_issue_query_result();
+        return project_issue_query_result($query);
+      }
+      else {
+        return project_issue_query_result();
+      }
   }
 }
 
@@ -196,7 +176,7 @@ function project_issue_build_form_url($url_arg) {
  *   Search filters
  */
 function project_issue_quick_search($url_arg, $filters) {
-  if ($url_arg === 'user') {
+  if ($url_arg == 'user') {
     // My issues query, so stay on the same page
     $destination = 'project/issues/user';
   }

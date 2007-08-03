@@ -1,0 +1,21 @@
+$Id: UPGRADE.txt,v 1.1 2007/08/03 00:59:23 dww Exp $
+
+======================================================================
+This file contains specific instructions for upgrading your site's
+version of project_issue.module to a new release.  You should always
+check this file when you download a new version to see if there are
+any specific things you need to know about a certain upgrade.
+======================================================================
+
+
+--------------------------------------------------
+Upgrading to 4.7.x-2.* (from the 4.7.x-1.* series)
+--------------------------------------------------
+
+  The 4.7.x-2.* versions of project and project_issue must be upgraded
+at the same time.  For example, you cannot run project_issue version
+4.7.x-2.* with project version 4.7.x-1.*.  Therefore, if you are
+considering upgrading a 4.7.x-1.* installation of project_issue to
+4.7.x-2.*, please consult modules/project/UPGRADE.txt.
+
+

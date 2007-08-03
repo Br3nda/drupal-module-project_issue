@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.241 2007-08-03 01:19:10 dww Exp $
+// $Id: issue.inc,v 1.242 2007-08-03 19:07:02 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1673,7 +1673,7 @@ function project_issue_query_result_quick_search($query, $projects, $states, $pr
           $option[] = ${$field}[$value];
         }
         else {
-          unset($query->$field[$key]);
+          unset($query->{$field}[$key]);
         }
       }
       $query->$field = implode(',', $query->$field);

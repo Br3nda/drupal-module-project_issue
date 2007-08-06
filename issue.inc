@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.242 2007/08/03 19:07:02 dww Exp $
+// $Id: issue.inc,v 1.243 2007/08/06 17:34:20 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1518,9 +1518,6 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
       'href' => "project/issues/search/$project->uri",
       'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $project->uri))),
     );
-    if (user_access('create project issues')) {
-
-    }
   }
   else {
     // only set a more descriptive title if we're not looking at "my

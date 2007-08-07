@@ -2,32 +2,15 @@ This module allows teams to track outstanding items which need
 resolution. It provides e-mail notifications to members about updates
 to items.  Similar to many issue tracking systems.
 
+For installation instructions, see INSTALL.txt.
+
 Send feature requests and bug reports to the issue tracking system for
 the project module: http://drupal.org/node/add/project_issue/project_issue.
+A TODO list can be found at http://groups.drupal.org/node/5489
 
-The project module is currently being maintained by:
-Derek Wright <drupal-project@dwwright.net>
-"dww" on drupal.org (http://drupal.org/user/46549).
+The project family of modules is currently being co-maintained by:
+- Derek Wright (http://drupal.org/user/46549) a.k.a. "dww"
+- Chad Phillips (http://drupal.org/user/22079) a.k.a. "hunmonk"
 
-
-Wish list
---------
-
- - Using the existing Drupal "comment" system for issue replies
-   instead of the customized issue "follow-ups" currently in place.
- - Better mailhandler integration for creating and replying to issues
-   via email.
- - Add method for project owner to assign issues to others.
- - Add a setting where you can select what node type should be the
-   "project" that project_issues are associated with.
- - RSS feeds for issues
- - Improve themeability of listings and issues.
- - Allow projects to specify their own categories (bug report, feature
-   request, etc).
- - Tool for administrators to be able to update the status of several
-   issues at once (mass closing).
- - Make components sub-projects with their own defaults.
- - Enable taxonomy support.
-
-$Id: README.txt,v 1.1.2.2 2007/07/30 14:57:15 dww Exp $
+$Id: README.txt,v 1.1.2.3 2007/08/07 20:02:38 dww Exp $
 $Name:  $

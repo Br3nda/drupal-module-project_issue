@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.10 2007/07/13 03:29:27 dww Exp $
+// $Id: project_issue.install,v 1.11 2007/08/09 20:23:05 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -147,6 +147,12 @@ function project_issue_install() {
     project_issue_init_state(8, 'patch (code needs review)', -8, 0, 0);
     project_issue_init_state(13, 'patch (code needs work)', -6, 0, 0);
     project_issue_init_state(14, 'patch (ready to commit)', -2, 0, 0);
+
+    // Since we're hacking in auto-increment values here,
+    // update the sequence value for Postgres -- ugly but necessary for now.
+    if ($GLOBALS['db_type'] == 'pgsql') {
+      db_query("SELECT setval('project_issue_state_sid_seq', 14)");
+    }
   }
 
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'project_issue'");
@@ -238,6 +244,20 @@ function project_issue_update_502() {
       if (!db_num_rows(db_query("SELECT relname FROM pg_class WHERE relname = '{project}_cid_seq' AND relkind='S'"))) {
         $ret[] = update_sql("CREATE SEQUENCE {project}_cid_seq INCREMENT 1 START 1");
       }
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Fix custom issue states. The sid needs to be set properly for the sequence.
+ */
+function project_issue_update_5000() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'pgsql':
+      $last_sid = db_result(db_query('SELECT MAX(sid) FROM project_issue_state'));
+      db_query("SELECT setval('project_issue_state_sid_seq', %d)", $last_sid);
       break;
   }
   return $ret;

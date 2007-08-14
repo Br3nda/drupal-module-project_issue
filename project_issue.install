@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.11 2007/08/09 20:23:05 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.12 2007/08/14 01:24:02 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -34,7 +34,8 @@ function project_issue_install() {
           file_mime varchar(255) NOT NULL default '',
           file_size int NOT NULL default 0,
           PRIMARY KEY (nid),
-          KEY project_issues_pid (pid)
+          KEY project_issues_pid (pid),
+          KEY project_issues_sid (sid)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_comments} (
           cid int(10) unsigned NOT NULL default '0',
@@ -97,6 +98,7 @@ function project_issue_install() {
             file_size int default 0 NOT NULL,
             PRIMARY KEY (nid)
           );");
+        db_query("CREATE INDEX {project_issues}_sid_idx ON {project_issues}(sid)");
       }
       if (!db_table_exists('project_comments')) {
         db_query("CREATE TABLE {project_comments} (
@@ -259,6 +261,24 @@ function project_issue_update_5000() {
       $last_sid = db_result(db_query('SELECT MAX(sid) FROM project_issue_state'));
       db_query("SELECT setval('project_issue_state_sid_seq', %d)", $last_sid);
       break;
+  }
+  return $ret;
+}
+
+/**
+ * Add an index to {project_issues}.sid
+ */
+function project_issue_update_5001() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql('ALTER TABLE {project_issues} ADD INDEX project_issues_sid (sid)');
+      break;
+    case 'pgsql':
+      $ret[] = update_sql('CREATE INDEX {project_issues}_sid_idx ON {project_issues}(sid)');
+      break;
+
   }
   return $ret;
 }

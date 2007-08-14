@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.46 2007/08/03 19:07:13 dww Exp $
+// $Id: issue.inc,v 1.172.2.47 2007/08/14 01:10:51 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1351,7 +1351,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $query->projects = $project->nid;
     $links = array();
     if (user_access('create project issues')) {
-      $links[] = l(t('submit'), "node/add/project_issue/$project->uri", array('title' => t('Submit a new issue for %project.', array('%project' => check_plain($project->uri)))));
+      $links[] = l(t('create'), "node/add/project_issue/$project->uri", array('title' => t('Create a new issue for %project.', array('%project' => check_plain($project->uri)))));
     }
     $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => check_plain($project->uri)))));
     if ($user->uid) {
@@ -1367,7 +1367,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     }
     $links = array();
     if (user_access('create project issues')) {
-      $links[] = l(t('submit'), "node/add/project_issue", array('title' => t('Submit a new issue.')));
+      $links[] = l(t('create'), "node/add/project_issue", array('title' => t('Create a new issue.')));
     }
     $links[] = l(t('statistics'), "project/issues/statistics", array('title' => t('See statistics about issues.')));
     if ($user->uid) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.1.2.2.2.6 2007/08/14 01:27:20 dww Exp $
+// $Id: project_issue.install,v 1.1.2.2.2.7 2007/08/15 19:41:05 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -97,6 +97,7 @@ function project_issue_install() {
             file_size int default 0 NOT NULL,
             PRIMARY KEY (nid)
           );");
+        db_query("CREATE INDEX {project_issues}_pid_idx ON {project_issues}(pid)");
         db_query("CREATE INDEX {project_issues}_sid_idx ON {project_issues}(sid)");
       }
       if (!project_issue_db_table_exists('project_comments')) {
@@ -115,6 +116,7 @@ function project_issue_install() {
             PRIMARY KEY (cid)
           );");
         db_query("CREATE SEQUENCE {project}_cid_seq INCREMENT 1 START 1");
+	db_query("CREATE INDEX {project_comments}_nid_idx ON {project_comments}(nid)");
       }
       if (!project_issue_db_table_exists('project_subscriptions')) {
         db_query("CREATE TABLE {project_subscriptions} (
@@ -122,6 +124,7 @@ function project_issue_install() {
             uid int NOT NULL default '0',
             level smallint NOT NULL default '0'
           );");
+        db_query("CREATE INDEX {project_subscriptions}_nid_uid_level_idx ON {project_subscriptions}(nid, uid, level)");
       }
       if (!project_issue_db_table_exists('project_issue_state')) {
         db_query("CREATE TABLE {project_issue_state} (
@@ -238,6 +241,21 @@ function project_issue_update_4() {
       $ret[] = update_sql('CREATE INDEX {project_issues}_sid_idx ON {project_issues}(sid)');
       break;
 
+  }
+  return $ret;
+}
+
+/**
+ * Add missing pgsql indexes.
+ */
+function project_issue_update_5() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'pgsql':
+      $ret[] = update_sql('CREATE INDEX {project_issues}_pid_idx ON {project_issues}(pid)');
+      $ret[] = update_sql('CREATE INDEX {project_comments}_nid_idx ON {project_comments}(nid)');
+      $ret[] = update_sql('CREATE INDEX {project_subscriptions}_nid_uid_level_idx ON {project_subscriptions}(nid, uid, level)');
+      break;
   }
   return $ret;
 }

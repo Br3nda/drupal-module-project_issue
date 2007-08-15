@@ -1,8 +1,10 @@
 <?php
-// $Id: issue.inc,v 1.243 2007/08/06 17:34:20 dww Exp $
+// $Id: issue.inc,v 1.244 2007/08/15 18:56:25 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
+  global $user;
+
   switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
     case 'rss':
       $project = project_project_retrieve(arg(3));
@@ -38,12 +40,23 @@ function project_issue_page() {
     case t('Subscribe'):
     case 'subscribe':
     case 'subscribe-mail':
-      $project = project_project_retrieve(arg(3));
-      if ($GLOBALS['user']->uid && $project->nid && node_access('view', $project)) {
-        return drupal_get_form('project_issue_subscribe', $project);
+      if ($user->uid) {
+        if (valid_email_address($user->mail)) {
+          $project = project_project_retrieve(arg(3));
+          if ($project->nid && node_access('view', $project)) {
+            return drupal_get_form('project_issue_subscribe', $project);
+          }
+          else {
+            return drupal_get_form('project_issue_subscribe');
+          }
+        }
+        else {
+          return t('You must have a valid e-mail address in order to subscribe to issues. Please <a href="@update">update your account</a>.', array('@update' => url('user/'. $user->uid .'/edit', drupal_get_destination())));
+        }
       }
       else {
-        return drupal_get_form('project_issue_subscribe');
+        $destination = drupal_get_destination();
+        return t('Please <a href="@login">login</a> or <a href="@register">register</a> in order to subscribe to issues.', array('@login' => url('user/login', $destination), '@register' => url('user/register', $destination)));
       }
       break;
     case 'user':
@@ -1928,7 +1941,7 @@ function project_issue_query_rss($result, $project) {
     $channel['title'] = variable_get('site_name', 'drupal') .' - '. t('issues');
   }
   $channel['link'] = url('project/issues', NULL, NULL, TRUE); // not 100% correct
-    
+
   node_feed($result, $channel);
 }
 

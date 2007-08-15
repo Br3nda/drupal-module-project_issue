@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.14 2007-08-15 19:40:58 dww Exp $
+// $Id: project_issue.install,v 1.15 2007-08-15 23:47:41 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -160,6 +160,8 @@ function project_issue_install() {
     }
   }
 
+  project_issue_add_missing_projects();
+
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'project_issue'");
 }
 
@@ -200,11 +202,27 @@ function project_issue_uninstall() {
   }
 }
 
+function project_issue_enable() {
+  project_issue_add_missing_projects();
+}
+
 /**
  * Initialize a given issue state in the database.
  */
 function project_issue_init_state($sid, $name, $weight, $author, $query) {
   db_query("INSERT INTO {project_issue_state} (sid, name, weight, author_has, default_query) VALUES (%d, '%s', %d, %d, %d)", $sid, $name, $weight, $author, $query);
+}
+
+/**
+ * Check for existing project nodes that do not have an entry in the
+ * {project_issue_projects} table, and add them.
+ *
+ */
+function project_issue_add_missing_projects() {
+  $projects = db_query("SELECT n.nid, pip.nid AS pip_nid FROM {node} n LEFT JOIN project_issue_projects pip ON n.nid = pip.nid WHERE n.type = 'project_project' AND pip.nid IS NULL");
+  while ($project = db_fetch_object($projects)) {
+    db_query('INSERT INTO {project_issue_projects} (nid) VALUES (%d)', $project->nid);
+  }
 }
 
 /**

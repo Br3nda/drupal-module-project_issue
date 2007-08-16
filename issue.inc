@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.244 2007-08-15 18:56:25 dww Exp $
+// $Id: issue.inc,v 1.245 2007-08-16 21:35:53 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -684,14 +684,6 @@ function project_issue_form($node, $param) {
         $msg .= ' '. t('Please contact the site administrator.');
       }
       drupal_set_message($msg, 'warning');
-    }
-
-    // Add any cck fields to the form
-    if (function_exists('_content_widget_invoke')) {
-      $db_node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
-      $type = content_types($db_node->type);
-      _content_widget_invoke('prepare form values', $db_node);
-      $form = array_merge($form, _content_widget_invoke('form', $db_node));
     }
   }
   else {

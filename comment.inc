@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.83 2007-07-30 14:31:36 dww Exp $
+// $Id: comment.inc,v 1.84 2007-08-16 21:35:53 dww Exp $
 // $Name:  $
 
 function project_comment_page($op, $nid) {
@@ -70,6 +70,14 @@ function project_comment_form($edit, $param = NULL) {
   $form['project_issue_form'] = project_issue_form($edit, $param);
   unset($form['project_issue_form']['#prefix']);
   unset($form['project_issue_form']['#suffix']);
+
+  // Add any CCK fields to the follow-up form.
+  if (function_exists('_content_widget_invoke')) {
+    $db_node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
+    $type = content_types($db_node->type);
+    _content_widget_invoke('prepare form values', $db_node);
+    $form = array_merge($form, _content_widget_invoke('form', $db_node));
+  }
 
   _project_issue_form_add_required_fields($form['project_issue_form'], FALSE);
   if ($edit->cid) {

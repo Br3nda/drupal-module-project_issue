@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.1.2.10 2007/08/15 23:59:09 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.1.2.11 2007/08/16 20:00:35 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -35,7 +35,8 @@ function project_issue_install() {
           file_size int NOT NULL default 0,
           PRIMARY KEY (nid),
           KEY project_issues_pid (pid),
-          KEY project_issues_sid (sid)
+          KEY project_issues_sid (sid),
+          KEY project_issues_nid_assigned (nid, assigned)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_comments} (
           cid int(10) unsigned NOT NULL default '0',
@@ -99,6 +100,7 @@ function project_issue_install() {
           );");
         db_query("CREATE INDEX {project_issues}_pid_idx ON {project_issues}(pid)");
         db_query("CREATE INDEX {project_issues}_sid_idx ON {project_issues}(sid)");
+        db_query('CREATE INDEX {project_issues}_nid_assigned_idx ON {project_issues}(nid, assigned)');
       }
       if (!project_issue_db_table_exists('project_comments')) {
         db_query("CREATE TABLE {project_comments} (
@@ -261,6 +263,23 @@ function project_issue_update_5() {
       $ret[] = update_sql('CREATE INDEX {project_issues}_pid_idx ON {project_issues}(pid)');
       $ret[] = update_sql('CREATE INDEX {project_comments}_nid_idx ON {project_comments}(nid)');
       $ret[] = update_sql('CREATE INDEX {project_subscriptions}_nid_uid_level_idx ON {project_subscriptions}(nid, uid, level)');
+      break;
+  }
+  return $ret;
+}
+
+/**
+ * Add nid_assigned index to {project_issues}.
+ */
+function project_issue_update_6() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql('ALTER TABLE {project_issues} ADD INDEX {project_issues}_nid_assigned (nid, assigned)');
+      break;
+    case 'pgsql':
+      $ret[] = update_sql('CREATE INDEX {project_issues}_nid_assigned_idx ON {project_issues}(nid, assigned)');
       break;
   }
   return $ret;

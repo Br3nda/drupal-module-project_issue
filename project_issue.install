@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.1.2.2.2.7 2007/08/15 19:41:05 dww Exp $
+// $Id: project_issue.install,v 1.1.2.2.2.8 2007/08/16 00:00:22 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -155,6 +155,13 @@ function project_issue_install() {
 	if ($GLOBALS['db_type'] == 'pgsql') {
 	  db_query("SELECT setval('project_issue_state_sid_seq', 14)");
 	}
+  }
+
+  // Check for existing project nodes that do not have an entry in the
+  // {project_issue_projects} table, and add them.
+  $projects = db_query("SELECT n.nid, pip.nid AS pip_nid FROM {node} n LEFT JOIN project_issue_projects pip ON n.nid = pip.nid WHERE n.type = 'project_project' AND pip.nid IS NULL");
+  while ($project = db_fetch_object($projects)) {
+    db_query('INSERT INTO {project_issue_projects} (nid) VALUES (%d)', $project->nid);
   }
 }
 

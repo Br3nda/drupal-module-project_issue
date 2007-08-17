@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.245 2007-08-16 21:35:53 dww Exp $
+// $Id: issue.inc,v 1.246 2007-08-17 16:56:53 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -135,6 +135,9 @@ function project_issue_update_project($pid, $cid = NULL, $rid = NULL) {
   // Build the HTML output for the component select.
   $form = form_builder('component', $form);
   $return['component'] .= drupal_render($form);
+
+  // Set proper content type header for the AJAX call.
+  drupal_set_header('Content-type: text/javascript');
 
   // Translate to js before output, so the calling js can work with the data.
   print drupal_to_js($return);

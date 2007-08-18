@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.29 2007/08/14 01:10:45 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.30 2007/08/18 02:17:43 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -796,19 +796,17 @@ function project_issue_comment_validate(&$node) {
 
 /**
  * Ensure only files with allowed extension are uploaded.
- *
  */
 function project_issue_validate_file($file) {
-  global $user;
-  foreach ($user->roles as $rid => $name) {
-    $extensions = variable_get("project_issues_extensions_$rid", variable_get('project_issues_extensions_default', 'patch jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp'));
-    $regex = '/\.('. ereg_replace(' +', '|', preg_quote($extensions)) .')$/i';
-    if (!preg_match($regex, $file->filename)) {
-      form_set_error('file_issue', t('The selected file %name can not be attached to this post, because it is only possible to attach files with the following extensions: %files-allowed.', array('%name' => $file->filename, '%files-allowed' => $extensions)));
-      return FALSE;
+  $whitelist = project_issue_filename_extension_whitelist();
+  $matches = array();
+  if (preg_match('/\.([^.]*)$/', $file->filename, $matches)) {
+    if (in_array($matches[1], $whitelist)) {
+      return TRUE;
     }
   }
-  return TRUE;
+  form_set_error('file_issue', t('The selected file %name can not be attached to this post, because it is only possible to attach files with the following extensions: %files-allowed.', array('%name' => $file->filename, '%files-allowed' => implode(', ', $whitelist))));
+  return FALSE;
 }
 
 function project_issue_view(&$node, $teaser = false, $page = false) {

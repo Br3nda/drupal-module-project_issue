@@ -1,9 +1,11 @@
 <?php
-// $Id: project_issue.module,v 1.34 2007/08/03 01:19:10 dww Exp $
+// $Id: project_issue.module,v 1.35 2007/08/18 02:17:32 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments
+
+define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png html doc xls pdf ppt pps odt ods odp odg');
 
 $path = drupal_get_path('module', 'project_issue');
 if (file_exists("$path/issue.inc")) {
@@ -96,9 +98,17 @@ function project_issue_settings_form() {
     );
   }
 
-  $upload_extensions_default = variable_get('upload_extensions_default', 'patch jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp');
+  $form['project_issues_extensions_default'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default permitted file extensions'),
+    '#default_value' => variable_get('project_issues_extensions_default', PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS),
+    '#maxlength' => 255,
+    '#description' => t('Default file extensions that users can upload and attach to issues. These defaults are used if none of the roles for a given user define their own allowed extensions. Separate the extensions with a space and do not include the leading dot.'),
+  );
 
-  $roles = user_roles(0, 'create project issues');
+  $roles = _project_issue_roles('create project issues');
+  natcasesort($roles);
+
   $form['roles'] = array('#type' => 'value', '#value' => $roles);
 
   foreach ($roles as $rid => $role) {
@@ -111,9 +121,9 @@ function project_issue_settings_form() {
     $form['project_issues_settings_role_'. $rid]['project_issues_extensions_'. $rid] = array(
       '#type' => 'textfield',
       '#title' => t('Permitted file extensions'),
-      '#default_value' => variable_get('project_issues_extensions_'. $rid, $upload_extensions_default),
+      '#default_value' => variable_get('project_issues_extensions_'. $rid, ''),
       '#maxlength' => 255,
-      '#description' => t('Extensions that users in this role can upload. Separate extensions with a space and do not include the leading dot.'),
+      '#description' => t('Extensions that users in this role can upload. Separate the extensions with a space and do not include the leading dot.'),
     );
   }
 
@@ -733,20 +743,12 @@ function project_issue_check_directory($form_element) {
  *   The potentially modified $filename.
  */
 function project_issue_munge_filename($filename) {
-  global $user;
-
   $original = $filename;
 
   // Allow potentially insecure uploads for very savvy users and admin
   if (!variable_get('allow_insecure_uploads', 0)) {
 
-    $extensions = '';
-    foreach ($user->roles as $rid => $name) {
-      $extensions .= ' '. variable_get("project_issues_extensions_$rid", variable_get('project_issues_extensions_default', 'patch jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp'));
-    }
-
-    $whitelist = array_unique(explode(' ', trim($extensions)));
-
+    $whitelist = project_issue_filename_extension_whitelist();
     $filename_parts = explode('.', $filename);
 
     $new_filename = array_shift($filename_parts); // Remove file basename.
@@ -762,4 +764,62 @@ function project_issue_munge_filename($filename) {
   }
 
   return $filename;
+}
+
+/**
+ * Returns an array of allowed file extensions based on the user's role(s).
+ *
+ * Extensions are considered valid if they are allowed by *any* of the user's
+ * roles which currently allow creating issues. If none of the roles define
+ * any explicit extensions, the default set of extensions are used, insteaad.
+ */
+function project_issue_filename_extension_whitelist() {
+  global $user;
+  static $whitelist = array();
+
+  if (empty($whitelist)) {
+    $roles = _project_issue_roles('create project issues');
+    $extensions = '';
+    foreach ($user->roles as $rid => $name) {
+      if (isset($roles[$rid])) {
+        $role_ext = variable_get("project_issues_extensions_$rid", '');
+        if (!empty($role_ext)) { 
+          $extensions .= ' '. $role_ext;
+        }
+      }
+    }
+    if (empty($extensions)) {
+      $extensions = variable_get('project_issues_extensions_default', PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS);
+    }
+    $whitelist = array_unique(explode(' ', trim($extensions)));
+  }
+
+  return $whitelist;
+}
+
+/**
+ * Helper function that returns all roles that have a given permission.
+ *
+ * Unlike core's user_roles(), this handles the case where the "authenticated
+ * user" role has a permission, in which case, all other roles effectively
+ * have access to that permission. This is important for the settings to
+ * control which filename extensions are allowed for each role.
+ *
+ * @param $permission
+ *   A string containing a permission. Only roles that provide this permission
+ *   are returned.
+ * @return
+ *   Associative array of roles that provide the given permission. The keys
+ *   are the role IDs (rid) and the values are the role names.
+ */
+function _project_issue_roles($permission) {
+  $roles = user_roles(FALSE, $permission);
+  if (isset($roles[DRUPAL_AUTHENTICATED_RID])) {
+    // All authenticated users have this permission, so we have to return all
+    // user roles. If anonymous users have this permission, we want to pass
+    // FALSE to the $membersonly argument to user_roles(), so that anonymous
+    // is included in the final array we return.
+    $roles = user_roles(empty($roles[DRUPAL_ANONYMOUS_RID]));
+  }
+  return $roles;
 }

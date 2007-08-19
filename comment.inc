@@ -1,10 +1,10 @@
 <?php
-// $Id: comment.inc,v 1.70.4.11 2007/07/30 14:57:09 dww Exp $
+// $Id: comment.inc,v 1.70.4.12 2007/08/19 23:23:07 dww Exp $
 // $Name:  $
 
 function project_comment_page() {
   
-  if (user_access('create project issues')) {
+  if (node_access('create', 'project_issue')) {
     $edit = (object) $_POST['edit'];
     $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
     if (!node_access('view', $node)) {

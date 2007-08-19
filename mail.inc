@@ -1,10 +1,10 @@
 <?php
-// $Id: mail.inc,v 1.72 2007-05-07 19:47:09 dww Exp $
+// $Id: mail.inc,v 1.73 2007-08-19 23:23:37 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
-    if (user_access('create project issues')) {
+    if (node_access('create', 'project_issue')) {
       $node->nid = preg_replace('/@.+/', '', $node->nid);
 
       if ($node->nid) {

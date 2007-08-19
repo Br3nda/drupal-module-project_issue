@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.35 2007-08-18 02:17:32 dww Exp $
+// $Id: project_issue.module,v 1.36 2007-08-19 23:23:37 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -106,7 +106,12 @@ function project_issue_settings_form() {
     '#description' => t('Default file extensions that users can upload and attach to issues. These defaults are used if none of the roles for a given user define their own allowed extensions. Separate the extensions with a space and do not include the leading dot.'),
   );
 
-  $roles = _project_issue_roles('create project issues');
+  // Find all the roles that can create issues for the per-role upload file
+  // extension whitelist settings.
+  $create_roles = _project_issue_roles('create project issues');
+  $admin_roles = _project_issue_roles('administer projects');
+  // array_merge() will reset the keys and allow duplicates, we want '+'.
+  $roles = $create_roles + $admin_roles;
   natcasesort($roles);
 
   $form['roles'] = array('#type' => 'value', '#value' => $roles);
@@ -158,7 +163,7 @@ function project_issue_link($type, $node = 0, $main = 0) {
       if ($node->type == 'project_issue' &&
           !(arg(0) == 'project' && arg(1) == 'comments')) {
           // Only add the link if we're not already on an issue follow-up.
-            if (user_access('create project issues')) {
+            if (node_access('create', 'project_issue')) {
               $links['project_issue_follow_up'] = array(
                 'title' => t('Follow up'),
                 'href' => "project/comments/add/$node->nid",
@@ -180,10 +185,16 @@ function project_issue_menu($may_cache) {
   $items = array();
   global $user;
 
+  $access_create = node_access('create', 'project_issue');
+
   if ($may_cache) {
 
+    $access_all = user_access('access project issues');
+    $access_own = user_access('access own project issues');
+    $access_admin = user_access('administer projects');
+    $access = $access_all || $access_own || $access_admin;
+
     // Issues
-    $access = user_access('access project issues');
     $items[] = array(
       'path' => 'project/issues',
       'title' => t('Issues'),
@@ -196,7 +207,7 @@ function project_issue_menu($may_cache) {
       'path' => 'project/issues/add',
       'title' => t('Create'),
       'callback' => 'project_issue_page',
-      'access' => $access,
+      'access' => $access_create,
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
@@ -233,7 +244,7 @@ function project_issue_menu($may_cache) {
       'path' => 'project/issues/subscribe-mail',
       'title' => t('Subscribe'),
       'callback' => 'project_issue_page',
-      'access' => $GLOBALS['user']->uid && $access,
+      'access' => $user->uid && $access,
       'type' => MENU_NORMAL_ITEM,
     );
 
@@ -251,12 +262,11 @@ function project_issue_menu($may_cache) {
       'path' => 'project/issues/user',
       'title' => t('My issues'),
       'callback' => 'project_issue_page',
-      'access' => $GLOBALS['user']->uid && $access,
+      'access' => $user->uid && $access,
       'type' => MENU_NORMAL_ITEM,
     );
 
     // Administrative pages
-    $access = user_access('administer projects');
     $items[] = array(
       'path' => 'admin/project/project-issue-settings',
       'title' => t('Project issue settings'),
@@ -265,7 +275,7 @@ function project_issue_menu($may_cache) {
       'callback arguments' => array('project_issue_settings_form'),
       'type' => MENU_NORMAL_ITEM,
       'weight' => 1,
-      'access' => $access,
+      'access' => $access_admin,
     );
 
     // Administer issue status settings
@@ -276,7 +286,7 @@ function project_issue_menu($may_cache) {
       'callback' => 'drupal_get_form',
       'callback arguments' => array('project_issue_admin_states_form'),
       'weight' => 1,
-      'access' => $access,
+      'access' => $access_admin,
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
@@ -284,7 +294,7 @@ function project_issue_menu($may_cache) {
       'title' => t('Delete'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('project_issue_delete_state_confirm'),
-      'access' => $access,
+      'access' => $access_admin,
       'type' => MENU_CALLBACK,
     );
 
@@ -311,7 +321,7 @@ function project_issue_menu($may_cache) {
          'path' => 'project/comments',
          'title' => t('Comments'),
          'callback' => 'project_comment_page',
-         'access' => node_access('view', $node),
+         'access' => node_access('view', $node) && $access_create,
          'type' => MENU_CALLBACK,
         );
       }

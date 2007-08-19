@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.49 2007/08/19 00:44:16 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.50 2007/08/19 23:23:18 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -216,14 +216,14 @@ function project_issue_statistics($project = 0) {
   $header = array(t('Category'), t('Overall'), t('Last month'));
   $rows = array();
   $duration = time() - 30 * 24 * 60 * 60;
-  $result = db_query('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 GROUP BY p.category', $filter);
+  $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 GROUP BY p.category', $filter));
   while ($stat = db_fetch_object($result)) {
     $i++;
     $rows[$i][0] = project_issue_category($stat->category);;
     $rows[$i][1] = array('data' => format_interval($stat->duration, 2), 'class' => 'numeric');
   }
 
-  $result = db_query('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 AND n.created > %d GROUP BY p.category', $filter, $duration);
+  $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 AND n.created > %d GROUP BY p.category', $filter, $duration));
   while ($stat = db_fetch_object($result)) {
     $j++;
     $rows[$j][2] = array('data' => format_interval($stat->duration, 2), 'class' => 'numeric');
@@ -253,8 +253,7 @@ function project_issue_statistics($project = 0) {
   if (!$project->nid) {
     $header = array_merge(array(t('Project')), project_issue_state(), array(t('Total')));
     $rows = array();
-    $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.sid, COUNT(n.nid) AS total FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.pid WHERE n.type = 'project_project' AND n.status = 1 GROUP BY n.nid, p.sid, n.title"));
-
+    $result = db_query(db_rewrite_sql("SELECT pn.nid, pn.title, p.sid, COUNT(n.nid) AS total FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.nid INNER JOIN {node} pn ON p.pid = pn.nid WHERE n.status = 1 AND pn.status = 1 GROUP BY pn.nid, p.sid, pn.title"));
     $orig = array('project' => array('data' => 0));
     foreach (project_issue_state() as $key => $value) {
       $orig[$key] = array('data' => '', 'class' => 'project-numeric');
@@ -438,6 +437,9 @@ function project_issue_form(&$node, &$param) {
   // Fetch a list of all projects to make swapping simpler
   $uris = NULL;
   $projects = array(t('<none>')) + project_projects_select_options($uris);
+  if (count($projects) == 1) {
+    drupal_set_message(t('You do not have access to any projects.'), 'error');
+  }
 
   // Try to find the active project, if not already known.
   if (empty($node->pid)) {
@@ -889,6 +891,9 @@ function project_issue_delete($node) {
 
 function project_issue_access($op, $node) {
   global $user;
+  if (user_access('administer projects')) {
+    return TRUE;
+  }
   switch ($op) {
     case 'view':
       if (user_access('access own project issues') && $node->uid == $user->uid) {
@@ -901,14 +906,12 @@ function project_issue_access($op, $node) {
     case 'create':
       return user_access('create project issues');
     case 'update':
-      if (user_access('administer projects') || (user_access('edit own project issues') && $node->uid == $user->uid)) {
+      if (user_access('edit own project issues') && $node->uid == $user->uid) {
         return TRUE;
       }
       break;
     case 'delete':
-      if (user_access('administer projects')) {
-        return TRUE;
-      }
+      // Admin case already handled, no one else should be able to delete.
       break;
   }
 }
@@ -926,9 +929,13 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false) {
 
   foreach($options as $state) {
     if ($restrict) {
-      // Check if user has access, or if status is default status and therefore available to all,
-      // or if user is original issue poster and poster is granted access
-      if (user_access('set issue status '. str_replace("'", "", $state->name)) || ($state->sid == variable_get('project_issue_default_state', 1)) || ($state->author_has && $is_author)) {
+      // Check if user has access,
+      // or if status is default status and therefore available to all,
+      // or if user is original issue author and author has access
+      if (user_access('set issue status '. str_replace("'", "", $state->name))
+          || user_access('administer projects')
+          || ($state->sid == variable_get('project_issue_default_state', 1))
+          || ($state->author_has && $is_author)) {
         $states[$state->sid] = $state->name;
       }
     }
@@ -1349,8 +1356,13 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $releases = project_release_load($project, 0);
     $query->projects = $project->nid;
     $links = array();
+<<<<<<< issue.inc
+    if (node_access('create', 'project_issue')) {
+      $links[] = l(t('create'), "node/add/project_issue/$project->uri", array('title' => t('Create a new issue for %project.', array('%project' => check_plain($project->uri)))));
+=======
     if (user_access('create project issues')) {
       $links[] = l(t('create'), "node/add/project_issue/$project->uri", array('title' => t('Create a new issue for %project.', array('%project' => check_plain($project->uri)))));
+>>>>>>> 1.172.2.47
     }
     $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => check_plain($project->uri)))));
     if ($user->uid) {
@@ -1365,8 +1377,13 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
       drupal_set_title(t('issues for all projects'));
     }
     $links = array();
+<<<<<<< issue.inc
+    if (node_access('create', 'project_issue')) {
+      $links[] = l(t('create'), "node/add/project_issue", array('title' => t('Create a new issue.')));
+=======
     if (user_access('create project issues')) {
       $links[] = l(t('create'), "node/add/project_issue", array('title' => t('Create a new issue.')));
+>>>>>>> 1.172.2.47
     }
     $links[] = l(t('statistics'), "project/issues/statistics", array('title' => t('See statistics about issues.')));
     if ($user->uid) {

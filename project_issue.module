@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.4.2.16 2007/08/18 02:18:02 dww Exp $
+// $Id: project_issue.module,v 1.4.2.17 2007/08/19 23:23:18 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -103,7 +103,12 @@ function project_issue_settings() {
     '#description' => t('Default file extensions that users can upload and attach to issues. These defaults are used if none of the roles for a given user define their own allowed extensions. Separate the extensions with a space and do not include the leading dot.'),
   );
 
-  $roles = _project_issue_roles('create project issues');
+  // Find all the roles that can create issues for the per-role upload file
+  // extension whitelist settings.
+  $create_roles = _project_issue_roles('create project issues');
+  $admin_roles = _project_issue_roles('administer projects');
+  // array_merge() will reset the keys and allow duplicates, we want '+'.
+  $roles = $create_roles + $admin_role;
   natcasesort($roles);
 
   $form['roles'] = array('#type' => 'value', '#value' => $roles);
@@ -152,10 +157,12 @@ function project_issue_link($type, $node = 0, $main = 0) {
   $links = array();
   switch ($type) {
     case 'node':
-      if ($node->type == 'project_issue') {
-        if (user_access('create project issues')) {
-          $links[] = l(t('follow up'), "project/comments/add/$node->nid");
-        }
+      if ($node->type == 'project_issue'
+          // Only add the link if we're not already on an issue follow-up.
+          && !(arg(0) == 'project' && arg(1) == 'comments')
+          // And, of course, if the user has permission.
+          && node_access('create', 'project_issue') ) {
+        $links[] = l(t('follow up'), "project/comments/add/$node->nid");
       }
       break;
   }
@@ -166,11 +173,17 @@ function project_issue_menu($may_cache) {
   $items = array();
   global $user;
 
+  $access_create = node_access('create', 'project_issue');
+
   if ($may_cache) {
     // Authenticated user pages:
 
+    $access_all = user_access('access project issues');
+    $access_own = user_access('access own project issues');
+    $access_admin = user_access('administer projects');
+    $access = $access_all || $access_own || $access_admin;
+
     // Issues
-    $access = user_access('access project issues');
     $items[] = array(
       'path' => 'project/issues',
       'title' => t('issues'),
@@ -182,21 +195,21 @@ function project_issue_menu($may_cache) {
       'path' => 'project/issues/user',
       'title' => t('my issues'),
       'callback' => 'project_issue_page',
-      'access' => $GLOBALS['user']->uid && $access,
+      'access' => $user->uid && $access,
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
       'path' => 'project/issues/subscribe',
       'title' => t('subscribe'),
       'callback' => 'project_issue_page',
-      'access' => $GLOBALS['user']->uid && $access,
+      'access' => $user->uid && $access,
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
       'path' => 'project/issues/add',
       'title' => t('create'),
       'callback' => 'project_issue_page',
-      'access' => $access,
+      'access' => $access_create,
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
@@ -234,51 +247,52 @@ function project_issue_menu($may_cache) {
     );
 
     // Create issues
-    $access = user_access('create project issues');
     $items[] = array(
       'path' => 'node/add/project_issue',
       'title' => t('issue'),
       'callback' => 'node_page',
-      'access' => $access,
+      'access' => $access_create,
       'type' => MENU_NORMAL_ITEM,
       'weight' => 1,
     );
 
     // Administer issue status settings
-    $access = user_access('administer projects');
     $items[] = array(
       'path' => 'admin/settings/project_issue/status',
       'title' => t('status options'),
       'callback' => 'project_issue_admin_states_page',
-      'access' => $access,
+      'access' => $access_admin,
       'type' => MENU_NORMAL_ITEM,
     );
     $items[] = array(
       'path' => 'admin/settings/project_issue/status/save',
       'title' => t('save'),
       'callback' => 'project_issue_admin_states_page',
-      'access' => $access,
+      'access' => $access_admin,
       'type' => MENU_CALLBACK,
     );
     $items[] = array(
       'path' => 'admin/settings/project_issue/status/delete',
       'title' => t('delete'),
       'callback' => 'project_issue_admin_states_page',
-      'access' => $access,
-      'type' => MENU_CALLBACK,
-    );
-
-    // Comments
-    $access = user_access('create project issues');
-    $items[] = array(
-      'path' => 'project/comments',
-      'title' => t('comments'),
-      'callback' => 'project_comment_page',
-      'access' => $access,
+      'access' => $access_admin,
       'type' => MENU_CALLBACK,
     );
   }
   else {
+    // Reply to issues
+    if (arg(0) == 'project' && arg(1) == 'comments' && arg(2) == 'add' && is_numeric(arg(3))) {
+      $node = node_load(arg(3));
+      if ($node->nid) {
+        $items[] = array(
+         'path' => 'project/comments',
+         'title' => t('Comments'),
+         'callback' => 'project_comment_page',
+         'access' => node_access('view', $node) && $access_create,
+         'type' => MENU_CALLBACK,
+        );
+      }
+    }
     theme_add_style(drupal_get_path('module', 'project_issue') .'/project_issue.css');
   }
 

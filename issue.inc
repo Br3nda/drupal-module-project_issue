@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.247 2007-08-18 02:17:32 dww Exp $
+// $Id: issue.inc,v 1.248 2007-08-19 00:36:15 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -671,12 +671,13 @@ function project_issue_form($node, $param) {
 
     $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
     if (file_check_directory($directory, 0)) {
-    $form['issue_details']['file_issue'] = array(
-      '#type' => 'file',
-      '#title' => t('File attachment'),
-      '#size' => 40,
-      '#description' => ($node->file || $node->file_path ? t('A file already exists, if you upload another file the current file will be replaced.') : t('Optionally attach a file, for example a patch or a screenshot.')),
-    );
+      $file = file_check_upload('file_issue');
+      $form['issue_details']['file_issue'] = array(
+        '#type' => 'file',
+        '#title' => t('File attachment'),
+        '#size' => 40,
+        '#description' => ($file ? t('A file named %filename has already been uploaded. If you upload another file %filename will be replaced.', array('%filename' => $file->filename)) : t('Optionally attach a file, for example a patch or a screenshot.')),
+      );
     }
     else {
       $msg = t('File attachments are disabled. The issue directory has not been properly configured.');

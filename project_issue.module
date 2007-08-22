@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.36 2007/08/19 23:23:37 dww Exp $
+// $Id: project_issue.module,v 1.37 2007/08/22 16:19:51 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -793,7 +793,7 @@ function project_issue_filename_extension_whitelist() {
     foreach ($user->roles as $rid => $name) {
       if (isset($roles[$rid])) {
         $role_ext = variable_get("project_issues_extensions_$rid", '');
-        if (!empty($role_ext)) { 
+        if (!empty($role_ext)) {
           $extensions .= ' '. $role_ext;
         }
       }

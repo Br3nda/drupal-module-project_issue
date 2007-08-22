@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.32 2007/08/19 23:23:07 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.33 2007/08/22 16:26:20 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -92,7 +92,7 @@ function project_issue_build_form_url($url_arg) {
       return project_project_retrieve($url_arg);
     }
   }
-  
+
   // dispatch to hanlders based on value of $_POST['edit']['form_id']
   if ($_POST['edit']['form_id'] == 'project_issue_query_result_quick_search') {
     return project_issue_quick_search($url_arg, $filters);
@@ -127,7 +127,7 @@ function project_issue_quick_search($url_arg, $filters) {
     }
     $destination = 'project/issues/'. $project->uri;
   }
-  
+
   // if 'q' is the only thing in $_GET, and it == destination, don't redirect
   if (count($_GET) == 1 && isset($_GET['q']) && $_GET['q'] == $destination) {
 
@@ -1423,7 +1423,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     foreach ($fields as $field) {
       if (is_array($query->$field)) {
         $option = array();
-        
+
         // $query is untrusted, user submitted data
         foreach ($query->$field as $key => $value) {
           if (isset(${$field}[$value])) {

@@ -1,9 +1,9 @@
 <?php
-// $Id: comment.inc,v 1.70.4.12 2007/08/19 23:23:07 dww Exp $
+// $Id: comment.inc,v 1.70.4.13 2007/08/22 16:26:20 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_comment_page() {
-  
+
   if (node_access('create', 'project_issue')) {
     $edit = (object) $_POST['edit'];
     $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));

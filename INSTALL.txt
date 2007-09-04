@@ -1,66 +1,24 @@
 -------------------------------------------------------------
-New Installation (with no previous use of the project.module)
+New Installation
 -------------------------------------------------------------
 
-1. Install the project.module (http://drupal.org/project/project),
-   which the project_issues module requires and depends on.
+1. Install the project module (http://drupal.org/project/project),
+   which the project issue tracking module requires and depends on.
 
-2. Place these files in modules/project:
-     project_issue.info
-     project_issue.install
-     project_issue.module
-     project_issue.css
-     comment.inc
-     issue.inc
-     mail.inc
+2. Install the project issue tracking module 
+   (http://drupal.org/project/project_issue).
 
-3. Enable the project_issue module under administer >> modules
+3. Enable the project issue tracking module under admin/build/modules
 
-4. Configure the status messages at admin/settings/project_issue/status
+4. Configure the status messages at admin/project/project-issue-status
 
-5. Grant the proper access to users under administer >> access control
-
-
---------------------------------------------------------------
-New Installation (if you are already using the project.module)
---------------------------------------------------------------
-
-0. Make sure you backup your database!
-
-1. Install the new version of project.module that supports the
-   project.issue.module (TODO: need good way to identify this)
-
-2. Login as the site administrator (user #1) and run the update.php
-   script. You must perform project_update_4() to transition your data
-   to the format used by the project_issue.module.
-
-3. Place these files in modules/project:
-     project_issue.install
-     project_issue.module
-     project_issue.css
-     comment.inc
-     issue.inc
-     mail.inc
-
-4. Enable the project_issue module under administer >> modules
-
-5. Configure the status messages at admin/settings/project_issue/status
-
-6. Grant the proper access to users under administer >> access control
+5. Grant the proper access to users under admin/user/access
 
 
 --------------------------------------------------------------
 Upgrading
 --------------------------------------------------------------
 
-0. Make sure you backup your database!
+Consult UPGRADE.txt
 
-1. Copy new files to modules/project_issues.
-
-2. Login as the site administrator (user #1) and run the update.php script.
-
-3. Configure the status messages at admin/settings/project_issue/status
-   and admin/access.
-
-$Id: INSTALL.txt,v 1.3 2007/01/08 22:57:59 dww Exp $
-$Name:  $
+$Id: INSTALL.txt,v 1.4 2007/09/04 22:37:52 thehunmonkgroup Exp $

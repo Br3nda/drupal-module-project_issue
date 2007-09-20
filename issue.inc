@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.249 2007-08-19 23:23:37 dww Exp $
+// $Id: issue.inc,v 1.250 2007-09-20 17:09:59 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -455,7 +455,8 @@ function project_issue_subscribe($project = 0) {
       $nids[] = $project->nid;
     }
 
-    $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n WHERE n.type = 'project_project' AND n.status = 1". ($nids ?  " AND n.nid NOT IN (%s)" : "") ." ORDER BY n.title"), implode(',', $nids));
+    $placeholders = implode(',', array_fill(0, count($nids), '%d'));
+    $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n WHERE n.type = 'project_project' AND n.status = 1". ($nids ?  " AND n.nid NOT IN ($placeholders)" : "") ." ORDER BY n.title"), $nids);
     while ($project = db_fetch_object($result)) {
       $form['project'][$project->nid]['title'] = array(
         '#type' => 'markup',

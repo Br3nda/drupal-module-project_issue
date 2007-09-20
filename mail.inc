@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.73 2007-08-19 23:23:37 dww Exp $
+// $Id: mail.inc,v 1.74 2007-09-20 17:09:59 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -238,10 +238,10 @@ function project_mail_notify($node) {
   // Record users that are connected to this node
   $uids = array();
   if ($entry->uid) {
-    $uids[$entry->uid] = "u.uid = $entry->uid";
+    $uids[$entry->uid] = $entry->uid;
   }
   if ($node->assigned) {
-    $uids[$node->assigned] = "u.uid = $node->assigned";
+    $uids[$node->assigned] = $node->assigned;
   }
 
   // Create link to related node
@@ -297,7 +297,7 @@ function project_mail_notify($node) {
     $body .= t('Previous comments:');
     foreach ($history as $entry) {
       if ($entry->uid) {
-        $uids[$entry->uid] = "u.uid = $entry->uid";
+        $uids[$entry->uid] = $entry->uid;
       }
       project_mail_output($entry->body, 1, $entry->format);
       $body .= "\n$hr\n\n";
@@ -317,7 +317,9 @@ function project_mail_notify($node) {
   $body = "$links\n$summary\n$body";
 
   if (count($uids)) {
-    $result = db_query('SELECT p.*, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND (p.level = 2 OR (p.level = 1 AND (%s)))', $node->pid, implode(' OR ', $uids));
+    $placeholders = implode(',', array_fill(0, count($uids), '%d'));
+    array_unshift($uids, $node->pid);
+    $result = db_query("SELECT p.*, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND (p.level = 2 OR (p.level = 1 AND u.uid IN ($placeholders)))", $uids);
   }
   else {
     $result = db_query('SELECT p.*, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->pid);

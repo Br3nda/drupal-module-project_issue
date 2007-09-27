@@ -1,11 +1,11 @@
 <?php
-// $Id: issue.inc,v 1.252 2007-09-27 16:20:47 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.253 2007-09-27 17:20:11 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
   global $user;
 
-  switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
+  switch (!empty($_POST['op']) ? $_POST['op'] : arg(2)) {
     case 'rss':
       $project = project_project_retrieve(arg(3));
       if ($project->nid && node_access('view', $project)) {
@@ -1131,7 +1131,7 @@ function project_issue_count($pid) {
 
 function project_issue_search_page($project_name = NULL, $query = NULL) {
   $project = project_project_retrieve($project_name);
-  if ($project->nid && node_access('view', $project)) {
+  if (isset($project) && $project->nid && node_access('view', $project)) {
     return drupal_get_form('project_issue_query', $project, $query);
   }
   else {
@@ -1141,8 +1141,9 @@ function project_issue_search_page($project_name = NULL, $query = NULL) {
 
 function project_issue_query($project = 0, $query = NULL) {
   $categories = project_issue_category();
+  $projects = array();
   $components = array();
-  if ($project->nid) {
+  if (!empty($project->nid)) {
     drupal_set_title(t('Search issues for %name', array('%name' => $project->title)));
     project_project_set_breadcrumb($project, TRUE);
     foreach ($project->components as $component) {
@@ -1159,12 +1160,24 @@ function project_issue_query($project = 0, $query = NULL) {
     drupal_set_title(t('Search issues for all projects'));
   }
   if (is_null($query)) {
-    $query = new StdClass();
+    $query = (object) array(
+      'projects' => '',
+      'summary' => '',
+      'attachment' => '',
+      'versions' => '',
+      'components' => '',
+      'categories' => '',
+      'priorities' => '',
+      'states' => '',
+      'submitted' => '',
+      'assigned' => '',
+      'users' => '',
+    );
   }
   $states = project_issue_state();
   $priorities = project_issue_priority();
 
-  $form['#action'] = url($project->uri ? "project/issues/$project->uri" : 'project/issues');
+  $form['#action'] = url(isset($project->uri) ? "project/issues/$project->uri" : 'project/issues');
   $form['text'] = array(
     '#type' => 'textfield',
     '#title' => t('Search for'),
@@ -1178,7 +1191,6 @@ function project_issue_query($project = 0, $query = NULL) {
   );
 
   if ($projects) {
-
     $form['projects'] = array(
       '#type' => 'select',
       '#title' => t('Projects'),
@@ -1279,14 +1291,14 @@ function theme_project_issue_query($form) {
   $rows[] = array(
     array('data' => drupal_render($form['attachment']), 'colspan' => 3)
   );
-  if ($form['projects']) {
+  if (isset($form['projects'])) {
     $rows[] = array(
       drupal_render($form['projects']),
       drupal_render($form['categories']),
       NULL,
     );
   }
-  elseif ($form['versions']) {
+  elseif (isset($form['versions'])) {
     $rows[] = array(
       drupal_render($form['versions']),
       drupal_render($form['components']),
@@ -1495,7 +1507,7 @@ function project_issue_delete_state_confirm_submit($form_id, $form_values) {
   }
 }
 
-function project_issue_query_result($query = NULL, $format = 'html', $search = true, $set_title = true) {
+function project_issue_query_result($query = NULL, $format = 'html', $show_search = true, $set_title = true) {
   global $user;
   $query = project_issue_query_parse($query);
   // $query must have a real value now, or the rest of this function fails.
@@ -1598,7 +1610,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   $header[] = array('data' => t('Status'), 'field' => 'p.sid');
   $header[] = array('data' => t('Priority'), 'field' => 'p.priority');
   $header[] = array('data' => t('Category'), 'field' => 'p.category');
-  if (count($releases)) {
+  if (!empty($releases)) {
     $header[] = array('data' => t('Version'), 'field' => 'p.rid');
   }
   $header[] = array('data' => t('Last updated'), 'field' => 'n.changed', 'sort' => 'desc');
@@ -1607,10 +1619,11 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
   $sql = project_issue_query_sql($query);
   $result = pager_query($sql['sql'] . tablesort_sql($header), 20, 0, $sql['count']);
 
-  if ($search) {
+  $search = '';
+  if ($show_search) {
     // Action links:
-    $group = theme('links', $links);
-    $group .= drupal_get_form('project_issue_query_result_quick_search', $query, $projects, $states, $priorities);
+    $search .= theme('links', $links);
+    $search .= drupal_get_form('project_issue_query_result_quick_search', $query, $projects, $states, $priorities);
   }
 
   $rows = array();
@@ -1630,6 +1643,8 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $projects = $flat_projects;
   }
 
+  $rss = '';
+  $link = '';
   if ($format == 'rss') {
     project_issue_query_rss($result, $project);
   }
@@ -1675,10 +1690,12 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
 
   $output = '<div class="project-issue">';
   $output .= '<div class="quick-search">';
-  $output .= $group;
+  $output .= $search;
+
   $output .= '</div>';
   $output .= theme('table', $header, $rows);
   $output .= "$rss $link";
+
   $output .= '</div>';
   return $output;
 }
@@ -1693,7 +1710,10 @@ function project_issue_query_result_quick_search($query, $projects, $states, $pr
   // Convert array fields to single select form items.
   $fields = array('projects', 'states', 'priorities', 'categories', 'users');
   foreach ($fields as $field) {
-    if (is_array($query->$field)) {
+    if (!isset($query->$field)) {
+      $query->$field = '';
+    }
+    elseif (is_array($query->$field)) {
       $option = array();
 
       // $query is untrusted, user submitted data
@@ -1865,6 +1885,7 @@ function project_issue_query_pager($query) {
 }
 
 function project_issue_query_sql($query) {
+  $comments = 0;
   foreach ($query as $key => $value) {
     switch ($key) {
       case 'projects':

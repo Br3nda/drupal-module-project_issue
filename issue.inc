@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.53 2007/09/27 01:24:03 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.54 2007/09/27 16:23:51 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -467,7 +467,7 @@ function project_issue_form(&$node, &$param) {
   if ($pid) {
     // Load the project and initialize some support arrays.
     $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
-    if (trim($project->help)) {
+    if (trim($project->help) && empty($_POST)) {
       drupal_set_message(filter_xss($project->help));
     }
     if ($releases = project_release_load($project)) {

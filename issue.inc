@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.54 2007/09/27 16:23:51 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.55 2007/09/27 20:22:31 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -728,7 +728,7 @@ function project_issue_comment_validate(&$node) {
   // Set default values.
   empty($node->priority) and $node->priority = 2;
   empty($node->category) and $node->category = arg(4);
-  empty($node->sid) and $node->sid = 1;
+  empty($node->sid) and $node->sid = variable_get('project_issue_default_state', 1);
 
   // Try to find the active project
   if (empty($node->pid)) {

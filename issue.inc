@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.250 2007-09-20 17:09:59 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.251 2007-09-27 01:11:16 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -398,7 +398,8 @@ function project_issue_subscribe_submit($form_id, $form_values) {
       }
     }
     drupal_set_message(t('Subscription settings saved.'));
-    drupal_goto('project/issues/subscribe-mail');
+
+    return 'project/issues/subscribe-mail';
 }
 
 
@@ -421,7 +422,7 @@ function project_issue_subscribe($project = 0) {
     $form['options'][$project->nid] = array(
       '#type' => 'radios',
       '#title' => t('Subscribe to @project issues', array('@project' => $project->title)),
-      '#default_value' => $level,
+      '#default_value' => isset($level) ? $level : 0,
       '#options' => $levels,
     );
 
@@ -441,11 +442,10 @@ function project_issue_subscribe($project = 0) {
     }
     $nids = array();
 
-    $result = db_query(db_rewrite_sql("SELECT s.nid, n.title, s.level FROM {project_subscriptions} s INNER JOIN {node} n ON n.nid = s.nid WHERE n.type = 'project_project' AND n.status = 1 AND s.uid = %d ORDER BY n.title", 's'), $user->uid);
+    $result = db_query(db_rewrite_sql("SELECT s.nid, n.title, s.level, p.uri FROM {project_subscriptions} s INNER JOIN {node} n ON n.nid = s.nid INNER JOIN {project_projects} p ON n.nid = p.nid WHERE n.type = 'project_project' AND n.status = 1 AND s.uid = %d ORDER BY n.title", 's'), $user->uid);
     while ($project = db_fetch_object($result)) {
       $form['project'][$project->nid]['title'] = array(
-        '#type' => 'markup',
-        '#value' => $project->title,
+        '#value' => l($project->title, "project/$project->uri"),
       );
       foreach ($levels as $key => $level) {
         if ($project->level == $key) {
@@ -455,12 +455,17 @@ function project_issue_subscribe($project = 0) {
       $nids[] = $project->nid;
     }
 
-    $placeholders = implode(',', array_fill(0, count($nids), '%d'));
-    $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n WHERE n.type = 'project_project' AND n.status = 1". ($nids ?  " AND n.nid NOT IN ($placeholders)" : "") ." ORDER BY n.title"), $nids);
+    if (empty($nids)) {
+      $placeholders = '';
+    }
+    else {
+      $placeholders = " AND n.nid NOT IN (". implode(',', array_fill(0, count($nids), '%d')) .")";
+    }
+
+    $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.uri FROM {node} n INNER JOIN {project_projects} p ON n.nid = p.nid WHERE n.type = 'project_project' AND n.status = 1". ($nids ?  $placeholders : "") ." ORDER BY n.title"), $nids);
     while ($project = db_fetch_object($result)) {
       $form['project'][$project->nid]['title'] = array(
-        '#type' => 'markup',
-        '#value' => $project->title,
+        '#value' => l($project->title, "project/$project->uri"),
       );
       $nids[] = $project->nid;
     }
@@ -469,7 +474,7 @@ function project_issue_subscribe($project = 0) {
       $form['options']['#tree'] = TRUE;
       $form['options'][$nid] = array(
         '#type' => 'radios',
-        '#default_value' => $status[$nid],
+        '#default_value' => isset($status[$nid]) ? $status[$nid] : 0,
         '#options' => $levels,
       );
     }

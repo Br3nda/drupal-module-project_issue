@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.3.2.11 2007/09/20 17:12:35 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.60.2.3.2.12 2007/09/27 20:21:30 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -86,7 +86,7 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
       }
 
       if (empty($entry->nid)) {
-        $entry->sid = 1;
+        $entry->sid = variable_get('project_issue_default_state', 1);
         $entry->type = 'project_issue';
         $entry = node_validate($entry, $error);
         $error or ($entry->nid = node_save($entry));

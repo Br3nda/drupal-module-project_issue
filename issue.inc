@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.37 2007/09/27 20:21:30 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.22.2.38 2007/09/29 13:12:15 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1764,7 +1764,7 @@ function project_issue_query_rss($projects, $result) {
         url("node/$node->nid", NULL, NULL, true),
         $body,
         array(
-          'pubDate' => date('r', ($node->updated > $node->created) ? $node->updated : $node->created),
+          'pubDate' => date('r', ($node->changed > $node->created) ? $node->changed : $node->created),
           'comments' => url("node/$node->nid", NULL, NULL, true),
           'category' => $projects[$node->pid]
         )

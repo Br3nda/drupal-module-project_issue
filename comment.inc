@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.86 2007-09-29 21:26:57 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.87 2007-09-29 22:07:26 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -49,7 +49,7 @@ function project_issue_comment(&$arg, $op) {
       $form['title'] = array(
         '#type' => 'textfield',
         '#title' => t('Issue title'),
-        '#maxlength' => 64,
+        '#maxlength' => 128,
         '#default_value' => $edit->title,
         '#weight' => -30,
         '#required' => TRUE,

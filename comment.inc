@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.88 2007-09-29 22:37:40 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.89 2007-09-29 22:58:21 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -191,6 +191,7 @@ function project_issue_update_by_comment($comment_data, $op) {
     // Massage the incoming data so the structure will work with the project_issue_update() function.
     $comment_data['component'] = $comment_data['project_info']['component'];
     $comment_data['pid'] = $comment_data['project_info']['pid'];
+    $comment_data['rid'] = $comment_data['project_info']['rid'];
     unset ($comment_data['project_info']);
     $comment_data = (object) $comment_data;
   }
@@ -218,7 +219,7 @@ function project_issue_update_by_comment($comment_data, $op) {
   // Issue title must be updated manually, when a comment is inserted, updated, or the last
   // comment is deleted.
   if (isset($update_title)) {
-    $node = node_load($comment_data->nid);
+    $node = node_load($comment_data->nid, NULL, TRUE);
     $node->title = $comment_data->title;
     node_save($node);
   }

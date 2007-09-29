@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255 2007/09/27 21:28:39 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.256 2007/09/29 21:26:57 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -680,10 +680,6 @@ function project_issue_form($node, $param) {
       '#size' => 60,
       '#maxlength' => 128,
     );
-    if ($node->title) {
-      $form['issue_details']['title']['#default_value'] = $node->title;
-      $form['issue_details']['title']['#description'] = t('Note: modifying this value will change the title of the entire issue, not your follow-up comment.');
-    }
     $form['issue_details']['body'] = array(
       '#type' => 'textarea',
       '#title' => t('Description'),
@@ -826,83 +822,6 @@ function project_issue_node_form_validate($form_id, $form) {
   }
 }
 
-function project_issue_comment_validate(&$node) {
-
-  // Set default values.
-  empty($node->priority) and $node->priority = 2;
-  empty($node->category) and $node->category = arg(4);
-  empty($node->sid) and $node->sid = variable_get('project_issue_default_state', 1);
-
-  // Try to find the active project
-  if (empty($node->pid)) {
-    if (isset($_POST['pid'])) {
-      $pid = $_POST['pid'];
-    }
-    else {
-      $pid = arg(3);
-    }
-    if (isset($pid)) {
-      if (is_numeric($pid)) {
-        $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
-      }
-      else {
-        $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid), 0);
-      }
-    }
-  }
-
-  // Validate the rest of the form.
-  if (isset($node->title) && !$node->validated) {
-    if ($node->pid && $project = node_load($node->pid)) {
-      if (module_exists('project_release') &&
-          $releases = project_release_get_releases($project, 0)) {
-        empty($node->rid) and form_set_error('rid', t('You have to specify a valid version.'));
-      }
-      else {
-        // If there's no version defined, set this to 0 to match the
-        // value stored in the issue. Otherwise, project_comment_save()
-        // will think we've changed the version with this reply and
-        // will store extra data in the DB we don't want or need.
-        $node->rid = 0;
-      }
-      if ($node->component && !in_array($node->component, $project->components)) {
-        $node->component = 0;
-      }
-
-      empty($node->component) and form_set_error('component', t('You have to specify a valid component.'));
-      empty($node->category) and form_set_error('category', t('You have to specify a valid category.'));
-
-      // make sure this followup changes something or has a body
-      if (!empty($_POST) && empty($node->body)) {
-        if (is_numeric(arg(3))) {
-          $issue = node_load(arg(3));
-        }
-        if (isset($issue)
-            && $node->pid == $issue->pid
-            && $node->rid == $issue->rid
-            && $node->component == $issue->component
-            && $node->category == $issue->category
-            && $node->priority == $issue->priority
-            && $node->assigned == $issue->assigned
-            && $node->sid == $issue->sid
-            && $node->title == $issue->title) {
-          form_set_error('body', t('You must either specify a description or change something about this issue.'));
-        }
-      }
-
-      $file = file_check_upload('file_issue');
-      if ($file && project_issue_validate_file($file)) {
-        $node->file = file_save_upload($file);
-      }
-    }
-    elseif (isset($node->pid)) {
-      form_set_error('pid', t('You have to specify a valid project.'));
-    }
-  }
-
-  return $node;
-}
-
 /**
  * Ensure only files with allowed extension are uploaded.
  */
@@ -954,10 +873,6 @@ function project_issue_view($node, $teaser = false, $page = false) {
       '#value' => '<div class="header">'. t('Description') .'</div>',
       '#weight' => -3,
     );
-    $node->content['project_issue_comments'] = array(
-      '#value' => project_comment_view($node),
-      '#weight' => 2,
-    );
 
     // Breadcrumb navigation
     $breadcrumb[] = array('path' => 'project', 'title' => t('Projects'));
@@ -985,7 +900,28 @@ function project_issue_insert($node) {
     $node->file->filename = project_issue_munge_filename($node->file->filename);
     $file = file_save_upload($node->file, $directory);
   }
-  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, file_path, file_mime, file_size) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', '%s', %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize);
+
+  // Permanently store the original issue states in a serialized array. This is a bit
+  // yucky, but we need them for proper handling of states workflow.  The current states
+  // need to be stored in {project_issues} as well for query efficiency in issue queue
+  // searches, and it seems too messy to add a bunch of new columns to the {project_issues}
+  // table for the original states.
+  $original_issue_data = new stdClass();
+  $fields = array(
+    'pid',
+    'rid',
+    'component',
+    'category',
+    'priority',
+    'assigned',
+    'sid',
+    'title',
+  );
+  foreach ($fields as $field) {
+    $original_issue_data->$field = $node->$field;
+  }
+
+  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, file_path, file_mime, file_size, original_issue_data) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', '%s', %d, '%s')", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize, serialize($original_issue_data));
   project_mail_notify($node);
 }
 

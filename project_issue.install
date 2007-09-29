@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.17 2007/08/22 16:19:51 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.18 2007/09/29 21:26:57 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -33,26 +33,28 @@ function project_issue_install() {
           file_path varchar(255) NOT NULL default '',
           file_mime varchar(255) NOT NULL default '',
           file_size int NOT NULL default 0,
+          original_issue_data text NOT NULL default '',
           PRIMARY KEY (nid),
           KEY project_issues_pid (pid),
           KEY project_issues_sid (sid),
           KEY project_issues_nid_assigned (nid, assigned)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
-      db_query("CREATE TABLE IF NOT EXISTS {project_comments} (
-          cid int(10) unsigned NOT NULL default '0',
-          nid int(10) unsigned NOT NULL default '0',
-          uid int(10) unsigned NOT NULL default '0',
-          name varchar(255) NOT NULL default '',
-          created int(10) unsigned NOT NULL default '0',
-          changed int(10) unsigned NOT NULL default '0',
-          body blob,
-          data blob,
-          file_path varchar(255) NOT NULL default '',
-          file_mime varchar(255) NOT NULL default '',
-          file_size int NOT NULL default 0,
-          PRIMARY KEY (cid),
-          KEY project_comments_nid (nid)
-        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      db_query("CREATE TABLE IF NOT EXISTS {project_issue_comments} (
+          nid int(11) default NULL,
+          cid int(11) default NULL,
+          rid int(11) default NULL,
+          component varchar(255) default NULL,
+          category varchar(255) default NULL,
+          priority int(11) default NULL,
+          assigned int(11) default NULL,
+          sid int(11) default NULL,
+          pid int(10) unsigned NOT NULL,
+          title varchar(255) NOT NULL,
+          timestamp int(10) unsigned NOT NULL,
+          original_issue_data text NOT NULL default '',
+          PRIMARY KEY(cid),
+          INDEX nid_timestamp (nid, timestamp)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */");
       db_query("CREATE TABLE IF NOT EXISTS {project_subscriptions} (
           nid int(10) unsigned NOT NULL default '0',
           uid int(10) unsigned NOT NULL default '0',
@@ -97,29 +99,29 @@ function project_issue_install() {
             file_path varchar(255) NOT NULL default '',
             file_mime varchar(255) default '' NOT NULL,
             file_size int default 0 NOT NULL,
+            original_issue_data text NOT NULL default '',
             PRIMARY KEY (nid)
           );");
         db_query("CREATE INDEX {project_issues}_pid_idx ON {project_issues}(pid)");
         db_query("CREATE INDEX {project_issues}_sid_idx ON {project_issues}(sid)");
         db_query('CREATE INDEX {project_issues}_nid_assigned_idx ON {project_issues}(nid, assigned)');
       }
-      if (!db_table_exists('project_comments')) {
-        db_query("CREATE TABLE {project_comments} (
-            cid int NOT NULL default '0',
-            nid int NOT NULL default '0',
-            uid int NOT NULL default '0',
-            name varchar(255) NOT NULL default '',
-            created int NOT NULL default '0',
-            changed int NOT NULL default '0',
-            body bytea,
-            data bytea,
-            file_path varchar(255) default '' NOT NULL,
-            file_mime varchar(255) default '' NOT NULL,
-            file_size int default 0 NOT NULL,
-            PRIMARY KEY (cid)
-          );");
-         db_query("CREATE SEQUENCE {project}_cid_seq INCREMENT 1 START 1");
-         db_query("CREATE INDEX {project_comments}_nid_idx ON {project_comments}(nid)");
+      if (!db_table_exists('project_issue_comments')) {
+        db_query("CREATE TABLE {project_issue_comments} (
+          nid int default NULL,
+          cid int default NULL,
+          rid int default NULL,
+          component varchar(255) default NULL,
+          category varchar(255) default NULL,
+          priority int default NULL,
+          assigned int default NULL,
+          sid int default NULL,
+          pid int NOT NULL,
+          title varchar(255) NOT NULL,
+          timestamp int NOT NULL,
+          PRIMARY KEY(cid)
+        )");
+        db_query('CREATE INDEX {project_issue_comments}_nid_timestamp_idx ON {project_issue_comments} (nid, timestamp)');
       }
       if (!db_table_exists('project_subscriptions')) {
         db_query("CREATE TABLE {project_subscriptions} (
@@ -373,4 +375,261 @@ function project_issue_update_5003() {
       break;
   }
   return $ret;
+}
+
+/**
+ * End of 5.x-1.x branch updates.  Next are 5.x-2.x updates.
+ */
+
+/**
+ * Add {project_issue_comments} table in preparation for issue followups as comments.
+ */
+function project_issue_update_5200() {
+
+  // Prevent the update and warn if the new required modules aren't enabled.
+  $modules = array(
+    'comment_upload' => t('Comment upload'),
+    'comment' => t('Comment')
+  );
+  if ($message = project_issue_check_dependencies($modules)) {
+    return array(array('success' => FALSE, 'query' => $message));
+  }
+
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("CREATE TABLE IF NOT EXISTS {project_issue_comments} (
+          nid int(11) default NULL,
+          cid int(11) default NULL,
+          rid int(11) default NULL,
+          component varchar(255) default NULL,
+          category varchar(255) default NULL,
+          priority int(11) default NULL,
+          assigned int(11) default NULL,
+          sid int(11) default NULL,
+          pid int(10) unsigned NOT NULL,
+          title varchar(255) NOT NULL,
+          timestamp int(10) unsigned NOT NULL,
+          PRIMARY KEY(cid),
+          INDEX nid_timestamp (nid, timestamp)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */");
+      $ret[] = update_sql("ALTER TABLE {project_issues} ADD COLUMN original_issue_data text NOT NULL DEFAULT ''");
+      break;
+
+    case 'pgsql':
+      if (!db_table_exists('project_issue_comments')) {
+        $ret[] = update_sql("CREATE TABLE {project_issue_comments} (
+          nid int default NULL,
+          cid int default NULL,
+          rid int default NULL,
+          component varchar(255) default NULL,
+          category varchar(255) default NULL,
+          priority int default NULL,
+          assigned int default NULL,
+          sid int default NULL,
+          pid int NOT NULL,
+          title varchar(255) NOT NULL,
+          timestamp int NOT NULL,
+          PRIMARY KEY(cid)
+        )");
+        $ret[] = update_sql('CREATE INDEX {project_issue_comments}_nid_timestamp_idx ON {project_issue_comments} (nid, timestamp)');
+      }
+      db_add_column(&$ret, 'project_issues', 'original_issue_data', 'text', array('not null' => TRUE, 'default' => "''"));
+    break;
+  }
+  $ret[] = update_sql("UPDATE {node} SET comment = ". COMMENT_NODE_READ_WRITE ." WHERE type = 'project_issue';");
+
+  return $ret;
+}
+
+/**
+ * Convert issue followups to real comments.
+ */
+function project_issue_update_5201() {
+  // This determines how many issue nodes will be processed in each batch run. A reasonable
+  // default has been chosen, but you may want to tweak depending on your average number of
+  // issue followups per issue.
+  $limit = 20;
+
+  // Prevent the update and warn if the new required modules aren't enabled.
+  $modules = array(
+    'comment_upload' => t('Comment upload'),
+    'comment' => t('Comment')
+  );
+  if ($message = project_issue_check_dependencies($modules)) {
+    return array(array('success' => FALSE, 'query' => $message));
+  }
+
+  $fields = array(
+    'pid',
+    'rid',
+    'component',
+    'category',
+    'priority',
+    'assigned',
+    'sid',
+    'title',
+  );
+
+  // Multi-part update
+  if (!isset($_SESSION['project_issue_update_6000'])) {
+    $_SESSION['project_issue_update_6000'] = 0;
+    $_SESSION['project_issue_update_6000_max'] = db_result(db_query('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid'));
+  }
+
+  // Pull all issues that have followups.
+  $followup_nodes = db_query_range("SELECT DISTINCT(n.nid) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid ORDER BY n.nid", $_SESSION['project_issue_update_6000'], $limit);
+
+  // Loop through each issue.
+  while ($nid = db_fetch_object($followup_nodes)) {
+    $pid = 0;  // This sets the comment's parent as the issue node.
+    $nid = $nid->nid;
+
+    // Pull the issue.
+    $issue = db_fetch_array(db_query('SELECT title, n.nid, pid, category, component, priority, rid, assigned, sid FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.nid = %d', $nid));
+
+    // Find the original metadata.
+    $issue_data = db_query("SELECT data, cid FROM {project_comments} WHERE nid = %d AND data != '' ORDER BY changed", $nid);
+    $data_array = array();
+    $original_found = array();
+    while ($comment = db_fetch_object($issue_data)) {
+      $data = unserialize(db_decode_blob($comment->data));
+      // Since we've ordered by followup creation date, the first 'old'
+      // value that's found in a sequential search is the original state
+      // for that field.
+      foreach ($fields as $field) {
+        if (isset($data['old']->$field) && !isset($original_found[$field])) {
+          $issue[$field] = $data['old']->$field;
+          $original_found[$field] = TRUE; // Mark as found.
+        }
+      }
+      // While we are here, let's store the unserialized object.
+      if (!empty($data['new'])) {
+        $data_array[$comment->cid] = $data['new'];
+      }
+    }
+
+    // Record the original issue states.
+    db_query("UPDATE {project_issues} SET original_issue_data = '%s' WHERE nid = %d", serialize((object) $issue), $nid);
+
+    // Pull the followups again.
+    $followup = db_query('SELECT cid, uid, changed, body, file_path, file_mime, file_size FROM {project_comments} WHERE nid = %d ORDER BY changed', $nid);
+    // Loop through each followup.
+    while ($comment = db_fetch_object($followup)) {
+      $comment->comment = db_decode_blob($comment->body);
+      // Check for metadata changes.
+      if (!empty($data_array[$comment->cid])) {
+        $data = $data_array[$comment->cid];
+        // Update the values in the issue copy.
+        foreach ($fields as $field) {
+          if (isset($data->$field)) {
+            $issue[$field] = $data->$field;
+          }
+        }
+      }
+      $thread = _project_issue_update_5200_get_vancode($nid, $pid);
+      $cid = db_next_id('{comments}_cid');
+      db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '', %d, %d, 0, '', '%s', '', '', '')", $cid, $nid, $pid, $comment->uid, $issue['title'], $comment->comment, FILTER_FORMAT_DEFAULT, $comment->changed, COMMENT_PUBLISHED, $thread);
+      // To make each issue followup a child of the previous followup,
+      // uncomment the next line. Default is all followups are children of the issue
+      #$pid = $cid;
+      db_query("INSERT INTO {project_issue_comments} (nid, cid, rid, component, category, priority, assigned, sid, title, pid, timestamp) VALUES (%d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $nid, $cid, $issue['rid'], $issue['component'], $issue['category'], $issue['priority'], $issue['assigned'], $issue['sid'], $issue['title'], $issue['pid'], $comment->changed);
+      if ($comment->file_path) {
+        $fid = db_next_id('{files}_fid');
+        db_query("INSERT INTO {comment_upload_files} (fid, nid, cid, filename, filepath, filemime, filesize, description, list) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, '%s', %d)", $fid, $nid, $cid, basename($comment->file_path), $comment->file_path, $comment->file_mime, $comment->file_size, '', 1);
+      }
+    }
+    _comment_update_node_statistics($nid);
+    $_SESSION['project_issue_update_6000']++;
+  }
+
+  if ($_SESSION['project_issue_update_6000'] >= $_SESSION['project_issue_update_6000_max']) {
+    $count = $_SESSION['project_issue_update_6000_max'];
+    unset($_SESSION['project_issue_update_6000']);
+    unset($_SESSION['project_issue_update_6000_max']);
+    return array(array('success' => TRUE, 'query' => t('Converted issue followups to comments for @count issues', array('@count' => $count))));
+  }
+  return array('#finished' => $_SESSION['project_issue_update_6000'] / $_SESSION['project_issue_update_6000_max']);
+
+}
+
+/**
+ * Drop {project_comments} table -- no longer needed.
+ */
+function project_issue_update_5202() {
+
+  // Prevent the update and warn if the new required modules aren't enabled.
+  $modules = array(
+    'comment_upload' => t('Comment upload'),
+    'comment' => t('Comment')
+  );
+  if ($message = project_issue_check_dependencies($modules)) {
+    return array(array('success' => FALSE, 'query' => $message));
+  }
+
+  $ret = array();
+  $ret[] = update_sql('DROP TABLE {project_comments}');
+  return $ret;
+}
+
+function _project_issue_update_5200_get_vancode($nid, $pid) {
+  if ($pid == 0) {
+    // This is a comment with no parent comment (depth 0): we start
+    // by retrieving the maximum thread level.
+    $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $nid));
+
+    // Strip the "/" from the end of the thread.
+    $max = rtrim($max, '/');
+
+    // Finally, build the thread field for this new comment.
+    $thread = int2vancode(vancode2int($max) + 1) .'/';
+  }
+  else {
+    // This is comment with a parent comment: we increase
+    // the part of the thread value at the proper depth.
+
+    // Get the parent comment:
+    $parent = _comment_load($pid);
+
+    // Strip the "/" from the end of the parent thread.
+    $parent->thread = (string) rtrim((string) $parent->thread, '/');
+
+    // Get the max value in _this_ thread.
+    $max = db_result(db_query("SELECT MAX(thread) FROM {comments} WHERE thread LIKE '%s.%%' AND nid = %d", $parent->thread, $nid));
+
+    if ($max == '') {
+      // First child of this parent.
+      $thread = $parent->thread .'.'. int2vancode(0) .'/';
+    }
+    else {
+      // Strip the "/" at the end of the thread.
+      $max = rtrim($max, '/');
+
+      // We need to get the value at the correct depth.
+      $parts = explode('.', $max);
+      $parent_depth = count(explode('.', $parent->thread));
+      $last = $parts[$parent_depth];
+
+      // Finally, build the thread field for this new comment.
+      $thread = $parent->thread .'.'. int2vancode(vancode2int($last) + 1) .'/';
+    }
+  }
+  return $thread;
+}
+
+function project_issue_check_dependencies($modules) {
+  $message = FALSE;
+  $messages = array();
+  foreach ($modules as $module => $name) {
+    if (!module_exists($module)) {
+      $messages[] = t('The %module module is not present.', array('%module' => $name));
+    }
+  }
+  if (!empty($messages)) {
+    $message = t('The update was aborted for the following reasons: !messages', array('!messages' => theme('item_list', $messages)));
+  }
+
+  return $message;
 }

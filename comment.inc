@@ -1,151 +1,120 @@
 <?php
-// $Id: comment.inc,v 1.85 2007/08/19 23:23:37 dww Exp $
+// $Id: comment.inc,v 1.86 2007/09/29 21:26:57 thehunmonkgroup Exp $
 // $Name:  $
 
-function project_comment_page($op, $nid) {
-
-  // Load the parent node.
+function project_issue_comment(&$arg, $op) {
+  static $edit;
+  // $arg can be a comment object, or a form or form_values.
+  if (is_object($arg)) {
+    $nid = $arg->nid;
+  }
+  elseif (is_array($arg)) {
+    $nid = is_array($arg['nid']) ? $arg['nid']['#value'] : $arg['nid'];
+  }
   $node = node_load($nid);
+  if ($node->type != 'project_issue') {
+    return;
+  }
 
-  if (node_access('create', 'project_issue')) {
-    $edit = (object)$_POST;
-
-    if ($_POST['op'] == t('Preview') || $_POST['op'] == t('Submit')) {
-      project_comment_validate($edit);
-    } else {
-      foreach (array('nid', 'type', 'pid', 'rid', 'category', 'component', 'priority', 'assigned', 'sid', 'title') as $var) {
-        $edit->$var = $node->$var;
+  switch ($op) {
+    case 'form':
+      $project = node_load($node->pid);
+      $extra = array();
+      $extra[] = l($project->title, 'node/'. $project->nid);
+      // Only add issue title to the breadcrumb if this comment is a reply
+      // to another comment.
+      if ($arg['pid']['#value']) {
+        $extra[] = l($node->title, 'node/'. $node->nid);
       }
-      project_comment_validate($edit);
-    }
-    $output .= drupal_get_form('project_comment_form', $edit);
+      project_project_set_breadcrumb($project, $extra);
 
-    // set breadcrumb
-    $project = node_load(array('nid' => $node->pid));
-    $breadcrumb[] = l($project->title, 'node/'. $project->nid);
-    $breadcrumb[] = l(t('Issues'), 'project/issues/'. $project->uri);
-    $breadcrumb[] = l($node->title, 'node/'. $node->nid);
-    project_project_set_breadcrumb($project, $breadcrumb);
+      // $arg is a form
+      if (!$node->comment_count) {
+        foreach (array('nid', 'pid', 'rid', 'category', 'component', 'priority', 'assigned', 'sid', 'title') as $var) {
+          $edit->$var = $node->$var;
+        }
+      }
+      else {
+        $edit = db_fetch_object(db_query_range('SELECT nid, title, pid, rid, component, category, priority, assigned, sid, timestamp FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp DESC ', $node->nid, 0, 1));
+      }
+      // We need to ask for almost the same metadata as project issue itself
+      // so let's reuse the form.
+      $form = drupal_retrieve_form('project_issue_form', $edit, NULL);
+      // We need this otherwise pid collides with comment.
+      $form['project_info']['#tree'] = TRUE;
+      $form['project_info']['#weight'] = -2;
+      $form['issue_info']['#weight'] = -1;
+      $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
+      $form['#suffix'] = '</div></div></div>';
+      $form['title'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Issue title'),
+        '#maxlength' => 64,
+        '#default_value' => $edit->title,
+        '#weight' => -30,
+        '#required' => TRUE,
+        '#description' => '<em>'. t('Note: modifying this value will change the title of the entire issue, not your follow-up comment.') .'</em>',
+      );
+      // Mark necessary required fields now, as these aren't added in the initial
+      // building of the project issue form.
+      _project_issue_form_add_required_fields($form, FALSE);
+      unset($form['page'], $form['issue_details']);
+      return $form;
+    case 'insert':
+      db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
+      project_issue_update_by_comment($arg, 'insert');
+      break;
+    case 'update':
+      // Updated comments always get moved to the most recently posted comment -- otherwise
+      // the state workflow tables can get screwy.
+      $time = time();
+      // Should we be using something like comment_save() here?
+      db_query("UPDATE {comments} SET timestamp = %d WHERE cid = %d", $time, $arg['cid']);
+      db_query("UPDATE {project_issue_comments} SET pid = %d, rid = %d, component = '%s', category = '%s', priority = %d, assigned = %d, sid = %d, title = '%s', timestamp = %d WHERE cid = %d", $arg['project_info']['pid'], $arg['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $time, $arg['cid']);
+      project_issue_update_by_comment($arg, 'update');
+      break;
+    case 'delete':
+      // Call the update by comment function first, so it can correctly determine if this
+      // is the most recent comment.
+      project_issue_update_by_comment($arg, 'delete');
+      db_query("DELETE FROM {project_issue_comments} WHERE cid = %d", $arg->cid);
 
-    drupal_set_title(t('New comment'));
-    switch ($_POST['op'] ? $_POST['op'] : arg(2)) {
-      case 'add':
-        $output .= node_view($node, NULL, TRUE);
-        return $output;
-        break;
-      case t('Preview'):
-          return $output;
-        break;
-      case t('Submit'):
-          if (!form_get_errors()) {
-            $edit->nid = $node->nid;
-
-            project_comment_save($edit);
-            drupal_goto("node/$node->nid");
-          } else {
-            return $output;
-          }
-        break;
-    }
-  }
-  else {
-    drupal_set_message(t('You are not authorized to follow up on issues.'), 'error');
-    drupal_goto("node/$nid");
-  }
-}
-
-function project_comment_form($edit, $param = NULL) {
-  $op = $_POST['op'];
-  if (isset($param)) {
-    $form = array(
-      '#method' => $param['method'],
-      '#action' => $param['action'],
-      '#attributes' => $param['options'],
-    );
-  } else {
-    $form['#attributes'] = array('enctype' => 'multipart/form-data');
-  }
-  $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
-  $form['#suffix'] = '</div></div></div>';
-  $form['project_issue_form'] = project_issue_form($edit, $param);
-  unset($form['project_issue_form']['#prefix']);
-  unset($form['project_issue_form']['#suffix']);
-
-  // Add any CCK fields to the follow-up form.
-  if (function_exists('_content_widget_invoke')) {
-    $db_node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
-    $type = content_types($db_node->type);
-    _content_widget_invoke('prepare form values', $db_node);
-    $form = array_merge($form, _content_widget_invoke('form', $db_node));
-  }
-
-  _project_issue_form_add_required_fields($form['project_issue_form'], FALSE);
-  if ($edit->cid) {
-    $form['cid']= array('#type' => 'hidden', '#value' => $edit->cid);
-  }
-  $form['preview'] = array('#type' => 'button', '#value' => t('Preview'));
-  if (!form_get_errors()) {
-    $form['submit'] = array('#type' => 'button', '#value' => t('Submit'));
-  }
-  if ($op == t('Preview')) {
-    $form['#after_build'] = array('project_comment_form_add_preview');
-  }
-  return $form;
-}
-
-function project_comment_validate(&$edit) {
-  global $user;
-
-  $edit->uid = $user->uid;
-  $edit->name = $user->name;
-
-  if ($edit->cid) {
-    $comment = project_comment_load($edit->cid);
-    $edit->nid = $comment->nid;
-  }
-
-  $edit->comment = true;
-
-  project_issue_comment_validate($edit);
-  $edit->validated = true;
-}
-
-function project_comment_view($node, $main = 0) {
-  global $user;
-  $rows = array();
-  $result = db_query('SELECT p.*, u.name FROM {project_comments} p INNER JOIN {users} u USING (uid) WHERE p.nid = %d ORDER BY p.created ASC', $node->nid);
-  if (db_num_rows($result)) {
-    $output = '<div class="project-issue">';
-    $i = 0;
-    while ($comment = db_fetch_object($result)) {
-      $comment->body = db_decode_blob($comment->body);
-      $comment->data = db_decode_blob($comment->data);
-      $i++;
-      $output .= _project_comment_view_single($comment, $i);
-    }
-    $output .= '</div>';
-    return theme('box', t('Updates'), $output);
+      break;
+    case 'view':
+      if (isset($arg->cid)) {
+        $project_issue_table = project_issue_comment_view($node, $arg);
+      }
+      else {
+        $test = drupal_clone($arg);
+        $test->pid = $arg->project_info['pid'];
+        $test->component = $arg->project_info['component'];
+        // Add a dummy rid if necessary -- prevents incorrect change data
+        if (!isset($arg->rid)) {
+          $test->rid = 0;
+        }
+        $project_issue_table = _project_issue_comment_table(_project_issue_comment_labels(), $edit, $test);
+      }
+      if ($project_issue_table) {
+        $arg->comment = '<div class="project-issue"><div class="summary">'. $project_issue_table .'</div></div>' . $arg->comment;
+      }
+      break;
+    case 'validate':
+      $project = node_load($node->pid);
+      if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {
+        empty($arg['project_info']['rid']) and form_set_error('project_info][rid', t('You have to specify a valid version.'));
+      }
+      $component = $arg['project_info']['component'];
+      if ($component && !in_array($component, $project->components)) {
+        $component = 0;
+      }
+      empty($component) && form_set_error('project_info][component', t('You have to specify a valid component.'));
+      empty($arg['category']) && form_set_error('category', t('You have to specify a valid category.'));
+      break;
   }
 }
 
-/**
- * Private method to view a single project comment (issue followup).
- *
- * @param $comment
- *   An array or object of the comment to view.
- * @param $count
- *   The integer that shows what number of comment this is.
- *
- * @return
- *   A string of validated output to theme/display.
- *
- */
-function _project_comment_view_single($comment, $count) {
-  $comment = (object)$comment;
-  $summary = array();
-  $output = '';
-
-  $fields = array(
+function _project_issue_comment_labels() {
+  return array(
     'title' => t('Title'),
     'pid' => t('Project'),
     'rid' => t('Version'),
@@ -155,154 +124,102 @@ function _project_comment_view_single($comment, $count) {
     'assigned' => t('Assigned to'),
     'sid' => t('Status'),
   );
-
-  // If we got this from the DB, we'll have a $data field to unserialize.
-  $comment = drupal_unpack($comment);
-
-  // Print out what changed about the issue with this comment. If the
-  // comment is in the DB, we'll have 'old' and 'new' fields from the
-  // 'data' field, which record exactly what changed. If not, we'll
-  // load the origial node and compare against that.
-  if (!isset($comment->data)) {
-    $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
-  }
-  foreach ($fields as $field => $text) {
-    if (isset($comment->old->$field) && isset($comment->new->$field)) {
-      $summary[] = array(
-        $text .':',
-        project_mail_summary($field, $comment->old->$field),
-        '&raquo; '. project_mail_summary($field, $comment->new->$field)
-      );
-    }
-    elseif (isset($node->$field) && isset($comment->$field) && $node->$field != $comment->$field ) {
-      $summary[] = array(
-        $text .':',
-        project_mail_summary($field, $node->$field),
-        '&raquo; '. project_mail_summary($field, $comment->$field)
-      );
-    }
-  }
-
-  if ($comment->file_path && file_exists($comment->file_path)) {
-    $summary[] = array(t('Attachment:'), '<a href="'. file_create_url($comment->file_path). '">'. basename($comment->file_path) .'</a> ('. format_size($comment->file_size) .')');
-  }
-
-  if ($summary || $comment->body) {
-    if ($count) {
-      $output .= '<div class="header">';
-      $output .= t('!count submitted by !user on !date', array('!count' => l("#$count", "node/$comment->nid", array ('id' => "comment-$comment->cid", 'name' => "comment-$comment->cid"), NULL, "comment-$comment->cid"), '!user' => theme('username', $comment), '!date' => format_date($comment->created))) . theme('mark', node_mark($comment->nid, $comment->changed));
-      $output .= '</div>';
-    }
-    if ($summary) {
-      $output .= '<div class="summary">';
-      $output .= theme('table', array(), $summary);
-      $output .= '</div>';
-    }
-    if ($comment->body) {
-      $output .= '<div class="content">';
-      $output .= check_markup($comment->body);
-      $output .= '</div>';
-    }
-  }
-  return $output;
-}
-
-function project_comment_load($cid) {
-  $object = db_fetch_object(db_query('SELECT p.*, u.name FROM {project_comments} p INNER JOIN {users} u USING (uid) WHERE p.cid = %d ORDER BY p.created DESC', $cid));
-  $object->body = db_decode_blob($object->body);
-  $object->data = db_decode_blob($object->data);
-  return $object;
-}
-
-function project_comment_save($edit) {
-  global $user;
-
-  if (empty($edit->cid)) {
-    $edit->cid = db_next_id('{project}_cid');
-    if ($edit->file) {
-      $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
-      $edit->file->filename = project_issue_munge_filename($edit->file->filename);
-      $file = file_save_upload($edit->file, $directory);
-      unset($edit->file);
-    }
-
-    if (empty($edit->uid)) {
-      $edit->uid = $user->uid;
-    }
-    $node = node_load(array('nid' => $edit->nid, 'type' => 'project_issue'));
-
-    // Check if comment changed any of the state values and update the node if necessary
-    foreach (array('pid', 'rid', 'category', 'component', 'priority', 'assigned', 'sid', 'title') as $var) {
-      if ($node->$var != $edit->$var) {
-        $data['old']->$var = $node->$var;
-        $data['new']->$var = $edit->$var;
-        $node->$var = $edit->$var;
-      }
-    }
-
-    // Add processed cck info into the node object for node_save
-    if (function_exists('_content_widget_invoke')) {
-      $type = content_types($node->type);
-      while (list($field, $val) = each($type['fields'])) {
-        $node->$field = $edit->$field;
-      }
-      _content_widget_invoke('process form values', $node);
-    }
-
-    watchdog('content', t('project_issue: added comment %title', array('%title' => $edit->title)), WATCHDOG_NOTICE, l('view', "node/$node->nid"));
-    $node->changed = time();
-    db_query("INSERT INTO {project_comments} (cid, nid, uid, created, changed, body, data, file_path, file_mime, file_size) VALUES (%d, %d, %d, %d, %d, %b, %b, '%s', '%s', %d)", $edit->cid, $edit->nid, $edit->uid, $node->changed, $node->changed, $edit->body, serialize($data), $file->filepath, $file->filemime, $file->filesize);
-
-    // Update node_comment_statistics so the tracker page lists the number of comments
-    $count = db_result(db_query('SELECT COUNT(cid) FROM {project_comments} WHERE nid = %d', $edit->nid));
-    db_query("UPDATE {node_comment_statistics} SET comment_count = %d, last_comment_timestamp = %d, last_comment_name = '%s', last_comment_uid = %d WHERE nid = %d", $count, time(), $user->name, $user->uid, $edit->nid);
-
-    node_save($node);
-  }
-
-  return $edit->cid;
 }
 
 /**
- * Form API callback for previewing a project comment.
+ * Create a project issue metadata table.
  *
- * @param $form
- *   The form to add the preview information to.
- * @param $edit
- *   The form values for the comment to preview.
- *
- * @return
- *   The modified form to render.
- *
+ * @param $labels
+ *  An array, keys are field names, values are the displayed labels.
+ * @param $old
+ *  The previous comment (or the node).
+ * @param $followup
+ *  The current comment.
  */
-function project_comment_form_add_preview($form, $edit) {
-  drupal_set_title(t('Preview comment'));
-  if (is_array($edit)) {
-    $comment = (object)$edit;
+function _project_issue_comment_table($labels, $old, $followup) {
+  $rows = array();
+  foreach ($labels as $field => $text) {
+    if ($old->$field != $followup->$field) {
+      $rows[] = array(
+        $labels[$field] .':',
+        project_mail_summary($field, $old->$field),
+        '&raquo; '. project_mail_summary($field, $followup->$field),
+      );
+    }
   }
-  else {
-    $comment = $edit;
-  }
-  project_comment_validate($comment);
+  return theme('table', array(), $rows);
+}
 
-  // Preview the comment with security check.
-  if (!form_get_errors()) {
-    $output = _project_comment_view_single($comment, 0);
+/**
+ * Returns the issue metadata table for a comment.
+ *
+ * @param $node
+ *  The corresponding node.
+ * @param $comment
+ *  The comment, if it's set then metadata will be returned. If it's not
+ *  set then metadata will be precalculated.
+ * @return
+ *  A themed table of issue metadata.
+ */
+function project_issue_comment_view(&$node, $comment = NULL) {
+  static $project_issue_tables;
+
+  if (isset($comment)) {
+    return $project_issue_tables[$comment->cid];
+  }
+  if ($node->comment_count) {
+    $old = unserialize(db_result(db_query('SELECT original_issue_data FROM {project_issues} WHERE nid = %d', $node->nid)));
+    $labels = _project_issue_comment_labels();
+    $result = db_query('SELECT cid, title, pid, rid, component, category, priority, assigned, sid FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp ASC', $node->nid);
+    while ($followup = db_fetch_object($result)) {
+      $project_issue_tables[$followup->cid] = _project_issue_comment_table($labels, $old, $followup);
+      $old = $followup;
+    }
+  }
+}
+
+/**
+ * Updates the project issue based on the comment inserted/updated/deleted.
+ *
+ * @param $comment_data
+ *  The comment data that's been submitted.
+ * @param $op
+ *  The comment operation performed, 'insert', 'update', 'delete'.
+ */
+function project_issue_update_by_comment($comment_data, $op) {
+  if (is_array($comment_data)) {
+    // Massage the incoming data so the structure will work with the project_issue_update() function.
+    $comment_data['component'] = $comment_data['project_info']['component'];
+    $comment_data['pid'] = $comment_data['project_info']['pid'];
+    unset ($comment_data['project_info']);
+    $comment_data = (object) $comment_data;
   }
 
-  $form['comment_preview'] = array(
-    '#value' => $output,
-    '#weight' => -100,
-    '#prefix' => '<div class="preview"><div class="comment">',
-    '#suffix' => '</div></div>',
-  );
-
-  $output = '';
-  if (is_numeric(arg(3))) {
-    $node = node_load(array('nid' => arg(3), 'type' => 'project_issue'));
-    $output .= node_view($node, NULL, TRUE);
-    $form['comment_preview_below'] = array('#value' => $output, '#weight' => 100);
+  switch ($op) {
+    case 'insert':
+    case 'update':
+      project_issue_update($comment_data);
+      $update_title = TRUE;
+      break;
+    case 'delete':
+      // Get the cid of the most recent comment, so we know if that's the one we're deleting.
+      $latest_cid = db_result(db_query_range('SELECT cid FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp DESC', $comment_data->nid, 0, 1));
+      if ($comment_data->cid == $latest_cid) {
+        // Get the cid of the next most recent comment, which will now be the last.
+        $latest_cid = db_result(db_query_range('SELECT cid FROM {project_issue_comments} WHERE nid = %d AND cid <> %d ORDER BY timestamp DESC', $comment_data->nid, $comment_data->cid, 0, 1));
+        $comment_data = db_fetch_object(db_query('SELECT * FROM {project_issue_comments} WHERE cid = %d', $latest_cid));
+        // Update the issue data to reflect the new final states.
+        project_issue_update($comment_data);
+        $update_title = TRUE;
+      }
+      break;
   }
-  unset($form['#sorted']);
-  return $form;
+
+  // Issue title must be updated manually, when a comment is inserted, updated, or the last
+  // comment is deleted.
+  if (isset($update_title)) {
+    $node = node_load($comment_data->nid);
+    $node->title = $comment_data->title;
+    node_save($node);
+  }
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.76 2007/09/28 13:26:28 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.77 2007/09/29 21:26:57 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -196,6 +196,7 @@ function project_mail_summary($field, $value) {
 }
 
 function project_mail_notify($node) {
+  return; //TODO: rewrite for ifac.
   if (defined('PROJECT_NOMAIL')) {
     return;
   }

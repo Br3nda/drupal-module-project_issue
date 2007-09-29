@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.87 2007/09/29 22:07:26 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.88 2007/09/29 22:37:40 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -61,7 +61,7 @@ function project_issue_comment(&$arg, $op) {
       unset($form['page'], $form['issue_details']);
       return $form;
     case 'insert':
-      db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
+      db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
       project_issue_update_by_comment($arg, 'insert');
       break;
     case 'update':
@@ -70,7 +70,7 @@ function project_issue_comment(&$arg, $op) {
       $time = time();
       // Should we be using something like comment_save() here?
       db_query("UPDATE {comments} SET timestamp = %d WHERE cid = %d", $time, $arg['cid']);
-      db_query("UPDATE {project_issue_comments} SET pid = %d, rid = %d, component = '%s', category = '%s', priority = %d, assigned = %d, sid = %d, title = '%s', timestamp = %d WHERE cid = %d", $arg['project_info']['pid'], $arg['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $time, $arg['cid']);
+      db_query("UPDATE {project_issue_comments} SET pid = %d, rid = %d, component = '%s', category = '%s', priority = %d, assigned = %d, sid = %d, title = '%s', timestamp = %d WHERE cid = %d", $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $time, $arg['cid']);
       project_issue_update_by_comment($arg, 'update');
       break;
     case 'delete':

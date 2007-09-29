@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.18 2007/09/29 21:26:57 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.19 2007/09/29 22:02:05 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -529,7 +529,7 @@ function project_issue_update_5201() {
           }
         }
       }
-      $thread = _project_issue_update_5200_get_vancode($nid, $pid);
+      $thread = _project_issue_update_5201_get_vancode($nid, $pid);
       $cid = db_next_id('{comments}_cid');
       db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '', %d, %d, 0, '', '%s', '', '', '')", $cid, $nid, $pid, $comment->uid, $issue['title'], $comment->comment, FILTER_FORMAT_DEFAULT, $comment->changed, COMMENT_PUBLISHED, $thread);
       // To make each issue followup a child of the previous followup,
@@ -574,7 +574,7 @@ function project_issue_update_5202() {
   return $ret;
 }
 
-function _project_issue_update_5200_get_vancode($nid, $pid) {
+function _project_issue_update_5201_get_vancode($nid, $pid) {
   if ($pid == 0) {
     // This is a comment with no parent comment (depth 0): we start
     // by retrieving the maximum thread level.

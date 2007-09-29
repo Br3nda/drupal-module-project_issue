@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.89 2007/09/29 22:58:21 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.90 2007/09/29 23:47:53 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -96,6 +96,9 @@ function project_issue_comment(&$arg, $op) {
       }
       if ($project_issue_table) {
         $arg->comment = '<div class="project-issue"><div class="summary">'. $project_issue_table .'</div></div>' . $arg->comment;
+      }
+      if (variable_get('project_issue_comment_hide_subject', 1)) {
+        $arg->subject = '';
       }
       break;
     case 'validate':

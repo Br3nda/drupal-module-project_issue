@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.39 2007/09/29 21:26:57 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.40 2007/09/29 23:47:53 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -55,6 +55,9 @@ function project_issue_form_alter($form_id, &$form) {
       // validate handler.
       // The 'your name' item just wastes screen estate.
       unset($form['comment_filter']['comment']['#required'], $form['_author']);
+      if (variable_get('project_issue_comment_hide_subject', 1)) {
+        unset($form['subject']);
+      }
     }
   }
 }

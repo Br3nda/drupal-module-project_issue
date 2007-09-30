@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.38 2007/09/29 13:12:15 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.22.2.39 2007/09/30 14:42:02 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -576,6 +576,7 @@ function project_issue_form(&$node, &$param) {
     $form['issue_details']['title'] = array(
       '#type' => 'textfield',
       '#title' => t('Title'),
+      '#default_value' => $node->title,
       '#size' => 60,
       '#maxlength' => 128,
     );

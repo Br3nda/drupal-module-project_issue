@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.90 2007/09/29 23:47:53 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.91 2007/09/30 00:37:33 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -102,15 +102,26 @@ function project_issue_comment(&$arg, $op) {
       }
       break;
     case 'validate':
-      $project = node_load($node->pid);
-      if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {
-        empty($arg['project_info']['rid']) and form_set_error('project_info][rid', t('You have to specify a valid version.'));
+      $project = node_load($arg['project_info']['pid']);
+      if ($project) {
+        // Validate version.
+        if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {
+          $rid = $arg['project_info']['rid'];
+          if ($rid && !in_array($rid, array_keys($releases))) {
+            $rid = 0;
+          }
+          empty($rid) and form_set_error('project_info][rid', t('You have to specify a valid version.'));
+        }
+        // Validate component.
+        $component = $arg['project_info']['component'];
+        if ($component && !in_array($component, $project->components)) {
+          $component = 0;
+        }
+        empty($component) && form_set_error('project_info][component', t('You have to specify a valid component.'));
       }
-      $component = $arg['project_info']['component'];
-      if ($component && !in_array($component, $project->components)) {
-        $component = 0;
+      else {
+        form_set_error('project_info][pid', t('You have to specify a valid project.'));
       }
-      empty($component) && form_set_error('project_info][component', t('You have to specify a valid component.'));
       empty($arg['category']) && form_set_error('category', t('You have to specify a valid category.'));
       break;
   }

@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.12 2007-08-16 00:10:02 dww Exp $ */
+/* $Id: project_issue.css,v 1.13 2007-09-30 04:19:19 thehunmonkgroup Exp $ */
 /* $Name:  $ */
 
 /* Viewing issue nodes */
@@ -9,12 +9,15 @@
 .project-issue .summary table {
   border-collapse: collapse;
   width: auto;
+  border: 1px;
+  border-style: solid;
+  border-color: #eee;
 }
 .project-issue .summary table td {
   color: #333;
   background-color: transparent;
   font-size: 90%;
-  padding: 0em 0.2em;
+  padding: 0em 1em;
   border: 0;
 }
 .project-issue tbody {

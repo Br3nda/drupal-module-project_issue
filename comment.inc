@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.92 2007/09/30 03:24:43 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.93 2007/09/30 03:46:18 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -42,6 +42,13 @@ function project_issue_comment(&$arg, $op) {
       // We need this otherwise pid collides with comment.
       $form['project_info']['#tree'] = TRUE;
       $form['project_info']['#weight'] = -2;
+
+      // Because we've tree'd project_info, the id's for these elements must
+      // be set by hand, or the js project reloads will break.
+      $form['project_info']['pid']['#id'] = 'edit-pid';
+      $form['project_info']['rid']['#id'] = 'edit-rid';
+      $form['project_info']['component']['#id'] = 'edit-component';
+
       $form['issue_info']['#weight'] = -1;
       $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
       $form['#suffix'] = '</div></div></div>';

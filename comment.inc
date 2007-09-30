@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.91 2007/09/30 00:37:33 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.92 2007/09/30 03:24:43 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -16,9 +16,17 @@ function project_issue_comment(&$arg, $op) {
     return;
   }
 
+  // Make sure project is current here -- it may have changed when posted.
+  // This is ugly, but the form workflow doesn't really offer a better
+  // choice for this scenario.
+  if (isset($_POST['project_info']['pid'])) {
+    $node->pid = $_POST['project_info']['pid'];
+  }
+  $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
+
   switch ($op) {
     case 'form':
-      $project = node_load($node->pid);
+      // Set breadcrumb.
       $extra = array();
       $extra[] = l($project->title, 'node/'. $project->nid);
       // Only add issue title to the breadcrumb if this comment is a reply
@@ -28,18 +36,9 @@ function project_issue_comment(&$arg, $op) {
       }
       project_project_set_breadcrumb($project, $extra);
 
-      // $arg is a form
-      if (!$node->comment_count) {
-        foreach (array('nid', 'pid', 'rid', 'category', 'component', 'priority', 'assigned', 'sid', 'title') as $var) {
-          $edit->$var = $node->$var;
-        }
-      }
-      else {
-        $edit = db_fetch_object(db_query_range('SELECT nid, title, pid, rid, component, category, priority, assigned, sid, timestamp FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp DESC ', $node->nid, 0, 1));
-      }
       // We need to ask for almost the same metadata as project issue itself
       // so let's reuse the form.
-      $form = drupal_retrieve_form('project_issue_form', $edit, NULL);
+      $form = drupal_retrieve_form('project_issue_form', $node, NULL);
       // We need this otherwise pid collides with comment.
       $form['project_info']['#tree'] = TRUE;
       $form['project_info']['#weight'] = -2;
@@ -50,7 +49,7 @@ function project_issue_comment(&$arg, $op) {
         '#type' => 'textfield',
         '#title' => t('Issue title'),
         '#maxlength' => 128,
-        '#default_value' => $edit->title,
+        '#default_value' => $node->title,
         '#weight' => -30,
         '#required' => TRUE,
         '#description' => '<em>'. t('Note: modifying this value will change the title of the entire issue, not your follow-up comment.') .'</em>',
@@ -102,7 +101,6 @@ function project_issue_comment(&$arg, $op) {
       }
       break;
     case 'validate':
-      $project = node_load($arg['project_info']['pid']);
       if ($project) {
         // Validate version.
         if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {

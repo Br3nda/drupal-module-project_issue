@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.257 2007-09-30 14:40:27 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.258 2007-10-01 22:51:26 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -909,16 +909,20 @@ function project_issue_insert($node) {
   // table for the original states.
   $original_issue_data = new stdClass();
   $fields = array(
-    'pid',
-    'rid',
-    'component',
-    'category',
-    'priority',
-    'assigned',
-    'sid',
-    'title',
+    'pid' => 0,
+    'rid' => 0,
+    'component' => '',
+    'category' => '',
+    'priority' => 0,
+    'assigned' => 0,
+    'sid' => 0,
+    'title' => '',
   );
-  foreach ($fields as $field) {
+  foreach ($fields as $field => $default) {
+    // Some of the incoming data may not have the correct default.
+    if (!$node->$field) {
+      $node->$field = $default;
+    }
     $original_issue_data->$field = $node->$field;
   }
 

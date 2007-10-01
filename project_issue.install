@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.20 2007-09-30 19:29:20 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.21 2007-10-01 17:06:04 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -531,7 +531,9 @@ function project_issue_update_5201() {
       }
       $thread = _project_issue_update_5201_get_vancode($nid, $pid);
       $cid = db_next_id('{comments}_cid');
-      db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '', %d, %d, 0, '', '%s', '', '', '')", $cid, $nid, $pid, $comment->uid, $issue['title'], $comment->comment, FILTER_FORMAT_DEFAULT, $comment->changed, COMMENT_PUBLISHED, $thread);
+      // Use the same subject creation logic as new comment creations.
+      $subject = _comment_form_submit(array('subject' => '', 'comment' => $comment->comment));
+      db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '', %d, %d, 0, '', '%s', '', '', '')", $cid, $nid, $pid, $comment->uid, $subject['subject'], $comment->comment, FILTER_FORMAT_DEFAULT, $comment->changed, COMMENT_PUBLISHED, $thread);
       // To make each issue followup a child of the previous followup,
       // uncomment the next line. Default is all followups are children of the issue
       #$pid = $cid;

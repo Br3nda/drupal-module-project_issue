@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.21 2007/10/01 17:06:04 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.22 2007/10/02 07:11:03 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -516,6 +516,9 @@ function project_issue_update_5201() {
 
     // Pull the followups again.
     $followup = db_query('SELECT cid, uid, changed, body, file_path, file_mime, file_size FROM {project_comments} WHERE nid = %d ORDER BY changed', $nid);
+
+    $subject = 0;
+
     // Loop through each followup.
     while ($comment = db_fetch_object($followup)) {
       $comment->comment = db_decode_blob($comment->body);
@@ -531,9 +534,9 @@ function project_issue_update_5201() {
       }
       $thread = _project_issue_update_5201_get_vancode($nid, $pid);
       $cid = db_next_id('{comments}_cid');
-      // Use the same subject creation logic as new comment creations.
-      $subject = _comment_form_submit(array('subject' => '', 'comment' => $comment->comment));
-      db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '', %d, %d, 0, '', '%s', '', '', '')", $cid, $nid, $pid, $comment->uid, $subject['subject'], $comment->comment, FILTER_FORMAT_DEFAULT, $comment->changed, COMMENT_PUBLISHED, $thread);
+      $subject++;
+
+      db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '', %d, %d, 0, '', '%s', '', '', '')", $cid, $nid, $pid, $comment->uid, "#$subject", $comment->comment, FILTER_FORMAT_DEFAULT, $comment->changed, COMMENT_PUBLISHED, $thread);
       // To make each issue followup a child of the previous followup,
       // uncomment the next line. Default is all followups are children of the issue
       #$pid = $cid;

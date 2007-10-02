@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.22 2007-10-02 07:11:03 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.23 2007-10-02 22:07:42 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -451,7 +451,7 @@ function project_issue_update_5201() {
   // This determines how many issue nodes will be processed in each batch run. A reasonable
   // default has been chosen, but you may want to tweak depending on your average number of
   // issue followups per issue.
-  $limit = 20;
+  $limit = 100;
 
   // Prevent the update and warn if the new required modules aren't enabled.
   $modules = array(

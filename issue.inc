@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.258 2007/10/01 22:51:26 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.259 2007/10/02 17:24:17 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -863,7 +863,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
     $rows[] = array(t('Priority:'), project_issue_priority($node->priority));
     $rows[] = array(t('Assigned:'), $assigned);
     $rows[] = array(t('Status:'), project_issue_state($node->sid));
-    if ($node->file_path && file_exists($node->file_path)) {
+    if ($node->file_path) {
       $rows[] = array(t('Attachment:'), '<a href="'. file_create_url($node->file_path). '">'. basename($node->file_path) .'</a> ('. format_size($node->file_size) .')');
     }
     $node->content['project_issue_summary'] = array(

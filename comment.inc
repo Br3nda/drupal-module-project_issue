@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.94 2007-10-02 00:24:56 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.95 2007-10-02 02:45:16 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -25,6 +25,10 @@ function project_issue_comment(&$arg, $op) {
 
   switch ($op) {
     case 'form':
+      // Only allow metadata changes on new followups.
+      if (isset($arg['cid']['#value'])) {
+        return array();
+      }
       // Set breadcrumb.
       $extra = array();
       $extra[] = l($project->title, 'node/'. $project->nid);
@@ -70,12 +74,6 @@ function project_issue_comment(&$arg, $op) {
       project_issue_update_by_comment($arg, 'insert');
       break;
     case 'update':
-      // Updated comments always get moved to the most recently posted comment -- otherwise
-      // the state workflow tables can get screwy.
-      $time = time();
-      // Should we be using something like comment_save() here?
-      db_query("UPDATE {comments} SET timestamp = %d WHERE cid = %d", $time, $arg['cid']);
-      db_query("UPDATE {project_issue_comments} SET pid = %d, rid = %d, component = '%s', category = '%s', priority = %d, assigned = %d, sid = %d, title = '%s', timestamp = %d WHERE cid = %d", $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $time, $arg['cid']);
       project_issue_update_by_comment($arg, 'update');
       break;
     case 'delete':
@@ -105,6 +103,10 @@ function project_issue_comment(&$arg, $op) {
       }
       break;
     case 'validate':
+      // Only validate metadata changes on new followups.
+      if (isset($arg['cid'])) {
+        return;
+      }
       if ($project) {
         // Validate version.
         if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {
@@ -203,20 +205,18 @@ function project_issue_comment_view(&$node, $comment = NULL) {
  *  The comment operation performed, 'insert', 'update', 'delete'.
  */
 function project_issue_update_by_comment($comment_data, $op) {
-  if (is_array($comment_data)) {
-    // Massage the incoming data so the structure will work with the project_issue_update() function.
-    $comment_data['component'] = $comment_data['project_info']['component'];
-    $comment_data['pid'] = $comment_data['project_info']['pid'];
-    $comment_data['rid'] = $comment_data['project_info']['rid'];
-    unset ($comment_data['project_info']);
-    $comment_data = (object) $comment_data;
-  }
-
   switch ($op) {
     case 'insert':
+      // Massage the incoming data so the structure is consistent throughout the function.
+      $comment_data['component'] = $comment_data['project_info']['component'];
+      $comment_data['pid'] = $comment_data['project_info']['pid'];
+      $comment_data['rid'] = $comment_data['project_info']['rid'];
+      unset ($comment_data['project_info']);
+      $comment_data = (object) $comment_data;
+      $update_issue = TRUE;
+      break;
     case 'update':
-      project_issue_update($comment_data);
-      $update_title = TRUE;
+      $comment_data = (object) $comment_data;
       break;
     case 'delete':
       // Get the cid of the most recent comment, so we know if that's the one we're deleting.
@@ -224,19 +224,29 @@ function project_issue_update_by_comment($comment_data, $op) {
       if ($comment_data->cid == $latest_cid) {
         // Get the cid of the next most recent comment, which will now be the last.
         $latest_cid = db_result(db_query_range('SELECT cid FROM {project_issue_comments} WHERE nid = %d AND cid <> %d ORDER BY timestamp DESC', $comment_data->nid, $comment_data->cid, 0, 1));
-        $comment_data = db_fetch_object(db_query('SELECT * FROM {project_issue_comments} WHERE cid = %d', $latest_cid));
-        // Update the issue data to reflect the new final states.
-        project_issue_update($comment_data);
-        $update_title = TRUE;
+        if ($latest_cid) {
+          $comment_data = db_fetch_object(db_query('SELECT * FROM {project_issue_comments} WHERE cid = %d', $latest_cid));
+        }
+        // If this was the last comment on the issue, then treat the original issue as the last comment.
+        else {
+          $comment_data = node_load($comment_data->nid);
+        }
+
+        $update_issue = TRUE;
       }
       break;
   }
 
-  // Issue title must be updated manually, when a comment is inserted, updated, or the last
-  // comment is deleted.
-  if (isset($update_title)) {
-    $node = node_load($comment_data->nid, NULL, TRUE);
-    $node->title = $comment_data->title;
-    node_save($node);
+  // Update the issue data to reflect the new final states.
+  if (isset($update_issue)) {
+    db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $comment_data->nid);
   }
+
+  // Update the issue title if necessary.
+  $node = node_load($comment_data->nid, NULL, TRUE);  // Don't use cached since we changed data above.
+  if (isset($update_issue)) {
+    $node->title = $comment_data->title;
+  }
+  // This also triggers the mail notification, and updates the changed date of the issue.
+  node_save($node);
 }

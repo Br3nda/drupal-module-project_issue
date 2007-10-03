@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.46 2007/10/03 06:43:36 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.47 2007/10/03 16:10:19 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -57,9 +57,15 @@ function project_issue_form_alter($form_id, &$form) {
       unset($form['comment_filter']['comment']['#required'], $form['_author']);
       // For existing comments, we want to preserve the comment subject,
       // Even if the subject field is disabled.
-      $subject = '';
       if ($cid = $form['cid']['#value']) {
         $subject = db_result(db_query('SELECT subject FROM {comments} WHERE cid = %d', $cid));
+      }
+      // For new comments, show the expected next number for previews.
+      // This is only for show, the number will be generated when the comment
+      // is posted.
+      else {
+        $next_id = db_result(db_query('SELECT COUNT(cid) FROM {project_issue_comments} WHERE nid = %d', $form['nid']['#value'])) + 1;
+        $subject = "#$next_id";
       }
       $form['subject'] = array(
         '#type' => 'value',
@@ -67,8 +73,8 @@ function project_issue_form_alter($form_id, &$form) {
       );
 
       // TODO: This is not implemented yet, so it will fall through.
-      if (function_exists('comment_form_location')) {
-        $comment_form_location = comment_form_location($node);
+      if (isset($node->comment_form_location)) {
+        $comment_form_location = $node->comment_form_location;
       }
       else {
         $comment_form_location = variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.44 2007/10/03 05:24:06 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.45 2007/10/03 05:32:27 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -57,13 +57,14 @@ function project_issue_form_alter($form_id, &$form) {
       unset($form['comment_filter']['comment']['#required'], $form['_author']);
       // For existing comments, we want to preserve the comment subject,
       // Even if the subject field is disabled.
+      $subject = '';
       if ($cid = $form['cid']['#value']) {
         $subject = db_result(db_query('SELECT subject FROM {comments} WHERE cid = %d', $cid));
-        $form['subject'] = array(
-          '#type' => 'value',
-          '#value' => $subject,
-        );
       }
+      $form['subject'] = array(
+        '#type' => 'value',
+        '#value' => $subject,
+      );
       if (variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE) == COMMENT_FORM_SEPARATE_PAGE) {
         $form['node_show'] = array(
           '#value' => node_show($node, NULL),

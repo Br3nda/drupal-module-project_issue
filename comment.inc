@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.96 2007-10-02 07:02:32 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.97 2007-10-03 19:57:11 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -254,4 +254,8 @@ function project_issue_update_by_comment($comment_data, $op) {
   }
   // This also triggers the mail notification, and updates the changed date of the issue.
   node_save($node);
+}
+
+function project_issue_is_comment_reply() {
+  return arg(0) == 'comment' && arg(1) == 'reply';
 }

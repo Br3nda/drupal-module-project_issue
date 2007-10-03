@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.51 2007-10-03 23:18:08 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.52 2007-10-03 23:23:50 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -81,7 +81,8 @@ function project_issue_form_alter($form_id, &$form) {
         // The comment form displays the initial node below the form when pid = 0
         // This is ugly because we already put a running history in -- unset it
         // so it doesn't display twice.
-        unset($form['#after_build']);
+        $preview = array_search('comment_form_add_preview', $form['#after_build']);
+        unset($form['#after_build'][$preview]);
       }
     }
   }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.259 2007/10/02 17:24:17 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.260 2007/10/03 06:43:36 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -892,6 +892,10 @@ function project_issue_view($node, $teaser = false, $page = false) {
 
 function project_issue_load($node) {
   $project = db_fetch_object(db_query(db_rewrite_sql('SELECT pi.* FROM {project_issues} pi WHERE pi.nid = %d', 'pi'), $node->nid));
+
+  // TODO: future functionality -- this is not implemented yet!
+  $project->comment_form_location = variable_get('project_issue_comment_form_location', COMMENT_FORM_BELOW);
+
   return $project;
 }
 

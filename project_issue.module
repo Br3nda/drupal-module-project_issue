@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.47 2007-10-03 16:10:19 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.48 2007-10-03 19:13:44 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -72,15 +72,8 @@ function project_issue_form_alter($form_id, &$form) {
         '#value' => $subject,
       );
 
-      // TODO: This is not implemented yet, so it will fall through.
-      if (isset($node->comment_form_location)) {
-        $comment_form_location = $node->comment_form_location;
-      }
-      else {
-        $comment_form_location = variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
-      }
-
-      if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
+      // Any time we're on a reply page, show the full issue below the reply.
+      if (arg(0) == 'comment' && arg(1) == 'reply') {
         $form['node_show'] = array(
           '#value' => node_show($node, NULL),
           '#weight' => 100,   // Push to the bottom.

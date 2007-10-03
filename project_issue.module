@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.45 2007-10-03 05:32:27 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.46 2007-10-03 06:43:36 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -65,7 +65,16 @@ function project_issue_form_alter($form_id, &$form) {
         '#type' => 'value',
         '#value' => $subject,
       );
-      if (variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE) == COMMENT_FORM_SEPARATE_PAGE) {
+
+      // TODO: This is not implemented yet, so it will fall through.
+      if (function_exists('comment_form_location')) {
+        $comment_form_location = comment_form_location($node);
+      }
+      else {
+        $comment_form_location = variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
+      }
+
+      if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
         $form['node_show'] = array(
           '#value' => node_show($node, NULL),
           '#weight' => 100,   // Push to the bottom.

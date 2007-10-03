@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.260 2007/10/03 06:43:36 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.261 2007/10/03 23:00:47 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -841,7 +841,7 @@ function project_issue_validate_file($file) {
 function project_issue_view($node, $teaser = false, $page = false) {
   $node = node_prepare($node, $teaser);
 
-  if (!$teaser && $page) {
+  if (!$teaser && ($page || project_issue_is_comment_reply())) {
 
     $node->content['#prefix'] = '<div class="project-issue">';
     $node->content['#suffix'] = '</div>';

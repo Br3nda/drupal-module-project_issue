@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.42 2007/10/02 21:05:19 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.43 2007/10/03 05:10:01 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -64,6 +64,10 @@ function project_issue_form_alter($form_id, &$form) {
           '#value' => $subject,
         );
       }
+      $form['node_show'] = array(
+        '#value' => node_show($node, NULL),
+        '#weight' => 100,   // Push to the bottom.
+      );
     }
   }
 }

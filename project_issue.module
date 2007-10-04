@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.53 2007-10-04 04:21:15 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.54 2007-10-04 17:32:56 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -74,10 +74,7 @@ function project_issue_form_alter($form_id, &$form) {
 
       // Any time we're on a reply page, show the full issue below the reply.
       if (project_issue_is_comment_reply()) {
-        $form['node_show'] = array(
-          '#value' => node_view($node) . comment_render($node, 0),
-          '#weight' => 100,   // Push to the bottom.
-        );
+        $form['#pre_render'][] = 'project_issue_comment_pre_render';
       }
     }
   }

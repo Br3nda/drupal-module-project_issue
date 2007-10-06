@@ -1,11 +1,14 @@
 <?php
-// $Id: project_issue.module,v 1.54 2007-10-04 17:32:56 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.55 2007-10-06 18:12:21 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments
 
 define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png html doc xls pdf ppt pps odt ods odp odg');
+
+/// How many issues should be displayed per page by default.
+define('PROJECT_ISSUES_PER_PAGE', 20);
 
 $path = drupal_get_path('module', 'project_issue');
 if (file_exists("$path/issue.inc")) {
@@ -109,6 +112,16 @@ function project_issue_perm() {
  */
 function project_issue_settings_form() {
 
+  $form['project_issues_per_page'] = array(
+    '#title' => t('Issues per page'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('project_issues_per_page', PROJECT_ISSUES_PER_PAGE),
+    '#size' => 4,
+    '#maxlength' => 10,
+    '#description' => t('Number of issues to display on a single page when viewing the issue queues.'),
+    '#validate' => array('project_issue_validate_issues_per_page' => array()),
+  );
+
   $form['project_directory_issues']  = array(
     '#type' => 'textfield',
     '#title' => t('Issue directory'),
@@ -169,6 +182,15 @@ function project_issue_settings_form() {
   }
 
   return system_settings_form($form);
+}
+
+function project_issue_validate_issues_per_page($form) {
+  if (!is_numeric($form['#value'])) {
+    form_error($form, t('%setting must be a number.', array('%setting' => t('Issues per page'))));
+  }
+  if ($form['#value'] <= 0) {
+    form_error($form, t('%setting must be greater than 0.', array('%setting' => t('Issues per page'))));
+  }
 }
 
 function project_issue_cron() {

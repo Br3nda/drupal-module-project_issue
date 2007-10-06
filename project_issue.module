@@ -1,11 +1,14 @@
 <?php
-// $Id: project_issue.module,v 1.40 2007/09/29 23:47:53 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.38.2.1 2007/10/06 18:12:13 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments
 
 define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png html doc xls pdf ppt pps odt ods odp odg');
+
+/// How many issues should be displayed per page by default.
+define('PROJECT_ISSUES_PER_PAGE', 20);
 
 $path = drupal_get_path('module', 'project_issue');
 if (file_exists("$path/issue.inc")) {
@@ -44,24 +47,6 @@ function project_issue_help($section) {
   }
 }
 
-/**
- * Implementation of hook_form_alter.
- */
-function project_issue_form_alter($form_id, &$form) {
-  if ($form_id == 'comment_form') {
-    $node = node_load($form['nid']['#value']);
-    if ($node->type == 'project_issue') {
-      // Comment is not required for project issue followups, we have our own
-      // validate handler.
-      // The 'your name' item just wastes screen estate.
-      unset($form['comment_filter']['comment']['#required'], $form['_author']);
-      if (variable_get('project_issue_comment_hide_subject', 1)) {
-        unset($form['subject']);
-      }
-    }
-  }
-}
-
 function project_issue_node_info() {
   return array(
     'project_issue' => array(
@@ -90,6 +75,16 @@ function project_issue_perm() {
  * Callback for the main settings page.
  */
 function project_issue_settings_form() {
+
+  $form['project_issues_per_page'] = array(
+    '#title' => t('Issues per page'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('project_issues_per_page', PROJECT_ISSUES_PER_PAGE),
+    '#size' => 4,
+    '#maxlength' => 10,
+    '#description' => t('Number of issues to display on a single page when viewing the issue queues.'),
+    '#validate' => array('project_issue_validate_issues_per_page' => array()),
+  );
 
   $form['project_directory_issues']  = array(
     '#type' => 'textfield',
@@ -153,6 +148,15 @@ function project_issue_settings_form() {
   return system_settings_form($form);
 }
 
+function project_issue_validate_issues_per_page($form) {
+  if (!is_numeric($form['#value'])) {
+    form_error($form, t('%setting must be a number.', array('%setting' => t('Issues per page'))));
+  }
+  if ($form['#value'] <= 0) {
+    form_error($form, t('%setting must be greater than 0.', array('%setting' => t('Issues per page'))));
+  }
+}
+
 function project_issue_cron() {
   if (time() - variable_get('project_issue_digest_last', 0) > variable_get('project_issue_digest_interval', 7 * 24 * 60 * 60)) {
     variable_set('project_issue_digest_last', time());
@@ -172,6 +176,31 @@ function project_issue_cron() {
     $comment->sid = 7;
     project_comment_save($comment);
   }
+}
+
+function project_issue_link($type, $node = 0, $main = 0) {
+  $links = array();
+  switch ($type) {
+    case 'node':
+      if ($node->type == 'project_issue' &&
+          !(arg(0) == 'project' && arg(1) == 'comments')) {
+          // Only add the link if we're not already on an issue follow-up.
+            if (node_access('create', 'project_issue')) {
+              $links['project_issue_follow_up'] = array(
+                'title' => t('Follow up'),
+                'href' => "project/comments/add/$node->nid",
+              );
+            }
+            else {
+              $links['project_issue_follow_up_forbidden'] = array(
+                'title' => theme('project_issue_follow_up_forbidden', $node->nid),
+                'html' => TRUE,
+              );
+            }
+      }
+      break;
+  }
+  return $links;
 }
 
 function project_issue_menu($may_cache) {
@@ -502,11 +531,6 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
       if (!(user_access('set issue status '. str_replace("'", "", $state->name)) || ($node->sid == variable_get('project_issue_default_state', 1)) || ($state->author_has && ($user->uid == $node->uid)))) {
         form_set_error('sid', t('Invalid issue status %status: you do not have permission to set this status', array('%status' => $state)));
       }
-      break;
-    case 'view':
-      $_GET['mode'] = COMMENT_MODE_FLAT_EXPANDED;
-      $_GET['sort'] = COMMENT_ORDER_OLDEST_FIRST;
-      project_issue_comment_view($node);
       break;
   }
 }

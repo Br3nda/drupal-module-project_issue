@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255.2.1 2007/09/30 14:41:14 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.255.2.2 2007/10/06 18:12:13 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1603,6 +1603,8 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     );
   }
 
+  $issues_per_page = variable_get('project_issues_per_page', PROJECT_ISSUES_PER_PAGE);
+
   $header = array();
   if (!$project->nid) {
     $header[] = array('data' => t('Project'), 'field' => 'p.pid');
@@ -1618,7 +1620,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
   $header[] = array('data' => t('Assigned to'), 'field' => 'u.name');
 
   $sql = project_issue_query_sql($query);
-  $result = pager_query($sql['sql'] . tablesort_sql($header), 20, 0, $sql['count']);
+  $result = pager_query($sql['sql'] . tablesort_sql($header), $issues_per_page, 0, $sql['count']);
 
   $search = '';
   if ($show_search) {
@@ -1681,7 +1683,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
 
     $rss = theme('feed_icon', url('project/issues/rss', project_issue_query_url($query)));
     $link = l(t('#'), 'project/issues', array('title' => t('Permalink to search query.')), project_issue_query_url($query));
-    if ($pager = theme('pager', NULL, 20, 0)) {
+    if ($pager = theme('pager', NULL, $issues_per_page, 0)) {
       $rows[] = array(array('data' => $pager, 'colspan' => count($header)));
     }
   }

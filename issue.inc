@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255.2.2 2007/10/06 18:12:13 dww Exp $
+// $Id: issue.inc,v 1.255.2.3 2007/10/07 06:57:35 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1005,6 +1005,10 @@ function project_issue_update($node) {
 
 function project_issue_delete($node) {
   file_delete($node->file_path);
+  $comment_files = db_query("SELECT file_path FROM {project_comments} WHERE file_path <> '' AND nid = %d", $node->nid);
+  while ($comment = db_fetch_object($comment_files)) {
+    file_delete($comment->file_path);
+  }
   db_query('DELETE FROM {project_issues} WHERE nid = %d', $node->nid);
   db_query('DELETE FROM {project_comments} WHERE nid = %d', $node->nid);
 }

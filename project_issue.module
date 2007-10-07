@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.4.2.3.2.26 2007/10/07 06:47:51 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.4.2.3.2.27 2007/10/07 07:06:30 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -108,7 +108,7 @@ function project_issue_settings() {
   $create_roles = _project_issue_roles('create project issues');
   $admin_roles = _project_issue_roles('administer projects');
   // array_merge() will reset the keys and allow duplicates, we want '+'.
-  $roles = $create_roles + $admin_role;
+  $roles = $create_roles + $admin_roles;
   natcasesort($roles);
 
   $form['roles'] = array('#type' => 'value', '#value' => $roles);

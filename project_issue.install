@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.23 2007/10/02 22:07:42 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.24 2007/10/07 21:42:53 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -223,7 +223,7 @@ function project_issue_init_state($sid, $name, $weight, $author, $query) {
  *
  */
 function project_issue_add_missing_projects() {
-  $projects = db_query("SELECT n.nid, pip.nid AS pip_nid FROM {node} n LEFT JOIN project_issue_projects pip ON n.nid = pip.nid WHERE n.type = 'project_project' AND pip.nid IS NULL");
+  $projects = db_query("SELECT n.nid, pip.nid AS pip_nid FROM {node} n LEFT JOIN {project_issue_projects} pip ON n.nid = pip.nid WHERE n.type = 'project_project' AND pip.nid IS NULL");
   while ($project = db_fetch_object($projects)) {
     db_query('INSERT INTO {project_issue_projects} (nid) VALUES (%d)', $project->nid);
   }

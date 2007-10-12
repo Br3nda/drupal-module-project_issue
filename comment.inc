@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.99 2007-10-04 17:34:52 dww Exp $
+// $Id: comment.inc,v 1.100 2007-10-12 20:29:10 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -67,7 +67,7 @@ function project_issue_comment(&$arg, $op) {
       // Mark necessary required fields now, as these aren't added in the initial
       // building of the project issue form.
       _project_issue_form_add_required_fields($form, FALSE);
-      unset($form['page'], $form['issue_details']);
+      unset($form['page'], $form['issue_details'], $form['project_help']);
       return $form;
     case 'insert':
       db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);

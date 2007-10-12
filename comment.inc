@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.100 2007-10-12 20:29:10 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.101 2007-10-12 20:39:47 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -108,10 +108,6 @@ function project_issue_comment(&$arg, $op) {
         // Force all comments to be a child of the main issue, to match the
         // flat display, and also to prevent accidentally deleting a thread.
         form_set_value(array('#parents' => array('pid')), 0);
-
-        // Auto numbering for comment subjects.
-        $count = db_result(db_query('SELECT COUNT(cid) FROM {project_issue_comments} WHERE nid = %d', $arg['nid'])) + 1;
-        form_set_value(array('#parents' => array('subject')), "#$count");
 
         // Validate version.
         if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {

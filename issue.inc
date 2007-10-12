@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.263 2007/10/07 06:45:16 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.264 2007/10/12 20:29:10 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -568,9 +568,7 @@ function project_issue_form($node, $param) {
 
     // Load the project and initialize some support arrays.
     $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
-    if (trim($project->help) && empty($_POST)) {
-      drupal_set_message(filter_xss($project->help));
-    }
+
     if (module_exists('project_release') &&
         $releases = project_release_get_releases($project, 0)) {
       $releases = array(t('<none>')) + $releases;
@@ -594,6 +592,14 @@ function project_issue_form($node, $param) {
       $assigned = array(
         $node->assigned => ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned')),
         $user->uid => $user->name
+      );
+    }
+
+    if (trim($project->help)) {
+      $form['project_help'] = array(
+        '#prefix' => '<div class="messages status">',
+        '#value' => filter_xss($project->help),
+        '#suffix' => '</div>',
       );
     }
 

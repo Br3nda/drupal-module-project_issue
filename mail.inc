@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.78 2007-10-12 18:45:00 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.79 2007-10-12 23:41:25 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -232,7 +232,7 @@ function project_mail_notify($node) {
 
   // Create complete history of the bug report
   $history = array($node);
-  $result = db_query('SELECT u.name, c.comment, c.uid, c.format, pic.* FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid INNER JOIN {users} u ON u.uid = c.uid WHERE c.nid = %d ORDER BY pic.timestamp', $node->nid);
+  $result = db_query('SELECT u.name, c.comment, c.uid, c.format, pic.* FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid INNER JOIN {users} u ON u.uid = c.uid WHERE c.nid = %d AND c.status = %d ORDER BY pic.timestamp', $node->nid, COMMENT_PUBLISHED);
 
   while ($comment = db_fetch_object($result)) {
     $comment->comment = db_decode_blob($comment->comment);

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.56 2007/10/07 06:45:16 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.57 2007/10/12 23:41:25 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -51,35 +51,41 @@ function project_issue_help($section) {
  * Implementation of hook_form_alter.
  */
 function project_issue_form_alter($form_id, &$form) {
-  if ($form_id == 'comment_form') {
-    $node = node_load($form['nid']['#value']);
-    if ($node->type == 'project_issue') {
-      // Comment is not required for project issue followups, we have our own
-      // validate handler.
-      // The 'your name' item just wastes screen estate.
-      unset($form['comment_filter']['comment']['#required'], $form['_author']);
-      // For existing comments, we want to preserve the comment subject,
-      // Even if the subject field is disabled.
-      if ($cid = $form['cid']['#value']) {
-        $subject = db_result(db_query('SELECT subject FROM {comments} WHERE cid = %d', $cid));
-      }
-      // For new comments, show the expected next number for previews.
-      // This is only for show, the number will be generated when the comment
-      // is posted.
-      else {
-        $next_id = db_result(db_query('SELECT COUNT(cid) FROM {project_issue_comments} WHERE nid = %d', $form['nid']['#value'])) + 1;
-        $subject = "#$next_id";
-      }
-      $form['subject'] = array(
-        '#type' => 'value',
-        '#value' => $subject,
-      );
+  switch ($form_id) {
+    case 'comment_form':
+      $node = node_load($form['nid']['#value']);
+      if ($node->type == 'project_issue') {
+        // Comment is not required for project issue followups, we have our own
+        // validate handler.
+        // The 'your name' item just wastes screen estate.
+        unset($form['comment_filter']['comment']['#required'], $form['_author']);
+        // For existing comments, we want to preserve the comment subject,
+        // Even if the subject field is disabled.
+        if ($cid = $form['cid']['#value']) {
+          $subject = db_result(db_query('SELECT subject FROM {comments} WHERE cid = %d', $cid));
+        }
+        // For new comments, show the expected next number for previews.
+        // This is only for show, the number will be generated when the comment
+        // is posted.
+        else {
+          $next_id = db_result(db_query('SELECT COUNT(cid) FROM {project_issue_comments} WHERE nid = %d', $form['nid']['#value'])) + 1;
+          $subject = "#$next_id";
+        }
+        $form['subject'] = array(
+          '#type' => 'value',
+          '#value' => $subject,
+        );
 
-      // Any time we're on a reply page, show the full issue below the reply.
-      if (project_issue_is_comment_reply()) {
-        $form['#pre_render'][] = 'project_issue_comment_pre_render';
+        // Any time we're on a reply page, show the full issue below the reply.
+        if (project_issue_is_comment_reply()) {
+          $form['#pre_render'][] = 'project_issue_comment_pre_render';
+        }
       }
-    }
+      break;
+    // Issues must be updated if any project issue comments are edited/deleted.
+    case 'comment_admin_overview':
+      $form['#submit']['project_issue_comment_mass_update'] = array();
+      break;
   }
 }
 
@@ -872,4 +878,16 @@ function _project_issue_roles($permission) {
     $roles = user_roles(empty($roles[DRUPAL_ANONYMOUS_RID]));
   }
   return $roles;
+}
+
+/**
+ * Submit handler to adjust project issue metadata when comments are mass edited.
+ */
+function project_issue_comment_mass_update($form_id, $form_values) {
+  // This filters non-numeric values, then empty values.
+  $cids = array_filter(array_filter($form_values['comments'], 'is_numeric'));
+  $issue_comments = db_query("SELECT n.nid, c.cid FROM {node} n INNER JOIN {comments} c ON n.nid = c.nid WHERE c.cid IN (". implode(', ', $cids) .") AND n.type = 'project_issue'");
+  while ($issue_comment = db_fetch_object($issue_comments)) {
+    project_issue_update_by_comment($issue_comment, 'update');
+  }
 }

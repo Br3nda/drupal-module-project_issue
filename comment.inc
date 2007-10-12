@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.101 2007/10/12 20:39:47 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.102 2007/10/12 23:41:25 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -77,11 +77,8 @@ function project_issue_comment(&$arg, $op) {
       project_issue_update_by_comment($arg, 'update');
       break;
     case 'delete':
-      // Call the update by comment function first, so it can correctly determine if this
-      // is the most recent comment.
-      project_issue_update_by_comment($arg, 'delete');
       db_query("DELETE FROM {project_issue_comments} WHERE cid = %d", $arg->cid);
-
+      project_issue_update_by_comment($arg, 'delete');
       break;
     case 'view':
       if (isset($arg->cid)) {
@@ -214,48 +211,61 @@ function project_issue_update_by_comment($comment_data, $op) {
       $comment_data['rid'] = $comment_data['project_info']['rid'];
       unset ($comment_data['project_info']);
       $comment_data = (object) $comment_data;
-      $update_issue = TRUE;
       break;
     case 'update':
       $comment_data = (object) $comment_data;
       break;
-    case 'delete':
-      // Get the cid of the most recent comment, so we know if that's the one we're deleting.
-      $latest_cid = db_result(db_query_range('SELECT cid FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp DESC', $comment_data->nid, 0, 1));
-      if ($comment_data->cid == $latest_cid) {
-        // Get the cid of the next most recent comment, which will now be the last.
-        $latest_cid = db_result(db_query_range('SELECT cid FROM {project_issue_comments} WHERE nid = %d AND cid <> %d ORDER BY timestamp DESC', $comment_data->nid, $comment_data->cid, 0, 1));
-        if ($latest_cid) {
-          $comment_data = db_fetch_object(db_query('SELECT * FROM {project_issue_comments} WHERE cid = %d', $latest_cid));
-        }
-        // If this was the last comment on the issue, then treat the original issue as the last comment.
-        else {
-          $comment_data = node_load($comment_data->nid);
-        }
-
-        $update_issue = TRUE;
-      }
-      break;
   }
+
+  // In order to deal with deleted/unpublished comments, make sure that we're performing
+  // the updates to the issue with the latest available published comment.
+  $comment_data = project_issue_get_newest_comment($comment_data);
 
   // Update the issue data to reflect the new final states.
-  if (isset($update_issue)) {
-    db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $comment_data->nid);
-  }
+  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $comment_data->nid);
 
-  // Update the issue title if necessary.
+  // Update the issue title.
   $node = node_load($comment_data->nid, NULL, TRUE);  // Don't use cached since we changed data above.
-  if (isset($update_issue)) {
-    $node->title = $comment_data->title;
-  }
+  $node->title = $comment_data->title;
+
   // This also triggers the mail notification, and updates the changed date of the issue.
   node_save($node);
 }
 
+/**
+ * Retrieves the newest published comment for an issue.
+ *
+ * @param $comment_data
+ *   An object representing the current comment being edited
+ * @return
+ *   An object representing the most recent published comment for the issue.
+ */
+function project_issue_get_newest_comment($comment_data) {
+  // Get the cid of the most recent comment.
+  $latest_cid = db_result(db_query_range('SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid WHERE c.nid = %d AND c.status = %d ORDER BY pic.timestamp DESC', $comment_data->nid, COMMENT_PUBLISHED, 0, 1));
+  if ($latest_cid) {
+    $comment_data = db_fetch_object(db_query('SELECT * FROM {project_issue_comments} WHERE cid = %d', $latest_cid));
+  }
+  // No more comments on the issue -- use the original issue metadata.
+  else {
+    $comment_data = unserialize(db_result(db_query("SELECT original_issue_data FROM {project_issues} WHERE nid = %d", $comment_data->nid)));
+  }
+  return $comment_data;
+}
+
+/**
+ * Test to determine if the active page is the comment reply form.
+ *
+ * @return
+ *   TRUE if the active page is the comment reply form, FALSE otherwise.
+ */
 function project_issue_is_comment_reply() {
   return arg(0) == 'comment' && arg(1) == 'reply';
 }
 
+/**
+ * Appends the comment thread to the comment reply form.
+ */
 function project_issue_comment_pre_render($form_id, &$form) {
   $suffix = empty($form['#suffix']) ? '' : $form['#suffix'];
   $node = node_load($form['nid']['#value']);

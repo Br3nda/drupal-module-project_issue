@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.265 2007-10-13 01:56:03 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.266 2007-10-13 13:51:52 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1846,18 +1846,18 @@ function project_issue_query_sql($query) {
         break;
       case 'text':
         $comments = 1;
-        $sql[] = '('. project_issue_query_sql_field('n.title', $value, 1) .' OR '. project_issue_query_sql_field('r.body', $value, 1) .' OR '. project_issue_query_sql_field('c.body', $value, 1) .')';
+        $sql[] = '('. project_issue_query_sql_field('n.title', $value, 1) .' OR '. project_issue_query_sql_field('r.body', $value, 1) .' OR '. project_issue_query_sql_field('c.comment', $value, 1) .')';
         break;
       case 'attachment':
         $comments = 1;
-        $sql[] = "(p.file_path <> '' OR c.file_path <> '')";
+        $sql[] = "(p.file_path <> '' OR cu.filepath <> '')";
         break;
       case 'summary':
         $sql[] = '('. project_issue_query_sql_field('n.title', $value, 1) .' OR '. project_issue_query_sql_field('r.body', $value, 1) .')';
         break;
       case 'comment':
         $comments = 1;
-        $sql[] = project_issue_query_sql_field('c.body', $value, 1);
+        $sql[] = project_issue_query_sql_field('c.comment', $value, 1);
         break;
       case 'categories':
         $sql[] = project_issue_query_sql_field('p.category', $value);
@@ -1907,8 +1907,8 @@ function project_issue_query_sql($query) {
   }
   else {
     return array(
-      'sql' => db_rewrite_sql('SELECT DISTINCT(n.nid), n.changed FROM {node} n INNER JOIN {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {project_comments} c ON c.nid = p.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')'),
-      'count' => db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN  {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {project_comments} c ON c.nid = p.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')')
+      'sql' => db_rewrite_sql('SELECT DISTINCT(n.nid), n.changed FROM {node} n INNER JOIN {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {comments} c ON c.nid = p.nid LEFT JOIN {comment_upload_files} cu ON p.nid = cu.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')'),
+      'count' => db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN  {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {comments} c ON c.nid = p.nid LEFT JOIN {comment_upload_files} cu ON p.nid = cu.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')')
     );
   }
 }
@@ -1936,10 +1936,6 @@ function project_issue_query_rss($result, $project) {
   $channel['link'] = url('project/issues', NULL, NULL, TRUE); // not 100% correct
 
   node_feed($result, $channel);
-}
-
-function project_issue_tracker_comments($node) {
-  return db_query(db_rewrite_sql("SELECT c.nid, c.cid, c.uid, c.created AS timestamp, '%s' AS subject, u.name FROM {project_comments} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.nid = %d ORDER BY c.cid DESC", 'c'), $node->title, $node->nid);
 }
 
 function theme_project_issue_follow_up_forbidden($nid) {

@@ -1,9 +1,9 @@
 <?php
-// $Id: project_issue.module,v 1.58 2007/10/13 01:56:03 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.59 2007/10/13 13:51:52 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
-// issue comments   -> project_comments
+// issue comments   -> project_issue_comments
 
 define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png html doc xls pdf ppt pps odt ods odp odg');
 
@@ -697,9 +697,7 @@ function project_issue_user_page($arg = 0) {
 function project_issue_file_download($file) {
   $file = file_create_path($file);
   $file_info = db_fetch_object(db_query("SELECT nid, file_mime, file_size FROM {project_issues} WHERE file_path = '%s'", $file));
-  if (!$file_info) {
-    $file_info = db_fetch_object(db_query("SELECT nid, file_mime, file_size FROM {project_comments} WHERE file_path = '%s'", $file));
-  }
+
   if ($file_info) {
     if (user_access('access project issues')) {
       $node = node_load($file_info->nid);

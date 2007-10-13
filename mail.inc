@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.80 2007-10-13 04:28:10 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.81 2007-10-13 04:42:33 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -369,7 +369,7 @@ function project_mail_notify($node) {
   }
 
   project_mail_output($node->title, 0);
-  $node->title = "[$project->title " . t("$node->category") ."] $node->title";
+  $node->title = "[". t($node->category) ."] $node->title";
 
   while ($recipient = db_fetch_object($result)) {
     drupal_mail('project_issue_update', $recipient->mail, $node->title, $body, NULL, $header);

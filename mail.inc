@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.79 2007/10/12 23:41:25 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.80 2007/10/13 04:28:10 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -299,7 +299,7 @@ function project_mail_notify($node) {
   $hr = str_repeat('-', 72);
 
   // Create mail header
-  $sender->name = mime_header_encode(($pos = strpos($node->updator, '@')) ? drupal_substr($node->updator, 0, $pos) : $node->updator);
+  $sender->name = mime_header_encode("$project->title ". t('issue queue'));
   $sender->mail = $project->mail;
   $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url);
   $header = array(

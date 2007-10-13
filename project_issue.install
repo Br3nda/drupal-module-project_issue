@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.26 2007/10/13 01:56:03 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.27 2007/10/13 02:30:22 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -484,14 +484,14 @@ function project_issue_update_5201() {
   // Multi-part update
   if (!isset($_SESSION['project_issue_update_5201'])) {
     $_SESSION['project_issue_update_5201'] = 0;
-    $_SESSION['project_issue_update_5201_max'] = db_result(db_query('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid'));
+    $_SESSION['project_issue_update_5201_max'] = db_result(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'project_issue'"));
   }
 
   // Pull all issues that have followups.
-  $followup_nodes = db_query_range("SELECT DISTINCT(n.nid) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid ORDER BY n.nid", $_SESSION['project_issue_update_5201'], $limit);
+  $issue_nodes = db_query_range("SELECT nid FROM {node} WHERE type = 'project_issue' ORDER BY nid", $_SESSION['project_issue_update_5201'], $limit);
 
   // Loop through each issue.
-  while ($nid = db_fetch_object($followup_nodes)) {
+  while ($nid = db_fetch_object($issue_nodes)) {
     $pid = 0;  // This sets the comment's parent as the issue node.
     $nid = $nid->nid;
 

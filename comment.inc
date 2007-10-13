@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.103 2007/10/13 01:14:01 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.104 2007/10/13 01:56:03 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -70,8 +70,42 @@ function project_issue_comment(&$arg, $op) {
       unset($form['page'], $form['issue_details'], $form['project_help']);
       return $form;
     case 'insert':
-      db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
-      project_issue_update_by_comment($arg, 'insert');
+      // Get a lock on the issue in order to generate the next comment ID.
+      $tries = 20;
+      $sleep_increment = 0;
+      while ($tries) {
+        $lock = db_query("UPDATE {project_issues} SET db_lock = 1 WHERE nid = %d AND db_lock = 0", $arg['nid']);
+        if (db_affected_rows()) {
+          $id = db_result(db_query("SELECT last_comment_id FROM {project_issues} WHERE nid = %d", $arg['nid'])) + 1;
+          db_query("UPDATE {project_issues} SET last_comment_id = %d, db_lock = 0 WHERE nid = %d", $id, $arg['nid']);
+          break;
+        }
+
+        // Wait a random and increasing amount of time before the next attempt.
+        $sleep = rand(10000, 1000000) + $sleep_increment;
+        usleep($sleep);
+        $sleep_increment += 50000;
+        $tries--;
+      }
+
+      if (isset($id)) {
+        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
+        db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['nid']);
+        project_issue_update_by_comment($arg, 'insert');
+
+      }
+      else {
+        drupal_set_message(t('There was an error submitting your comment -- please try again. If the problem persists, contact the system administrator.'), 'error');
+        watchdog('project_issue', t('Error obtaining lock for project issue %nid', array('%nid' => $arg['nid'])), WATCHDOG_ERROR, 'node/'. $arg['nid']);
+        // This is a bit extreme, but we have to clean up the failed comment,
+        // or it will appear on the issue.
+        _comment_delete_thread((object) $arg);
+        _comment_update_node_statistics($arg['nid']);
+        cache_clear_all();
+        // The hard redirect prevents any bogus data from being inserted for the failed comment.
+        drupal_goto('node/'. $arg['nid']);
+      }
+
       break;
     case 'update':
       project_issue_update_by_comment($arg, 'update');

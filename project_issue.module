@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.59 2007-10-13 13:51:52 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.60 2007-10-13 22:09:25 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -212,6 +212,7 @@ function project_issue_cron() {
 
   $result = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.rid, p.assigned, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.sid = 2 AND n.changed < %d', time() - 14 * 24 * 60 * 60);
   while ($node = db_fetch_object($result)) {
+    unset($comment); // Make sure we start with a clean object every time.
     foreach (array('nid', 'pid', 'category', 'component', 'priority', 'rid', 'assigned', 'title') as $var) {
       $comment->$var = $node->$var;
     }

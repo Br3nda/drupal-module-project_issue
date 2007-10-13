@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.102 2007/10/12 23:41:25 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.103 2007/10/13 01:14:01 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -267,7 +267,24 @@ function project_issue_is_comment_reply() {
  * Appends the comment thread to the comment reply form.
  */
 function project_issue_comment_pre_render($form_id, &$form) {
+
+  // Force the correct formatting.
+  $_GET['mode'] = COMMENT_MODE_FLAT_EXPANDED;
+  $_GET['sort'] = COMMENT_ORDER_OLDEST_FIRST;
+
   $suffix = empty($form['#suffix']) ? '' : $form['#suffix'];
   $node = node_load($form['nid']['#value']);
-  $form['#suffix'] = $suffix . comment_render($node, 0);
+
+  // Unfortunately, the comment module blindly puts the node view
+  // after the comment form on preview, in the case where the comment
+  // parent is 0.  If we want our issue previews to be consistent, this
+  // ugly hack is necessary.
+  if ($_POST['op'] == t('Preview comment')) {
+    $preview = comment_render($node, 0);
+  }
+  else {
+    $preview = node_show($node, 0);
+  }
+
+  $form['#suffix'] = $suffix . $preview;
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.27 2007-10-13 02:30:22 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.28 2007-10-13 06:48:28 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -487,7 +487,7 @@ function project_issue_update_5201() {
     $_SESSION['project_issue_update_5201_max'] = db_result(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'project_issue'"));
   }
 
-  // Pull all issues that have followups.
+  // Pull the next batch of issues.
   $issue_nodes = db_query_range("SELECT nid FROM {node} WHERE type = 'project_issue' ORDER BY nid", $_SESSION['project_issue_update_5201'], $limit);
 
   // Loop through each issue.

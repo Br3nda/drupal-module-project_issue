@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.24 2007-10-07 21:42:53 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.25 2007-10-13 01:00:13 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -474,13 +474,13 @@ function project_issue_update_5201() {
   );
 
   // Multi-part update
-  if (!isset($_SESSION['project_issue_update_6000'])) {
-    $_SESSION['project_issue_update_6000'] = 0;
-    $_SESSION['project_issue_update_6000_max'] = db_result(db_query('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid'));
+  if (!isset($_SESSION['project_issue_update_5201'])) {
+    $_SESSION['project_issue_update_5201'] = 0;
+    $_SESSION['project_issue_update_5201_max'] = db_result(db_query('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid'));
   }
 
   // Pull all issues that have followups.
-  $followup_nodes = db_query_range("SELECT DISTINCT(n.nid) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid ORDER BY n.nid", $_SESSION['project_issue_update_6000'], $limit);
+  $followup_nodes = db_query_range("SELECT DISTINCT(n.nid) FROM {node} n INNER JOIN {project_comments} pc ON n.nid = pc.nid ORDER BY n.nid", $_SESSION['project_issue_update_5201'], $limit);
 
   // Loop through each issue.
   while ($nid = db_fetch_object($followup_nodes)) {
@@ -547,16 +547,16 @@ function project_issue_update_5201() {
       }
     }
     _comment_update_node_statistics($nid);
-    $_SESSION['project_issue_update_6000']++;
+    $_SESSION['project_issue_update_5201']++;
   }
 
-  if ($_SESSION['project_issue_update_6000'] >= $_SESSION['project_issue_update_6000_max']) {
-    $count = $_SESSION['project_issue_update_6000_max'];
-    unset($_SESSION['project_issue_update_6000']);
-    unset($_SESSION['project_issue_update_6000_max']);
+  if ($_SESSION['project_issue_update_5201'] >= $_SESSION['project_issue_update_5201_max']) {
+    $count = $_SESSION['project_issue_update_5201_max'];
+    unset($_SESSION['project_issue_update_5201']);
+    unset($_SESSION['project_issue_update_5201_max']);
     return array(array('success' => TRUE, 'query' => t('Converted issue followups to comments for @count issues', array('@count' => $count))));
   }
-  return array('#finished' => $_SESSION['project_issue_update_6000'] / $_SESSION['project_issue_update_6000_max']);
+  return array('#finished' => $_SESSION['project_issue_update_5201'] / $_SESSION['project_issue_update_5201_max']);
 
 }
 

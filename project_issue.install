@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.25 2007-10-13 01:00:13 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.26 2007-10-13 01:56:03 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -34,6 +34,8 @@ function project_issue_install() {
           file_mime varchar(255) NOT NULL default '',
           file_size int NOT NULL default 0,
           original_issue_data text NOT NULL default '',
+          last_comment_id int NOT NULL default 0,
+          db_lock tinyint NOT NULL default 0,
           PRIMARY KEY (nid),
           KEY project_issues_pid (pid),
           KEY project_issues_sid (sid),
@@ -100,6 +102,8 @@ function project_issue_install() {
             file_mime varchar(255) default '' NOT NULL,
             file_size int default 0 NOT NULL,
             original_issue_data text NOT NULL default '',
+            last_comment_id int NOT NULL default 0,
+            db_lock smallint NOT NULL default 0,
             PRIMARY KEY (nid)
           );");
         db_query("CREATE INDEX {project_issues}_pid_idx ON {project_issues}(pid)");
@@ -416,6 +420,8 @@ function project_issue_update_5200() {
           INDEX nid_timestamp (nid, timestamp)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */");
       $ret[] = update_sql("ALTER TABLE {project_issues} ADD COLUMN original_issue_data text NOT NULL DEFAULT ''");
+      $ret[] = update_sql("ALTER TABLE {project_issues} ADD COLUMN last_comment_id int NOT NULL default 0");
+      $ret[] = update_sql("ALTER TABLE {project_issues} ADD COLUMN db_lock tinyint NOT NULL default 0");
       break;
 
     case 'pgsql':
@@ -437,6 +443,8 @@ function project_issue_update_5200() {
         $ret[] = update_sql('CREATE INDEX {project_issue_comments}_nid_timestamp_idx ON {project_issue_comments} (nid, timestamp)');
       }
       db_add_column(&$ret, 'project_issues', 'original_issue_data', 'text', array('not null' => TRUE, 'default' => "''"));
+      db_add_column(&$ret, 'project_issues', 'last_comment_id', 'int', array('not null' => TRUE, 'default' => 0));
+      db_add_column(&$ret, 'project_issues', 'db_lock', 'smallint', array('not null' => TRUE, 'default' => 0));
     break;
   }
   $ret[] = update_sql("UPDATE {node} SET comment = ". COMMENT_NODE_READ_WRITE ." WHERE type = 'project_issue';");
@@ -546,6 +554,7 @@ function project_issue_update_5201() {
         db_query("INSERT INTO {comment_upload_files} (fid, nid, cid, filename, filepath, filemime, filesize, description, list) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, '%s', %d)", $fid, $nid, $cid, basename($comment->file_path), $comment->file_path, $comment->file_mime, $comment->file_size, '', 1);
       }
     }
+    db_query("UPDATE {project_issues} SET last_comment_id = %d WHERE nid = %d", $subject, $nid);
     _comment_update_node_statistics($nid);
     $_SESSION['project_issue_update_5201']++;
   }

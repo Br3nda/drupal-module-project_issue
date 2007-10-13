@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.264 2007-10-12 20:29:10 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.265 2007-10-13 01:56:03 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -936,7 +936,7 @@ function project_issue_insert($node) {
     $original_issue_data->$field = $node->$field;
   }
 
-  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, file_path, file_mime, file_size, original_issue_data) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', '%s', %d, '%s')", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize, serialize($original_issue_data));
+  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, file_path, file_mime, file_size, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', '%s', %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize, serialize($original_issue_data), 0, 0);
   project_mail_notify($node);
 }
 

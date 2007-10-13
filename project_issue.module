@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.57 2007-10-12 23:41:25 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.58 2007-10-13 01:56:03 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -68,7 +68,7 @@ function project_issue_form_alter($form_id, &$form) {
         // This is only for show, the number will be generated when the comment
         // is posted.
         else {
-          $next_id = db_result(db_query('SELECT COUNT(cid) FROM {project_issue_comments} WHERE nid = %d', $form['nid']['#value'])) + 1;
+          $next_id = db_result(db_query('SELECT last_comment_id FROM {project_issues} WHERE nid = %d', $form['nid']['#value'])) + 1;
           $subject = "#$next_id";
         }
         $form['subject'] = array(

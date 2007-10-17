@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.28 2007/10/13 06:48:28 dww Exp $
+// $Id: project_issue.install,v 1.29 2007/10/17 21:58:52 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -550,7 +550,7 @@ function project_issue_update_5201() {
       #$pid = $cid;
       db_query("INSERT INTO {project_issue_comments} (nid, cid, rid, component, category, priority, assigned, sid, title, pid, timestamp) VALUES (%d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $nid, $cid, $issue['rid'], $issue['component'], $issue['category'], $issue['priority'], $issue['assigned'], $issue['sid'], $issue['title'], $issue['pid'], $comment->changed);
       if ($comment->file_path) {
-        $fid = db_next_id('{files}_fid');
+        $fid = db_next_id('{comment_upload_files}_fid');
         db_query("INSERT INTO {comment_upload_files} (fid, nid, cid, filename, filepath, filemime, filesize, description, list) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, '%s', %d)", $fid, $nid, $cid, basename($comment->file_path), $comment->file_path, $comment->file_mime, $comment->file_size, '', 1);
       }
     }

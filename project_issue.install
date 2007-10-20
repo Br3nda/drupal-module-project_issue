@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.29 2007/10/17 21:58:52 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.30 2007/10/20 23:36:49 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -193,7 +193,6 @@ function project_issue_uninstall() {
   $variables = array(
     'project_issue_default_state',
     'project_directory_issues',
-    'project_issues_extensions_default',
     'project_reply_to',
     'project_issue_digest_last',
     'project_issue_digest_interval',
@@ -202,11 +201,6 @@ function project_issue_uninstall() {
   );
   foreach ($variables as $variable) {
     variable_del($variable);
-  }
-
-  $variables = db_query("SELECT name FROM {variable} WHERE name LIKE 'project_issues_extensions_%%'");
-  while ($variable = db_fetch_object($variables)) {
-    variable_del($variable->name);
   }
 }
 
@@ -570,24 +564,8 @@ function project_issue_update_5201() {
 }
 
 /**
- * Drop {project_comments} table -- no longer needed.
+ * Helper function to determine the vancode for newly added project comments.
  */
-function project_issue_update_5202() {
-
-  // Prevent the update and warn if the new required modules aren't enabled.
-  $modules = array(
-    'comment_upload' => t('Comment upload'),
-    'comment' => t('Comment')
-  );
-  if ($message = project_issue_check_dependencies($modules)) {
-    return array(array('success' => FALSE, 'query' => $message));
-  }
-
-  $ret = array();
-  $ret[] = update_sql('DROP TABLE {project_comments}');
-  return $ret;
-}
-
 function _project_issue_update_5201_get_vancode($nid, $pid) {
   if ($pid == 0) {
     // This is a comment with no parent comment (depth 0): we start
@@ -633,6 +611,105 @@ function _project_issue_update_5201_get_vancode($nid, $pid) {
   return $thread;
 }
 
+/**
+ * Drop {project_comments} table -- no longer needed.
+ */
+function project_issue_update_5202() {
+
+  // Prevent the update and warn if the new required modules aren't enabled.
+  $modules = array(
+    'comment_upload' => t('Comment upload'),
+    'comment' => t('Comment')
+  );
+  if ($message = project_issue_check_dependencies($modules)) {
+    return array(array('success' => FALSE, 'query' => $message));
+  }
+
+  $ret = array();
+  $ret[] = update_sql('DROP TABLE {project_comments}');
+  return $ret;
+}
+
+/**
+ * Convert issue file attachments to upload files.
+ */
+function project_issue_update_5203() {
+  // This determines how many issue nodes will be processed in each batch run. A reasonable
+  // default has been chosen, but you may want to tweak depending on your setup.
+  $limit = 1000;
+
+  // Prevent the update and warn if the new required modules aren't enabled.
+  $modules = array(
+    'upload' => t('Upload'),
+  );
+  if ($message = project_issue_check_dependencies($modules)) {
+    return array(array('success' => FALSE, 'query' => $message));
+  }
+
+  // Multi-part update
+  if (!isset($_SESSION['project_issue_update_5203'])) {
+    $_SESSION['project_issue_update_5203'] = 0;
+    $_SESSION['project_issue_update_5203_max'] = db_result(db_query("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {project_issues} pi ON n.nid = pi.nid WHERE file_path <> ''"));
+  }
+
+  // Pull the next batch of issues.
+  $issue_nodes = db_query_range("SELECT n.nid, n.vid, pi.file_path, pi.file_mime, pi.file_size FROM {node} n INNER JOIN {project_issues} pi ON n.nid = pi.nid WHERE file_path <> '' ORDER BY n.nid", $_SESSION['project_issue_update_5203'], $limit);
+
+  // Loop through each issue.
+  while ($issue = db_fetch_object($issue_nodes)) {
+    // Make sure file is still there.
+    if (file_exists($issue->file_path)) {
+      $fid = db_next_id('{files}_fid');
+      $filename = basename($issue->file_path);
+      db_query("INSERT INTO {files} (fid, nid, filename, filepath, filemime, filesize) VALUES (%d, %d, '%s', '%s', '%s', %d)", $fid, $issue->nid, $filename, $issue->file_path, $issue->file_mime, $issue->file_size);
+      // List the file by default.
+      db_query("INSERT INTO {file_revisions} (fid, vid, list, description) VALUES (%d, %d, %d, '%s')", $fid, $issue->vid, 1, $filename);
+    }
+
+    $_SESSION['project_issue_update_5203']++;
+  }
+
+  if ($_SESSION['project_issue_update_5203'] >= $_SESSION['project_issue_update_5203_max']) {
+    $count = $_SESSION['project_issue_update_5203_max'];
+    unset($_SESSION['project_issue_update_5203']);
+    unset($_SESSION['project_issue_update_5203_max']);
+    return array(array('success' => TRUE, 'query' => t('Converted issue file attachments for @count issues', array('@count' => $count))));
+  }
+  return array('#finished' => $_SESSION['project_issue_update_5203'] / $_SESSION['project_issue_update_5203_max']);
+
+}
+
+/**
+ * Drop file-related columns from {project_issues}.
+ */
+function project_issue_update_5204() {
+
+  // Prevent the update and warn if the new required modules aren't enabled.
+  $modules = array(
+    'upload' => t('Upload'),
+  );
+  if ($message = project_issue_check_dependencies($modules)) {
+    return array(array('success' => FALSE, 'query' => $message));
+  }
+
+  // Remove dead variables.
+  variable_del('project_issues_extensions_default');
+  $variables = db_query("SELECT name FROM {variable} WHERE name LIKE 'project_issues_extensions_%%'");
+  while ($variable = db_fetch_object($variables)) {
+    variable_del($variable->name);
+  }
+
+  $ret = array();
+  // Postgres and MySQL have the same syntax for this, so no switch statement.
+  $ret[] = update_sql('ALTER TABLE {project_issues} DROP COLUMN file_path');
+  $ret[] = update_sql('ALTER TABLE {project_issues} DROP COLUMN file_mime');
+  $ret[] = update_sql('ALTER TABLE {project_issues} DROP COLUMN file_size');
+  return $ret;
+}
+
+/**
+ * Helper function for determining new module dependencies.
+ */
 function project_issue_check_dependencies($modules) {
   $message = FALSE;
   $messages = array();

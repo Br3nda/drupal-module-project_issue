@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.266 2007-10-13 13:51:52 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.267 2007-10-20 23:36:49 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -522,8 +522,6 @@ function project_issue_form($node, $param) {
   global $user;
 
   $default_state = variable_get('project_issue_default_state', 1);
-  // Set form parameters so we can accept file uploads.
-  $form['#attributes'] = array('enctype' => 'multipart/form-data');
 
   // Set the pre-render function for adjustments to the form stages
   $form['#pre_render'] = array('project_issue_form_pre_render');
@@ -696,16 +694,7 @@ function project_issue_form($node, $param) {
     $form['issue_details']['format'] = filter_form($node->format);
 
     $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
-    if (file_check_directory($directory, 0)) {
-      $file = file_check_upload('file_issue');
-      $form['issue_details']['file_issue'] = array(
-        '#type' => 'file',
-        '#title' => t('File attachment'),
-        '#size' => 40,
-        '#description' => ($file ? t('A file named %filename has already been uploaded. If you upload another file %filename will be replaced.', array('%filename' => $file->filename)) : t('Optionally attach a file, for example a patch or a screenshot.')),
-      );
-    }
-    else {
+    if (!file_check_directory($directory, 0)) {
       $msg = t('File attachments are disabled. The issue directory has not been properly configured.');
       if (user_access('administer site configuration')) {
         $msg .= ' '. t('Please visit the !admin-project-issue-settings page.', array('!admin-project-issue-settings' => l(t('Project issue settings'), 'admin/project/project-issue-settings')));
@@ -819,29 +808,8 @@ function project_issue_node_form_validate($form_id, $form) {
       empty($form_values['category']) && form_set_error('category', t('You have to specify a valid category.'));
       empty($form_values['title']) && form_set_error('title', t('You have to specify a valid title.'));
       empty($form_values['body']) && form_set_error('body', t('You have to specify a valid description.'));
-
-      if ($file = file_check_upload('file_issue')) {
-        if (project_issue_validate_file($file)) {
-          $form_values['file'] = file_save_upload($file);
-        }
-      }
     }
   }
-}
-
-/**
- * Ensure only files with allowed extension are uploaded.
- */
-function project_issue_validate_file($file) {
-  $whitelist = project_issue_filename_extension_whitelist();
-  $matches = array();
-  if (preg_match('/\.([^.]*)$/', $file->filename, $matches)) {
-    if (in_array($matches[1], $whitelist)) {
-      return TRUE;
-    }
-  }
-  form_set_error('file_issue', t('The selected file %name can not be attached to this post, because it is only possible to attach files with the following extensions: %files-allowed.', array('%name' => $file->filename, '%files-allowed' => implode(', ', $whitelist))));
-  return FALSE;
 }
 
 function project_issue_view($node, $teaser = false, $page = false) {
@@ -869,9 +837,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
     $rows[] = array(t('Priority:'), project_issue_priority($node->priority));
     $rows[] = array(t('Assigned:'), $assigned);
     $rows[] = array(t('Status:'), project_issue_state($node->sid));
-    if ($node->file_path) {
-      $rows[] = array(t('Attachment:'), '<a href="'. file_create_url($node->file_path). '">'. basename($node->file_path) .'</a> ('. format_size($node->file_size) .')');
-    }
+
     $node->content['project_issue_summary'] = array(
       '#value' => '<div class="summary">'. theme('table', array(), $rows) .'</div>',
       '#weight' => -5,
@@ -906,11 +872,6 @@ function project_issue_load($node) {
 }
 
 function project_issue_insert($node) {
-  if ($node->file) {
-    $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
-    $node->file->filename = project_issue_munge_filename($node->file->filename);
-    $file = file_save_upload($node->file, $directory);
-  }
 
   // Permanently store the original issue states in a serialized array. This is a bit
   // yucky, but we need them for proper handling of states workflow.  The current states
@@ -936,25 +897,18 @@ function project_issue_insert($node) {
     $original_issue_data->$field = $node->$field;
   }
 
-  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, file_path, file_mime, file_size, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', '%s', %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize, serialize($original_issue_data), 0, 0);
+  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, serialize($original_issue_data), 0, 0);
   project_mail_notify($node);
 }
 
 function project_issue_update($node) {
-  if ($node->file) {
-    // Remove old file.
-    file_delete(db_result(db_query('SELECT file_path FROM {project_issues} WHERE nid = %d', $node->nid)));
-    $file = file_save_upload($node->file, variable_get('project_directory_issues', 'issues'));
-    db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d, file_path = '%s', file_mime = '%s', file_size = %d WHERE nid = %d", $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $file->filepath, $file->filemime, $file->filesize, $node->nid);
-  }
-  else {
-    db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $node->nid);
-  }
+
+  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $node->nid);
+
   project_mail_notify($node);
 }
 
 function project_issue_delete($node) {
-  file_delete($node->file_path);
   db_query('DELETE FROM {project_issues} WHERE nid = %d', $node->nid);
   db_query('DELETE FROM {project_issue_comments} WHERE nid = %d', $node->nid);
 }
@@ -1850,7 +1804,7 @@ function project_issue_query_sql($query) {
         break;
       case 'attachment':
         $comments = 1;
-        $sql[] = "(p.file_path <> '' OR cu.filepath <> '')";
+        $sql[] = "(f.filepath <> '' OR cu.filepath <> '')";
         break;
       case 'summary':
         $sql[] = '('. project_issue_query_sql_field('n.title', $value, 1) .' OR '. project_issue_query_sql_field('r.body', $value, 1) .')';
@@ -1907,8 +1861,8 @@ function project_issue_query_sql($query) {
   }
   else {
     return array(
-      'sql' => db_rewrite_sql('SELECT DISTINCT(n.nid), n.changed FROM {node} n INNER JOIN {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {comments} c ON c.nid = p.nid LEFT JOIN {comment_upload_files} cu ON p.nid = cu.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')'),
-      'count' => db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN  {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {comments} c ON c.nid = p.nid LEFT JOIN {comment_upload_files} cu ON p.nid = cu.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')')
+      'sql' => db_rewrite_sql('SELECT DISTINCT(n.nid), n.changed FROM {node} n INNER JOIN {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {comments} c ON c.nid = p.nid LEFT JOIN {comment_upload_files} cu ON p.nid = cu.nid LEFT JOIN {files} f ON n.nid = f.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')'),
+      'count' => db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN  {project_issues} p ON p.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON p.assigned = u.uid LEFT JOIN {comments} c ON c.nid = p.nid LEFT JOIN {comment_upload_files} cu ON p.nid = cu.nid LEFT JOIN {files} f ON n.nid = f.nid WHERE n.status = 1 AND ('. implode(') AND (', $sql) .')')
     );
   }
 }

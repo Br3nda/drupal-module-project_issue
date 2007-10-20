@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.105 2007-10-17 20:23:59 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.106 2007-10-20 23:36:49 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -131,6 +131,11 @@ function project_issue_comment(&$arg, $op) {
       }
       break;
     case 'validate':
+      // Adjust new file attachments to go to the issues directory.
+      // We have to do this during validate, otherwise we might miss
+      // adjusting the filename before comment upload saves it (module weighting)
+      project_issue_change_comment_upload_path($arg);
+
       // Only validate metadata changes on new followups.
       if (isset($arg['cid'])) {
         return;
@@ -264,6 +269,32 @@ function project_issue_update_by_comment($comment_data, $op) {
 
   // This also triggers the mail notification, and updates the changed date of the issue.
   node_save($node);
+}
+
+/**
+ * Adjusts the filepath of issue followups so files are saved to
+ * the correct issues directory.
+ *
+ * @param $comment
+ *   An array of the submitted comment values.
+ */
+function project_issue_change_comment_upload_path(&$comment) {
+  static $run = NULL;
+
+  $node = node_load($comment['nid']);
+  if (isset($comment['files']) && !isset($run)) {
+    $run = TRUE;  // Make sure this only gets run once.
+    $issue_dir = variable_get('project_directory_issues', 'issues');
+    foreach ($comment['files'] as $key => $file) {
+      if ($issue_dir && 0 === strpos($key, 'upload_')) {  // Only rewrite the name when adding the file, not when updating it
+        // Change where the file will be saved to the specified directory.
+        // Since changes to the comment aren't carried to submit, we have
+        // to adjust $form_values here.
+        $filename = $issue_dir .'/'. $comment['files'][$key]['filename'];
+        form_set_value(array('#parents' => array('files', $key, 'filename')), $filename);
+      }
+    }
+  }
 }
 
 /**

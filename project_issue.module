@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.61 2007/10/20 23:36:49 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.62 2007/10/21 00:24:26 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -78,12 +78,27 @@ function project_issue_form_alter($form_id, &$form) {
         if (project_issue_is_comment_reply()) {
           $form['#pre_render'][] = 'project_issue_comment_pre_render';
         }
+
+        // Make sure the 'File attachments' fieldset is expanded.
+        if (isset($form['attachments'])) {
+          $form['attachments']['#collapsed'] = FALSE;
+        }
+
       }
       break;
+
     // Issues must be updated if any project issue comments are edited/deleted.
     case 'comment_admin_overview':
       $form['#submit']['project_issue_comment_mass_update'] = array();
       break;
+
+    case 'project_issue_node_form':
+      // Make sure the 'File attachments' fieldset is expanded.
+      if (isset($form['attachments'])) {
+        $form['attachments']['#collapsed'] = FALSE;
+      }
+      break;
+
   }
 }
 

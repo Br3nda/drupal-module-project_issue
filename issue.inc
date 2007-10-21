@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.267 2007/10/20 23:36:49 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.268 2007/10/21 19:55:28 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -312,14 +312,14 @@ function project_issue_statistics($project = 0) {
   $header = array(t('Category'), t('Overall'), t('Last month'));
   $rows = array();
   $duration = time() - 30 * 24 * 60 * 60;
-  $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 GROUP BY p.category', $filter));
+  $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 GROUP BY p.category'), $filter);
   while ($stat = db_fetch_object($result)) {
     $i++;
     $rows[$i][0] = project_issue_category($stat->category);;
     $rows[$i][1] = array('data' => format_interval($stat->duration, 2), 'class' => 'numeric');
   }
 
-  $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 AND n.created > %d GROUP BY p.category', $filter, $duration));
+  $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 AND n.created > %d GROUP BY p.category'), $filter, $duration);
   while ($stat = db_fetch_object($result)) {
     $j++;
     $rows[$j][2] = array('data' => format_interval($stat->duration, 2), 'class' => 'numeric');

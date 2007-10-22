@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.13 2007/09/28 13:27:37 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.60.2.14 2007/10/22 00:56:05 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -137,6 +137,7 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
   if ($html) {
     $pattern = '@<a +([^ >]+ )*?href *= *"([^>"]+?)"[^>]*>([^<]+?)</a>@ei';
     $body = preg_replace($pattern, "'\\3 ['. project_mail_urls('\\2') .']'", $body);
+    $body = check_markup($body, $format, FALSE);
     $urls = project_mail_urls();
     if (count($urls)) {
       $body .= "\n";
@@ -145,7 +146,6 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
       }
     }
 
-    $body = check_markup($body, $format, false);
     $body = preg_replace('!</?blockquote>!i', '"', $body);
     $body = preg_replace('!</?(em|i)>!i', '/', $body);
     $body = preg_replace('!</?(b|strong)>!i', '*', $body);

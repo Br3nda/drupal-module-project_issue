@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.269 2007/10/22 05:01:58 dww Exp $
+// $Id: issue.inc,v 1.270 2007/10/22 14:58:14 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -888,14 +888,11 @@ function project_issue_insert($node) {
   }
 
   db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, serialize($original_issue_data), 0, 0);
-  project_mail_notify($node);
 }
 
 function project_issue_update($node) {
 
   db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $node->nid);
-
-  project_mail_notify($node);
 }
 
 function project_issue_delete($node) {

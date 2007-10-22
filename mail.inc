@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.82 2007/10/22 00:51:53 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.83 2007/10/22 14:58:14 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -195,12 +195,15 @@ function project_mail_summary($field, $value) {
   }
 }
 
-function project_mail_notify($node) {
+function project_mail_notify($nid) {
   global $user, $base_url;
 
   if (defined('PROJECT_NOMAIL')) {
     return;
   }
+
+  // There could be stale data in the cached node, so reset the cache.
+  $node = node_load($nid, NULL, TRUE);
   $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
 
   $fields = array(
@@ -215,18 +218,12 @@ function project_mail_notify($node) {
     'sid' => t('Status')
   );
 
-  // Newly created nodes must be reloaded to get current file data.
-  if ($node->is_new) {
-    $node = node_load($node->nid, NULL, TRUE);
-  }
   // Load in the original issue data here, since we want a running
   // reverse history.
-  else {
-    $original_issue_data = unserialize($node->original_issue_data);
-    foreach ($fields as $field => $label) {
-      if ($field != 'name' && $field != 'updator') {
-        $node->$field = $original_issue_data->$field;
-      }
+  $original_issue_data = unserialize($node->original_issue_data);
+  foreach ($fields as $field => $label) {
+    if ($field != 'name' && $field != 'updator') {
+      $node->$field = $original_issue_data->$field;
     }
   }
 
@@ -278,19 +275,7 @@ function project_mail_notify($node) {
     }
   }
 
-  // TODO: tear out this conditional when issue attachments use upload module.
-  if (isset($previous)) {
-    if (is_array($entry->files)) {
-      foreach ($entry->files as $file) {
-        $summary .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($file->filepath) .' ('. format_size($file->filesize) .")\n";
-      }
-    }
-  }
-  else {
-    if ($entry->file_path && file_exists($entry->file_path)) {
-      $summary .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($entry->file_path) .' ('. format_size($entry->file_size) .")\n";
-    }
-  }
+  $summary .= project_mail_format_attachments($entry);
 
   // Create main body content
   project_mail_output($content, 1, $entry->format);
@@ -330,20 +315,13 @@ function project_mail_notify($node) {
       $body .= "\n$hr\n\n";
       $body .= gmdate('r', $entry->timestamp) ." : $entry->name\n\n";
 
-      // TODO: tear out this conditional when issue attachments use upload module.
-      // vid tells us if it's the issue node.
+      $body .= project_mail_format_attachments($entry);
+
+      // Must distinguish between nodes and comments.
       if (!$entry->vid) {
-        if (is_array($entry->files)) {
-          foreach ($entry->files as $file) {
-            $body .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($file->filepath) .' ('. format_size($file->filesize) .")\n";
-          }
-        }
         $content = $entry->comment;
       }
       else {
-        if ($entry->file_path && file_exists($entry->file_path)) {
-          $body .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($entry->file_path) .' ('. format_size($entry->file_size) .")\n";
-        }
         $content = $entry->body;
       }
       project_mail_output($content, 1, $entry->format);
@@ -386,6 +364,24 @@ function project_mail_notify($node) {
   if ($project->mail_copy) {
     drupal_mail('project_issue_update', $project->mail_copy, $node->title, $body, NULL, $header);
   }
+}
+
+/**
+ * Formats attachments for issue notification e-mails.
+ *
+ * @param $entry
+ *   An issue or followup object containing the file data.
+ * @return
+ *   A formatted string of file attachments.
+ */
+function project_mail_format_attachments($entry) {
+  $output = '';
+  if (is_array($entry->files)) {
+    foreach ($entry->files as $file) {
+      $output .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($file->filepath) .' ('. format_size($file->filesize) .")\n";
+    }
+  }
+  return $output;
 }
 
 function project_mail_reminder() {

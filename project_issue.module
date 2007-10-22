@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.63 2007/10/21 19:01:19 dww Exp $
+// $Id: project_issue.module,v 1.64 2007/10/22 14:58:14 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -556,6 +556,51 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
         }
       }
       break;
+    case 'update':
+    case 'insert':
+      // Mark the node for email notification during hook_exit(), so all issue
+      // and file data is in a consistent state before we generate the email.
+      project_issue_set_mail_notify($node->nid);
+      break;
+  }
+}
+
+/**
+ * Store issue nodes that need mail notifications sent.
+ *
+ * It's possible that mass inserts/updates could occur, and also possible that
+ * a given node/comment could be programatically updated more than once in a
+ * page load -- an associative array is used in order to support these cases.
+ *
+ * @param $nid
+ *   The node ID of the issue node to store, or NULL to fetch the stored nids.
+ * @return
+ *   If $nid is not passed, an associative array of nids that are marked for
+ *   notification emails, with the following structure: key = nid, value = nid.
+ */
+function project_issue_set_mail_notify($nid = NULL) {
+  static $nids = array();
+
+  if (!isset($nid)) {
+    $return = $nids;
+    $nids = array();  // Reset just in case this function gets called again.
+    return $return;
+  }
+  else {
+    $nids[$nid] = $nid;
+  }
+}
+
+/**
+ * Implementation of hook_exit().
+ */
+function project_issue_exit() {
+  // Check for issue nodes that need mail notifications sent. This is done in
+  // hook_exit() so that all issue and file data is in a consistent state
+  // before we generate the email.
+  $nids = project_issue_set_mail_notify();
+  foreach ($nids as $nid) {
+    project_mail_notify($nid);
   }
 }
 

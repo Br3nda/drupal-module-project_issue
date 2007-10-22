@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.64 2007-10-22 14:58:14 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.65 2007-10-22 18:59:06 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -79,9 +79,11 @@ function project_issue_form_alter($form_id, &$form) {
           $form['#pre_render'][] = 'project_issue_comment_pre_render';
         }
 
-        // Make sure the 'File attachments' fieldset is expanded.
+        // Make sure the 'File attachments' fieldset is expanded and before the
+        // original issue fieldset.
         if (isset($form['attachments'])) {
           $form['attachments']['#collapsed'] = FALSE;
+          $form['attachments']['#weight'] = 2;
         }
 
       }

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.106 2007-10-20 23:36:49 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.107 2007-10-22 18:59:06 dww Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -55,15 +55,29 @@ function project_issue_comment(&$arg, $op) {
       $form['issue_info']['#weight'] = -1;
       $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
       $form['#suffix'] = '</div></div></div>';
-      $form['title'] = array(
+
+      $form['original_issue'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Edit issue settings'),
+        '#description' => t('Note: changing any of these items will update the issue\'s overall values.'),
+        '#collapsible' => TRUE,
+        '#weight' => 3,
+      );
+
+      $form['original_issue']['title'] = array(
         '#type' => 'textfield',
         '#title' => t('Issue title'),
         '#maxlength' => 128,
         '#default_value' => $node->title,
         '#weight' => -30,
         '#required' => TRUE,
-        '#description' => '<em>'. t('Note: modifying this value will change the title of the entire issue, not your follow-up comment.') .'</em>',
       );
+
+      // Restructure the UI to de-emphasize the original project form inputs.
+      $form['original_issue']['project_info'] = $form['project_info'];
+      $form['original_issue']['issue_info'] = $form['issue_info'];
+      unset($form['project_info'], $form['issue_info']);
+
       // Mark necessary required fields now, as these aren't added in the initial
       // building of the project issue form.
       _project_issue_form_add_required_fields($form, FALSE);

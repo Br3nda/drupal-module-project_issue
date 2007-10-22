@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.31 2007-10-22 04:46:05 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.32 2007-10-22 06:53:10 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -441,7 +441,12 @@ function project_issue_update_5200() {
       db_add_column(&$ret, 'project_issues', 'db_lock', 'smallint', array('not null' => TRUE, 'default' => 0));
     break;
   }
+
+  // Set up existing followups and future followups to be read/write.
   $ret[] = update_sql("UPDATE {node} SET comment = ". COMMENT_NODE_READ_WRITE ." WHERE type = 'project_issue';");
+  variable_set('comment_project_issue', COMMENT_NODE_READ_WRITE);
+  // Enable file attachments for followups.
+  variable_set('comment_upload_project_issue', '1');
 
   return $ret;
 }
@@ -704,6 +709,10 @@ function project_issue_update_5204() {
   $ret[] = update_sql('ALTER TABLE {project_issues} DROP COLUMN file_path');
   $ret[] = update_sql('ALTER TABLE {project_issues} DROP COLUMN file_mime');
   $ret[] = update_sql('ALTER TABLE {project_issues} DROP COLUMN file_size');
+
+  // Enable file attachments for issues.
+  variable_set('upload_project_issue', '1');
+
   return $ret;
 }
 

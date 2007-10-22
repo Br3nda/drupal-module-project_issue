@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.268 2007-10-21 19:55:28 dww Exp $
+// $Id: issue.inc,v 1.269 2007-10-22 05:01:58 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -292,18 +292,8 @@ function project_issue_advanced_search($url_arg, $filters) {
 
 function project_issue_statistics($project = 0) {
   if ($project->nid) {
-    $breadcrumb = array(
-      l(t('Home'), NULL),
-      l(t('Projects'), 'project')
-    );
-    if (project_use_taxonomy()) {
-      $taxonomy_terms = taxonomy_node_get_terms($project->nid);
-      reset($taxonomy_terms);
-      $breadcrumb[] = l($term->name, 'project/'. $term->name);
-    }
-    $breadcrumb[] = $project->nid ? l($project->title, "node/$project->nid") : l(t('All issues'), 'project/issues');
-    drupal_set_breadcrumb($breadcrumb);
     $filter = sprintf(' AND p.pid = %d ', (int)$project->nid);
+    project_project_set_breadcrumb($project, TRUE);
   }
 
   $output = '<div class="project-issue">';

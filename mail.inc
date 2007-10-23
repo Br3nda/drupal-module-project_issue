@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.83 2007/10/22 14:58:14 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.84 2007/10/23 06:31:03 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -187,7 +187,7 @@ function project_mail_summary($field, $value) {
       return t('<none>');
     case 'assigned':
       $user = user_load(array('uid' => $value));
-      return $user->name;
+      return $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
     case 'sid':
       return $value ? project_issue_state($value) : t('<none>');
     default:

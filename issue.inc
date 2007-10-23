@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.60 2007/10/22 05:01:12 dww Exp $
+// $Id: issue.inc,v 1.172.2.61 2007/10/23 21:50:06 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1356,13 +1356,8 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
     $releases = project_release_load($project, 0);
     $query->projects = $project->nid;
     $links = array();
-<<<<<<< issue.inc
     if (node_access('create', 'project_issue')) {
       $links[] = l(t('create'), "node/add/project_issue/$project->uri", array('title' => t('Create a new issue for %project.', array('%project' => check_plain($project->uri)))));
-=======
-    if (user_access('create project issues')) {
-      $links[] = l(t('create'), "node/add/project_issue/$project->uri", array('title' => t('Create a new issue for %project.', array('%project' => check_plain($project->uri)))));
->>>>>>> 1.172.2.47
     }
     $links[] = l(t('statistics'), "project/issues/statistics/$project->uri", array('title' => t('See statistics about %project issues.', array('%project' => check_plain($project->uri)))));
     if ($user->uid) {
@@ -1377,13 +1372,8 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
       drupal_set_title(t('issues for all projects'));
     }
     $links = array();
-<<<<<<< issue.inc
     if (node_access('create', 'project_issue')) {
       $links[] = l(t('create'), "node/add/project_issue", array('title' => t('Create a new issue.')));
-=======
-    if (user_access('create project issues')) {
-      $links[] = l(t('create'), "node/add/project_issue", array('title' => t('Create a new issue.')));
->>>>>>> 1.172.2.47
     }
     $links[] = l(t('statistics'), "project/issues/statistics", array('title' => t('See statistics about issues.')));
     if ($user->uid) {

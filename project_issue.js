@@ -1,20 +1,20 @@
-/* $Id: project_issue.js,v 1.3 2007-08-19 23:23:37 dww Exp $ */
+/* $Id: project_issue.js,v 1.4 2007-10-25 04:44:04 thehunmonkgroup Exp $ */
 
 Drupal.projectSwitchAutoAttach = function () {
-  $('#edit-pid').change(function () {
+  $('#edit-project-info-pid').change(function () {
     var pid = this.value;
 
     // Temporarily disable the dynamic selects while we retrieve the new info.
     // The newly loaded selects will be enabled by default.
-    $('#edit-rid, #edit-component').attr('disabled', 'disabled');
+    $('#edit-project-info-rid, #edit-project-info-component').attr('disabled', 'disabled');
 
     // Get existing component setting.
-    var cid = $('#edit-component').val();
+    var cid = $('#edit-project-info-component').val();
     cid = Drupal.encodeURIComponent(cid);
 
     // Get existing version label.
-    var nid = $('#edit-rid').val();
-    var rid = $('#edit-rid option[@value=' + nid + ']').text();
+    var nid = $('#edit-project-info-rid').val();
+    var rid = $('#edit-project-info-rid option[@value=' + nid + ']').text();
     rid = Drupal.encodeURIComponent(rid);
 
     // Pass new project ID, existing version, existing component.
@@ -31,8 +31,8 @@ Drupal.projectSwitchAutoAttach = function () {
           alert(result.error);
         }
         else {
-          $('#edit-rid, #edit-component').parent().remove();
-          $('#edit-pid').parent().after(result.component).after(result.rid);
+          $('#edit-project-info-rid, #edit-project-info-component').parent().remove();
+          $('#edit-project-info-pid').parent().after(result.component).after(result.rid);
         }
       },
       error: function (xmlhttp) {

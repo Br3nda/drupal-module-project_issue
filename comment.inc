@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.107 2007/10/22 18:59:06 dww Exp $
+// $Id: comment.inc,v 1.108 2007/10/25 04:44:04 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -11,6 +11,10 @@ function project_issue_comment(&$arg, $op) {
     $nid = is_array($arg['nid']) ? $arg['nid']['#value'] : $arg['nid'];
   }
   $node = node_load($nid);
+  // Make a copy here so we have all the original metadata, since some
+  // of it can change below.
+  $original_node = $node;
+
   if ($node->type != 'project_issue') {
     return;
   }
@@ -45,12 +49,6 @@ function project_issue_comment(&$arg, $op) {
       // We need this otherwise pid collides with comment.
       $form['project_info']['#tree'] = TRUE;
       $form['project_info']['#weight'] = -2;
-
-      // Because we've tree'd project_info, the id's for these elements must
-      // be set by hand, or the js project reloads will break.
-      $form['project_info']['pid']['#id'] = 'edit-pid';
-      $form['project_info']['rid']['#id'] = 'edit-rid';
-      $form['project_info']['component']['#id'] = 'edit-component';
 
       $form['issue_info']['#weight'] = -1;
       $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
@@ -130,7 +128,7 @@ function project_issue_comment(&$arg, $op) {
       break;
     case 'view':
       if (isset($arg->cid)) {
-        $project_issue_table = project_issue_comment_view($node, $arg);
+        $project_issue_table = project_issue_comment_view($original_node, $arg);
       }
       else {
         $test = drupal_clone($arg);
@@ -138,7 +136,7 @@ function project_issue_comment(&$arg, $op) {
         $test->component = $arg->project_info['component'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
         $test->rid = $arg->project_info['rid'] ? $arg->project_info['rid'] : 0;
-        $project_issue_table = _project_issue_comment_table(_project_issue_comment_labels(), $node, $test);
+        $project_issue_table = _project_issue_comment_table(_project_issue_comment_labels(), $original_node, $test);
       }
       if ($project_issue_table) {
         $arg->comment = '<div class="project-issue"><div class="summary">'. $project_issue_table .'</div></div>' . $arg->comment;

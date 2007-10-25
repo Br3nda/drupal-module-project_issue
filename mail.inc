@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.84 2007-10-23 06:31:03 dww Exp $
+// $Id: mail.inc,v 1.85 2007-10-25 14:08:37 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -279,7 +279,7 @@ function project_mail_notify($nid) {
 
   // Create main body content
   project_mail_output($content, 1, $entry->format);
-  $body = "$content\n\n$entry->name\n";
+  $body = "$content\n$entry->name\n";
 
   $hr = str_repeat('-', 72);
 
@@ -305,29 +305,16 @@ function project_mail_notify($nid) {
     $header['Message-Id'] = "<type=project&nid=$node->nid&cid=$entry->cid&host=@$domain>";
     $header['In-Reply-To'] = "<type=project&nid=$node->nid&host=@$domain>";
     $header['References'] = "<type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$previous->cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
-
-    $body .= "\n\n\n";
-    $body .= t('Previous comments:');
-    foreach ($history as $entry) {
-      if ($entry->uid) {
-        $uids[$entry->uid] = $entry->uid;
-      }
-      $body .= "\n$hr\n\n";
-      $body .= gmdate('r', $entry->timestamp) ." : $entry->name\n\n";
-
-      $body .= project_mail_format_attachments($entry);
-
-      // Must distinguish between nodes and comments.
-      if (!$entry->vid) {
-        $content = $entry->comment;
-      }
-      else {
-        $content = $entry->body;
-      }
-      project_mail_output($content, 1, $entry->format);
-
-      if ($content) {
-        $body .= "$content\n";
+    $body .= "\n\n";
+    $body .= t('Original issue:') ."\n";
+    $body .= project_mail_format_entry(array_shift($history), TRUE);
+    if (count($history)) {
+      $body .= "\n". t('Previous comments (!count):', array('!count' => count($history))) ."\n";
+      foreach ($history as $entry) {
+        $body .= project_mail_format_entry($entry);
+        if ($entry->uid) {
+          $uids[$entry->uid] = $entry->uid;
+        }
       }
     }
   }
@@ -380,6 +367,41 @@ function project_mail_format_attachments($entry) {
     foreach ($entry->files as $file) {
       $output .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($file->filepath) .' ('. format_size($file->filesize) .")\n";
     }
+  }
+  return $output;
+}
+
+/**
+ * Format an issue entry for display in an email.
+ *
+ * @param entry
+ *   The entry to the formatted.
+ * @param is_original
+ *   Whether this entry is the original issue or a followup. Followup issues
+ *   will be automatically numbered.
+ * @return
+ *   Formatted text for the entry.
+ */
+function project_mail_format_entry($entry, $is_original = FALSE) {
+  static $history_count = 1;
+  $hr = str_repeat('-', 72);
+  $output = "$hr\n";
+  $output .= ($is_original ? '' : $history_count++ .'. ') . format_date($entry->timestamp, 'large') ." : $entry->name\n";
+
+  $output .= project_mail_format_attachments($entry);
+
+  // Must distinguish between nodes and comments.
+  if (!$entry->vid) {
+    $content = $entry->comment;
+  }
+  else {
+    $content = $entry->body;
+  }
+
+  project_mail_output($content, 1, $entry->format);
+
+  if ($content) {
+    $output .= "\n$content";
   }
   return $output;
 }

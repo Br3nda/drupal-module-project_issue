@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.33 2007/10/24 16:42:27 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.34 2007/10/26 13:46:13 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -198,6 +198,7 @@ function project_issue_uninstall() {
     'project_issue_digest_interval',
     'project_issue_reminder_last',
     'project_issue_reminder_interval',
+    'project_issue_show_comment_signatures',
   );
   foreach ($variables as $variable) {
     variable_del($variable);

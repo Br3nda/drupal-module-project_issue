@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.35 2007/10/31 18:10:42 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.36 2007/10/31 18:37:05 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -173,11 +173,13 @@ function project_issue_install() {
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'project_issue'");
 
   // Set up future followups to be read/write.
-  variable_set('comment_project_issue', COMMENT_NODE_READ_WRITE);
+  if (module_exists('comment')) {
+    variable_set('comment_project_issue', COMMENT_NODE_READ_WRITE);
+  }
   // Enable file attachments for followups.
-  variable_set('comment_upload_project_issue', '1');
+  variable_set('comment_upload_project_issue', 1);
   // Enable file attachments for issues.
-  variable_set('upload_project_issue', '1');
+  variable_set('upload_project_issue', 1);
 
 }
 

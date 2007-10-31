@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.108 2007/10/25 04:44:04 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.109 2007/10/31 18:53:16 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -33,15 +33,8 @@ function project_issue_comment(&$arg, $op) {
       if (isset($arg['cid']['#value'])) {
         return array();
       }
-      // Set breadcrumb.
-      $extra = array();
-      $extra[] = l($project->title, 'node/'. $project->nid);
-      // Only add issue title to the breadcrumb if this comment is a reply
-      // to another comment.
-      if ($arg['pid']['#value']) {
-        $extra[] = l($node->title, 'node/'. $node->nid);
-      }
-      project_project_set_breadcrumb($project, $extra);
+
+      project_issue_set_breadcrumb($node, $project);
 
       // We need to ask for almost the same metadata as project issue itself
       // so let's reuse the form.

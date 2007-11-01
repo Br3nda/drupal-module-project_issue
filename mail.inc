@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.85 2007/10/25 14:08:37 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.86 2007/11/01 02:57:12 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -266,7 +266,7 @@ function project_mail_notify($nid) {
   // Mail summary (status values).
   foreach ($fields as $field => $text) {
     $text = str_pad("$text:", 14);
-    if (isset($previous) && $previous->$field != $entry->$field) {
+    if (isset($previous) && $previous->$field != $entry->$field && $field != 'updator') {
       $summary .= "-$text". project_mail_summary($field, $previous->$field) ."\n";
       $summary .= "+$text". project_mail_summary($field, $entry->$field) ."\n";
     }

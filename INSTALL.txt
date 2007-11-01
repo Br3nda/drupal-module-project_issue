@@ -5,14 +5,21 @@ New Installation
 1. Install the project module (http://drupal.org/project/project),
    which the project issue tracking module requires and depends on.
 
-2. Install the project issue tracking module 
+2. Install the comment upload module
+   (http://drupal.org/project/comment_upload), which the project 
+   issue tracking module requires and depends on.
+
+3. Enable Drupal's upload module under admin/build/modules, which 
+   the project issue tracking module requires and depends on.
+
+4. Install the project issue tracking module 
    (http://drupal.org/project/project_issue).
 
-3. Enable the project issue tracking module under admin/build/modules
+5. Enable the project issue tracking module under admin/build/modules
 
-4. Configure the status messages at admin/project/project-issue-status
+6. Configure the status messages at admin/project/project-issue-status
 
-5. Grant the proper access to users under admin/user/access
+7. Grant the proper access to users under admin/user/access
 
 
 --------------------------------------------------------------
@@ -21,4 +28,4 @@ Upgrading
 
 Consult UPGRADE.txt
 
-$Id: INSTALL.txt,v 1.4 2007/09/04 22:37:52 thehunmonkgroup Exp $
+$Id: INSTALL.txt,v 1.5 2007/11/01 04:51:02 thehunmonkgroup Exp $

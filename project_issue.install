@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.36 2007-10-31 18:37:05 dww Exp $
+// $Id: project_issue.install,v 1.37 2007-11-01 04:51:02 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -400,8 +400,8 @@ function project_issue_update_5200() {
     'comment_upload' => t('Comment upload'),
     'comment' => t('Comment')
   );
-  if ($message = project_issue_check_dependencies($modules)) {
-    return array(array('success' => FALSE, 'query' => $message));
+  if ($ret = project_issue_check_update_abort($modules, 5200)) {
+    return $ret;
   }
 
   $ret = array();
@@ -470,15 +470,6 @@ function project_issue_update_5201() {
   // default has been chosen, but you may want to tweak depending on your average number of
   // issue followups per issue.
   $limit = 100;
-
-  // Prevent the update and warn if the new required modules aren't enabled.
-  $modules = array(
-    'comment_upload' => t('Comment upload'),
-    'comment' => t('Comment')
-  );
-  if ($message = project_issue_check_dependencies($modules)) {
-    return array(array('success' => FALSE, 'query' => $message));
-  }
 
   $fields = array(
     'pid',
@@ -632,15 +623,6 @@ function _project_issue_update_5201_get_vancode($nid, $pid) {
  */
 function project_issue_update_5202() {
 
-  // Prevent the update and warn if the new required modules aren't enabled.
-  $modules = array(
-    'comment_upload' => t('Comment upload'),
-    'comment' => t('Comment')
-  );
-  if ($message = project_issue_check_dependencies($modules)) {
-    return array(array('success' => FALSE, 'query' => $message));
-  }
-
   $ret = array();
   $ret[] = update_sql('DROP TABLE {project_comments}');
   return $ret;
@@ -653,14 +635,6 @@ function project_issue_update_5203() {
   // This determines how many issue nodes will be processed in each batch run. A reasonable
   // default has been chosen, but you may want to tweak depending on your setup.
   $limit = 500;
-
-  // Prevent the update and warn if the new required modules aren't enabled.
-  $modules = array(
-    'upload' => t('Upload'),
-  );
-  if ($message = project_issue_check_dependencies($modules)) {
-    return array(array('success' => FALSE, 'query' => $message));
-  }
 
   // Multi-part update
   if (!isset($_SESSION['project_issue_update_5203'])) {
@@ -700,14 +674,6 @@ function project_issue_update_5203() {
  */
 function project_issue_update_5204() {
 
-  // Prevent the update and warn if the new required modules aren't enabled.
-  $modules = array(
-    'upload' => t('Upload'),
-  );
-  if ($message = project_issue_check_dependencies($modules)) {
-    return array(array('success' => FALSE, 'query' => $message));
-  }
-
   // Remove dead variables.
   variable_del('project_issues_extensions_default');
   $variables = db_query("SELECT name FROM {variable} WHERE name LIKE 'project_issues_extensions_%%'");
@@ -729,13 +695,19 @@ function project_issue_update_5204() {
 
 /**
  * Helper function for determining new module dependencies.
+ *
+ * @param $modules
+ *   An associative array of modules to check. Key is module name,
+ *   value is human-readable name.
+ * @return
+ *   A string containing the error message, if any -- FALSE otherwise.
  */
 function project_issue_check_dependencies($modules) {
   $message = FALSE;
   $messages = array();
   foreach ($modules as $module => $name) {
     if (!module_exists($module)) {
-      $messages[] = t('The %module module is not present.', array('%module' => $name));
+      $messages[] = t('The %module module is not enabled.', array('%module' => $name));
     }
   }
   if (!empty($messages)) {
@@ -743,4 +715,39 @@ function project_issue_check_dependencies($modules) {
   }
 
   return $message;
+}
+
+/**
+ * Helper function for rolling back updates if dependency checks fail.
+ *
+ * @param $modules
+ *   An associative array of modules to check. Key is module name,
+ *   value is human-readable name.
+ * @param $current_update
+ *   The current update.
+ * @return
+ *   If a dependency check fails, a return array marked as failed (with
+ *   a user message) -- otherwise, an empty array.
+ */
+function project_issue_check_update_abort($modules, $current_update) {
+  $ret = array();
+
+  // Dependency check failed.
+  if ($message = project_issue_check_dependencies($modules)) {
+    // Remove all subsequent project issue updates.
+    foreach ($_SESSION['update_remaining'] as $key => $update) {
+      if ($update['module'] = 'project_issue' && intval($update['version']) > $current_update) {
+        unset($_SESSION['update_remaining'][$key]);
+      }
+    }
+    // Clarify the nature of the error, and what to do next.
+    // Unfortunately, there's no elegant way to properly reset the schema version
+    // programatically, so we'll have to instruct the user to redo the update
+    // manually.
+    $message .= '<p>'. t("This and all subsequent updates of Project issue were safely aborted. Correct the problems listed above, then <a href=\"". base_path() ."update.php?op=selection\">re-run update.php</a>, click 'Select versions', select update %update for project_issue, and click 'Update'.", array('%update' => $current_update)) .'</p><p><em>'. t("Note: you will most likely need to disable the Project issue module temporarily in order to resolve the issues above. If necessary, please refer to Project issue's UPGRADE.txt for further details regarding this upgrade problem.") .'</em></p>';
+
+    $ret = array(array('success' => FALSE, 'query' => $message));
+  }
+
+  return $ret;
 }

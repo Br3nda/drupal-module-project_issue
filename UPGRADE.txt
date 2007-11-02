@@ -1,4 +1,4 @@
-$Id: UPGRADE.txt,v 1.2 2007-11-01 04:51:02 thehunmonkgroup Exp $
+$Id: UPGRADE.txt,v 1.3 2007-11-02 01:47:16 thehunmonkgroup Exp $
 
 ======================================================================
 This file contains specific instructions for upgrading your site's
@@ -22,30 +22,31 @@ considering upgrading a 4.7.x-1.* installation of project_issue to
 Upgrading to 5.x-2.* (from the 4.7.x-2.* and 5.x-1.* series)
 ------------------------------------------------------------
 
-  The 5.x-2.* version of project_issue has two new module depencencies:
-    1. Drupal core's Upload module.
-    2. Comment upload module -- http://drupal.org/project/comment_upload
+  The 5.x-2.* version of project_issue has three new module depencencies:
+    1. Drupal core's Comment module
+    2. Drupal core's Upload module.
+    3. Comment upload module -- http://drupal.org/project/comment_upload
 
   These modules must be installed and enabled BEFORE you attempt to
   upgrade to 5.x-2.*.
 
   Unfortunately, Drupal core currently has a bug that prevents you from
   enabling a module when another module adds new module dependencies. So,
-  if either of the two modules above were not already installed and
+  if any of the three modules above were not already installed and
   enabled on your site prior to this upgrade, there's a bit of extra work
   involved:
 
-    1. Go to the module administration page. If Upload module is not
+    1. Go to the module administration page. If Comment module is not
        enabled, then uncheck the 'Enabled' checkbox for any modules on 
-       which Upload module depends (this is listed in the 'Depends on:'
+       which Comment module depends (this is listed in the 'Depends on:'
        section -- Project issue tracker will be one of these).
-    2. Repeat step #1 for the Comment upload module.
+    2. Repeat step #1 for the Upload and Comment upload modules.
     3. Submit the module administration form.
     4. Check the 'Enabled' checkbox for all the modules that you disabled,
-       and for Upload/Comment upload.
+       and for the Comment/Upload/Comment upload modules.
     5. Submit the module administration form.
 
-  If you try to upgrade without Comment upload and Upload enabled, the
+  If you try to upgrade without the new dependencies enabled, the
   upgrade will fail gracefully.  If this happens to you:
 
     1. Follow the instructions above to get the dependencies resolved.

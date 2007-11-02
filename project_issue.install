@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.37 2007/11/01 04:51:02 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.38 2007/11/02 01:47:16 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -398,7 +398,8 @@ function project_issue_update_5200() {
   // Prevent the update and warn if the new required modules aren't enabled.
   $modules = array(
     'comment_upload' => t('Comment upload'),
-    'comment' => t('Comment')
+    'comment' => t('Comment'),
+    'upload' => t('Upload'),
   );
   if ($ret = project_issue_check_update_abort($modules, 5200)) {
     return $ret;

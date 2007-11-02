@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.38 2007/11/02 01:47:16 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.39 2007/11/02 04:28:57 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -551,7 +551,7 @@ function project_issue_update_5201() {
       // uncomment the next line. Default is all followups are children of the issue
       #$pid = $cid;
       db_query("INSERT INTO {project_issue_comments} (nid, cid, rid, component, category, priority, assigned, sid, title, pid, timestamp) VALUES (%d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $nid, $cid, $issue['rid'], $issue['component'], $issue['category'], $issue['priority'], $issue['assigned'], $issue['sid'], $issue['title'], $issue['pid'], $comment->changed);
-      if ($comment->file_path) {
+      if ($comment->file_path && file_exists($comment->file_path)) {
         $fid = db_next_id('{comment_upload_files}_fid');
         db_query("INSERT INTO {comment_upload_files} (fid, nid, cid, filename, filepath, filemime, filesize, description, list) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, '%s', %d)", $fid, $nid, $cid, basename($comment->file_path), $comment->file_path, $comment->file_mime, $comment->file_size, '', 1);
       }

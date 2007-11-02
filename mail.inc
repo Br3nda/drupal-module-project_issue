@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.87 2007-11-02 01:14:46 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.88 2007-11-02 01:16:06 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -390,7 +390,7 @@ function project_mail_format_entry($entry, $is_original = FALSE) {
   // Nodes and comments have different stamp fields.
   $timestamp = isset($entry->created) ? $entry->created : $entry->timestamp;
 
-  $output .= ($is_original ? '' : $history_count++ .'. ') . format_date($entry->timestamp, 'large') ." : $entry->name\n";
+  $output .= ($is_original ? '' : $history_count++ .'. ') . format_date($timestamp, 'large') ." : $entry->name\n";
 
   $output .= project_mail_format_attachments($entry);
 

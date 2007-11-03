@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.272 2007/10/31 18:53:16 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.273 2007/11/03 20:51:15 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -833,9 +833,10 @@ function project_issue_view($node, $teaser = false, $page = false) {
     $rows[] = array(t('Status:'), project_issue_state($node->sid));
 
     $node->content['project_issue_summary'] = array(
-      '#value' => '<div class="summary">'. theme('table', array(), $rows) .'</div>',
+      '#value' => theme('project_issue_summary', $rows, project_issue_internal_links($node)),
       '#weight' => -5,
     );
+
     $node->content['project_issue_header'] = array(
       '#value' => '<div class="header">'. t('Description') .'</div>',
       '#weight' => -3,
@@ -846,11 +847,69 @@ function project_issue_view($node, $teaser = false, $page = false) {
   return $node;
 }
 
+/**
+ * Themes the metadata table and internal page links for issue nodes.
+ *
+ * @param $summary_table_rows
+ *   An array of row data for the metadata table.
+ * @param $summary_links
+ *   An array of internal page links.
+ * @return
+ *   An HTML string of the summary section.
+ */
+function theme_project_issue_summary($summary_table_rows, $summary_links) {
+  $output = '<div id="project-summary-container" class="clear-block">';
+  $output .= '<div id="project-issue-summary-table" class="summary">'. theme('table', array(), $summary_table_rows) .'</div>';
+  $output .= '<div id="project-issue-summary-links">'. theme('item_list', $summary_links, t('Jump to:'), 'ul', array('class' => 'internal-links')) .'</div>';
+  $output .= '</div>';
+
+  return $output;
+}
+
+/**
+ * Generates internal page links for issue followup pages.
+ *
+ * @param $node
+ *   The issue node.
+ * @return
+ *   An array of internal page links.
+ */
+function project_issue_internal_links($node) {
+  $links = array();
+  // Link for most recent followup.
+  $followup_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
+  if ($followup_cid) {
+    $links[] = l('Most recent followup', "node/$node->nid", array(), NULL, "comment-$followup_cid");
+  }
+  // Link for most recent patch.
+  $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
+  if ($file_cid) {
+    $links[] = l('Most recent attachment', "node/$node->nid", array(), NULL, "comment-$file_cid");
+  }
+
+  // Link straight to comment form.
+  if (user_access('post comments') || user_access('post comments without approval')) {
+    // TODO: This conditional needs to be ripped out in D6.
+    $comment_form_location = isset($node->comment_form_location) ? $node->comment_form_location : variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
+
+    // Comment form isn't on the page, link to the comment reply page.
+    if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
+      $links[] = l('Post a followup', "comment/reply/$node->nid");
+    }
+    // Comment form is on the page, generate an internal page link for it.
+    else {
+      $links[] = l('Post a followup', "node/$node->nid", array(), NULL, "comment-form");
+    }
+  }
+
+  return $links;
+}
+
 function project_issue_load($node) {
   $project = db_fetch_object(db_query(db_rewrite_sql('SELECT pi.* FROM {project_issues} pi WHERE pi.nid = %d', 'pi'), $node->nid));
 
-  // TODO: future functionality -- this is not implemented yet!
-  $project->comment_form_location = variable_get('project_issue_comment_form_location', COMMENT_FORM_BELOW);
+  // TODO: This need to be ripped out in D6.
+  $project->comment_form_location = variable_get('project_issue_comment_form_location', NULL);
 
   return $project;
 }

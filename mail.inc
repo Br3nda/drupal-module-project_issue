@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.88 2007-11-02 01:16:06 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.89 2007-11-03 17:25:00 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -218,6 +218,12 @@ function project_mail_notify($nid) {
     'sid' => t('Status')
   );
 
+  // Store the mail subject here, since we're possibly overwriting
+  // the node title and category below.
+  $title = $node->title;
+  project_mail_output($title, 0);
+  $subject = "[". t($node->category) ."] $title";
+
   // Load in the original issue data here, since we want a running
   // reverse history.
   $original_issue_data = unserialize($node->original_issue_data);
@@ -333,11 +339,8 @@ function project_mail_notify($nid) {
     $result = db_query('SELECT p.*, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->pid);
   }
 
-  project_mail_output($node->title, 0);
-  $node->title = "[". t($node->category) ."] $node->title";
-
   while ($recipient = db_fetch_object($result)) {
-    drupal_mail('project_issue_update', $recipient->mail, $node->title, $body, NULL, $header);
+    drupal_mail('project_issue_update', $recipient->mail, $subject, $body, NULL, $header);
   }
 
   if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.90 2007-11-03 18:16:16 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.91 2007-11-03 22:09:49 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -196,7 +196,7 @@ function project_mail_summary($field, $value) {
 }
 
 function project_mail_notify($nid) {
-  global $user, $base_url;
+  global $base_url;
 
   if (defined('PROJECT_NOMAIL')) {
     return;
@@ -206,88 +206,45 @@ function project_mail_notify($nid) {
   $node = node_load($nid, NULL, TRUE);
   $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
 
-  $fields = array(
-    'pid' => t('Project'),
-    'rid' => t('Version'),
-    'component' => t('Component'),
-    'category' => t('Category'),
-    'priority' => t('Priority'),
-    'assigned' => t('Assigned to'),
-    'name' => t('Reported by'),
-    'updator' => t('Updated by'),
-    'sid' => t('Status')
-  );
+  $fields = project_mail_summary_fields();
 
-  // Store the mail subject here, since we're possibly overwriting
-  // the node title and category below.
-  $title = $node->title;
-  project_mail_output($title, 0);
-  $subject = "[". t($node->category) ."] $title";
+  // Store a copy of the issue, so we can load the original issue values
+  // below.
+  $issue = drupal_clone($node);
 
   // Load in the original issue data here, since we want a running
   // reverse history.
   $original_issue_data = unserialize($node->original_issue_data);
   foreach ($fields as $field => $label) {
     if ($field != 'name' && $field != 'updator') {
-      $node->$field = $original_issue_data->$field;
+      $issue->$field = $original_issue_data->$field;
     }
   }
 
-  // Create complete history of the bug report
-  $history = array($node);
-  $result = db_query('SELECT u.name, c.comment, c.uid, c.format, pic.* FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid INNER JOIN {users} u ON u.uid = c.uid WHERE c.nid = %d AND c.status = %d ORDER BY pic.timestamp', $node->nid, COMMENT_PUBLISHED);
+  // Record users that are connected to this issue.
+  $uids = array();
+  if ($node->assigned) {
+    $uids[$node->assigned] = $node->assigned;
+  }
+
+  // Create complete history of the bug report.
+  $history = array($issue);
+  $result = db_query('SELECT u.name, c.cid, c.comment, c.uid, c.format, pic.* FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid INNER JOIN {users} u ON u.uid = c.uid WHERE c.nid = %d AND c.status = %d ORDER BY pic.timestamp', $node->nid, COMMENT_PUBLISHED);
 
   while ($comment = db_fetch_object($result)) {
     $comment->comment = db_decode_blob($comment->comment);
     $comment->files = _comment_upload_load_files($comment->cid);
     $history[] = $comment;
-  }
-
-  // Get most recent update
-  $entry = array_pop($history);
-  $node->updator = $entry->name ? $entry->name : $user->name;
-
-  // Record users that are connected to this node
-  $uids = array();
-  if ($entry->uid) {
-    $uids[$entry->uid] = $entry->uid;
-  }
-  if ($node->assigned) {
-    $uids[$node->assigned] = $node->assigned;
-  }
-
-  // Create link to related node
-  $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", NULL, NULL, 1))) ."\n";
-  $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", NULL, 'comment-form', 1))) ."\n";
-
-  // Check if the latest entry is actually the initial issue.
-  if (empty($history)) {
-    $content = $entry->body;
-  }
-  else {
-    $previous = end($history);
-    $content = $entry->comment;
-  }
-
-  // Mail summary (status values).
-  foreach ($fields as $field => $text) {
-    $text = str_pad("$text:", 14);
-    if (isset($previous) && $previous->$field != $entry->$field && $field != 'updator' && $field != 'name') {
-      $summary .= "-$text". project_mail_summary($field, $previous->$field) ."\n";
-      $summary .= "+$text". project_mail_summary($field, $entry->$field) ."\n";
+    // Record users that are connected to this issue.
+    if ($comment->uid) {
+      $uids[$comment->uid] = $comment->uid;
     }
-    else {
-      $summary .= " $text". project_mail_summary($field, $node->$field) ."\n";
-    }
+    // We need the most recent cid and the next most recent cid for the
+    // message headers.  Instead of issuing another query, just keep track
+    // of them here.
+    $previous_cid = isset($cid) ? $cid : '';
+    $cid = $comment->cid;
   }
-
-  $summary .= project_mail_format_attachments($entry);
-
-  // Create main body content
-  project_mail_output($content, 1, $entry->format);
-  $body = "$content\n$entry->name\n";
-
-  $hr = str_repeat('-', 72);
 
   // Create mail header
   $sender->name = mime_header_encode("$project->title ". t('issue queue'));
@@ -306,40 +263,47 @@ function project_mail_notify($nid) {
   if ($replyto = variable_get('project_reply_to', '')) {
     $header['Reply-To'] = "$project->title <$replyto>";
   }
-
-  if (count($history)) {
-    $header['Message-Id'] = "<type=project&nid=$node->nid&cid=$entry->cid&host=@$domain>";
+  // Comments exist, set headers accordingly.
+  if (count($history) > 1) {
+    $header['Message-Id'] = "<type=project&nid=$node->nid&cid=$cid&host=@$domain>";
     $header['In-Reply-To'] = "<type=project&nid=$node->nid&host=@$domain>";
-    $header['References'] = "<type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$previous->cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
-    $body .= "\n\n";
-    $body .= t('Original issue:') ."\n";
-    $body .= project_mail_format_entry(array_shift($history), TRUE);
-    if (count($history)) {
-      $body .= "\n". t('Previous comments (!count):', array('!count' => count($history))) ."\n";
-      foreach ($history as $entry) {
-        $body .= project_mail_format_entry($entry);
-        if ($entry->uid) {
-          $uids[$entry->uid] = $entry->uid;
-        }
-      }
-    }
+    $header['References'] = "<type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$previous_cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
   }
+  // Only original issue in this email.
   else {
     $header['Message-Id'] = "<type=project&nid=$node->nid&host=@$domain>";
   }
 
-  $body = "$links\n$summary\n$body";
-
   if (count($uids)) {
     $placeholders = implode(',', array_fill(0, count($uids), '%d'));
     array_unshift($uids, $node->pid);
-    $result = db_query("SELECT p.*, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND (p.level = 2 OR (p.level = 1 AND u.uid IN ($placeholders)))", $uids);
+    $result = db_query("SELECT p.*, u.uid, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND (p.level = 2 OR (p.level = 1 AND u.uid IN ($placeholders)))", $uids);
   }
   else {
-    $result = db_query('SELECT p.*, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->pid);
+    $result = db_query('SELECT p.*, u.uid, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->pid);
   }
 
+  // Create link to related node
+  $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", NULL, NULL, 1))) ."\n";
+  $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", NULL, 'comment-form', 1))) ."\n";
+
+  // To save workload, check here if either the anonymous role or the
+  // authenticated role has the 'view uploaded files' permission, since
+  // we only need to process each user's file access permission if this
+  // is NOT the case.
+  $check_file_perms = !db_num_rows(db_query("SELECT rid FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+
   while ($recipient = db_fetch_object($result)) {
+    if ($check_file_perms) {
+      $account = user_load(array('uid' => $recipient->uid));
+      $display_files = user_access('view uploaded files', $account);
+    }
+    else {
+      $display_files = TRUE;
+    }
+    project_mail_output($node->title, 0);
+    $subject = "[". t($node->category) ."] $node->title";
+    $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, $display_files);
     drupal_mail('project_issue_update', $recipient->mail, $subject, $body, NULL, $header);
   }
 
@@ -357,16 +321,125 @@ function project_mail_notify($nid) {
 }
 
 /**
+ * Provide an array of project issue summary fields.
+ */
+function project_mail_summary_fields() {
+  return array(
+    'pid' => t('Project'),
+    'rid' => t('Version'),
+    'component' => t('Component'),
+    'category' => t('Category'),
+    'priority' => t('Priority'),
+    'assigned' => t('Assigned to'),
+    'name' => t('Reported by'),
+    'updator' => t('Updated by'),
+    'sid' => t('Status')
+  );
+}
+
+/**
+ * Format the body of an issue followup email.
+ *
+ * @param $node
+ *   The issue node.
+ * @param $history
+ *   An array containing the history of issue followups.
+ * @param $display_files
+ *   Boolean indicating if file attachments should be displayed.
+ * @return
+ *   A string of the email body.
+ */
+function project_mail_generate_followup_mail_body($node, $history, $display_files) {
+  global $user;
+  static $output_with_files =  NULL, $output_without_files = NULL;
+
+  // Return cached output if available.
+  if ($display_files) {
+    if (isset($output_with_files)) {
+      return $output_with_files;
+    }
+  }
+  else {
+    if (isset($output_without_files)) {
+      return $output_without_files;
+    }
+  }
+
+  $fields = project_mail_summary_fields();
+
+  // Get most recent update.
+  $entry = array_pop($history);
+  $node->updator = $entry->name ? $entry->name : $user->name;
+
+  // Check if the latest entry is actually the initial issue.
+  if (empty($history)) {
+    $content = $entry->body;
+  }
+  else {
+    $previous = end($history);
+    $content = $entry->comment;
+  }
+
+  // Mail summary (status values).
+  $summary = '';
+  foreach ($fields as $field => $text) {
+    $text = str_pad("$text:", 14);
+    if (isset($previous) && $previous->$field != $entry->$field && $field != 'updator' && $field != 'name') {
+      $summary .= "-$text". project_mail_summary($field, $previous->$field) ."\n";
+      $summary .= "+$text". project_mail_summary($field, $entry->$field) ."\n";
+    }
+    else {
+      $summary .= " $text". project_mail_summary($field, $node->$field) ."\n";
+    }
+  }
+
+  $summary .= project_mail_format_attachments($entry, $display_files);
+
+  // Create main body content
+  project_mail_output($content, 1, $entry->format);
+  $body = "$content\n$entry->name\n";
+
+  $hr = str_repeat('-', 72);
+
+  if (count($history)) {
+
+    $body .= "\n\n";
+    $body .= t('Original issue:') ."\n";
+    $body .= project_mail_format_entry(array_shift($history), $display_files, TRUE);
+    if (count($history)) {
+      $body .= "\n". t('Previous comments (!count):', array('!count' => count($history))) ."\n";
+      foreach ($history as $entry) {
+        $body .= project_mail_format_entry($entry, $display_files);
+      }
+    }
+  }
+
+  $output = "$summary\n$body";
+
+  // Set cached output.
+  if ($display_files) {
+    $output_with_files = $output;
+  }
+  else {
+    $output_without_files = $output;
+  }
+
+  return $output;
+}
+
+/**
  * Formats attachments for issue notification e-mails.
  *
  * @param $entry
  *   An issue or followup object containing the file data.
+ * @param $display_files
+ *   Boolean indicating if file attachments should be displayed.
  * @return
  *   A formatted string of file attachments.
  */
-function project_mail_format_attachments($entry) {
+function project_mail_format_attachments($entry, $display_files) {
   $output = '';
-  if (is_array($entry->files)) {
+  if ($display_files && is_array($entry->files)) {
     foreach ($entry->files as $file) {
       $output .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($file->filepath) .' ('. format_size($file->filesize) .")\n";
     }
@@ -379,13 +452,15 @@ function project_mail_format_attachments($entry) {
  *
  * @param entry
  *   The entry to the formatted.
+ * @param $display_files
+ *   Boolean indicating if file attachments should be displayed.
  * @param is_original
  *   Whether this entry is the original issue or a followup. Followup issues
  *   will be automatically numbered.
  * @return
  *   Formatted text for the entry.
  */
-function project_mail_format_entry($entry, $is_original = FALSE) {
+function project_mail_format_entry($entry, $display_files, $is_original = FALSE) {
   static $history_count = 1;
   $hr = str_repeat('-', 72);
   $output = "$hr\n";
@@ -395,7 +470,7 @@ function project_mail_format_entry($entry, $is_original = FALSE) {
 
   $output .= ($is_original ? '' : $history_count++ .'. ') . format_date($timestamp, 'large') ." : $entry->name\n";
 
-  $output .= project_mail_format_attachments($entry);
+  $output .= project_mail_format_attachments($entry, $display_files);
 
   // Must distinguish between nodes and comments.
   if (!$entry->vid) {

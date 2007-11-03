@@ -1,5 +1,16 @@
-/* $Id: project_issue.css,v 1.13 2007-09-30 04:19:19 thehunmonkgroup Exp $ */
+/* $Id: project_issue.css,v 1.14 2007-11-03 20:51:15 thehunmonkgroup Exp $ */
 /* $Name:  $ */
+
+/* Summary content */
+#project-issue-summary-table {
+  float: left;
+}
+#project-issue-summary-links {
+  float: right;
+}
+#project-issue-summary-links li {
+  list-style-type: none;
+}
 
 /* Viewing issue nodes */
 .project-issue .header {

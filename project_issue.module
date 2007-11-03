@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.67 2007/10/31 18:53:16 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.68 2007/11/03 13:53:20 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -8,11 +8,13 @@
 /// How many issues should be displayed per page by default.
 define('PROJECT_ISSUES_PER_PAGE', 20);
 
-$path = drupal_get_path('module', 'project_issue');
-if (file_exists("$path/issue.inc")) {
-  require_once "$path/issue.inc";
-  require_once "$path/comment.inc";
-  require_once "$path/mail.inc";
+if (function_exists('drupal_get_path')) {
+  $path = drupal_get_path('module', 'project_issue');
+  if (file_exists("$path/issue.inc")) {
+    require_once "$path/issue.inc";
+    require_once "$path/comment.inc";
+    require_once "$path/mail.inc";
+  }
 }
 
 function project_issue_help($section) {
@@ -614,8 +616,13 @@ function project_issue_exit() {
   // hook_exit() so that all issue and file data is in a consistent state
   // before we generate the email.
   $nids = project_issue_set_mail_notify();
-  foreach ($nids as $nid) {
-    project_mail_notify($nid);
+  // For cached pages, this hook is called, but there aren't any mail functions
+  // loaded. Since the cached pages won't have any new mail notifications,
+  // we can safely test for this case.
+  if (!empty($nids)) {
+    foreach ($nids as $nid) {
+      project_mail_notify($nid);
+    }
   }
 }
 

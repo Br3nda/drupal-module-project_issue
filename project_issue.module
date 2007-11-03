@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.69 2007-11-03 20:51:15 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.70 2007-11-03 23:46:28 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -573,7 +573,6 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
         }
       }
       break;
-    case 'update':
     case 'insert':
       // Mark the node for email notification during hook_exit(), so all issue
       // and file data is in a consistent state before we generate the email.

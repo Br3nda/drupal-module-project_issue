@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.273 2007-11-03 20:51:15 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.274 2007-11-04 00:23:05 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -876,15 +876,25 @@ function theme_project_issue_summary($summary_table_rows, $summary_links) {
  */
 function project_issue_internal_links($node) {
   $links = array();
+
   // Link for most recent followup.
   $followup_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
   if ($followup_cid) {
-    $links[] = l('Most recent followup', "node/$node->nid", array(), NULL, "comment-$followup_cid");
+    $mark = node_mark($node->nid, $node->changed);
+    if ($mark == MARK_NEW || $mark == MARK_UPDATED) {
+      // This issue has unread replies; link to the first unread one.
+     $links[] = l(t('First unread followup'), "node/$node->nid", array(), NULL, 'new');
+    }
+    else {
+      // No unread replies; link to most recent follow-up.
+      $links[] = l(t('Most recent followup'), "node/$node->nid", array(), NULL, "comment-$followup_cid");
+    }
+
   }
   // Link for most recent patch.
   $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
   if ($file_cid) {
-    $links[] = l('Most recent attachment', "node/$node->nid", array(), NULL, "comment-$file_cid");
+    $links[] = l(t('Most recent attachment'), "node/$node->nid", array(), NULL, "comment-$file_cid");
   }
 
   // Link straight to comment form.
@@ -894,11 +904,11 @@ function project_issue_internal_links($node) {
 
     // Comment form isn't on the page, link to the comment reply page.
     if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
-      $links[] = l('Post a followup', "comment/reply/$node->nid");
+      $links[] = l(t('Post a followup'), "comment/reply/$node->nid");
     }
     // Comment form is on the page, generate an internal page link for it.
     else {
-      $links[] = l('Post a followup', "node/$node->nid", array(), NULL, "comment-form");
+      $links[] = l(t('Post a followup'), "node/$node->nid", array(), NULL, "comment-form");
     }
   }
 

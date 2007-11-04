@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.274 2007/11/04 00:23:05 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.275 2007/11/04 06:32:31 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -878,16 +878,19 @@ function project_issue_internal_links($node) {
   $links = array();
 
   // Link for most recent followup.
-  $followup_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
-  if ($followup_cid) {
-    $mark = node_mark($node->nid, $node->changed);
-    if ($mark == MARK_NEW || $mark == MARK_UPDATED) {
+  $followup = db_fetch_object(db_query_range("SELECT pic.cid, pic.timestamp FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
+  // No link if there are no comments, or if the user has never viewed
+  // the issue before.
+  $mark = node_mark($node->nid, $followup->timestamp);
+  if ($followup && $mark != MARK_NEW) {
+    // Link to first new comment if new comments exist.
+    if ($mark == MARK_UPDATED) {
       // This issue has unread replies; link to the first unread one.
-     $links[] = l(t('First unread followup'), "node/$node->nid", array(), NULL, 'new');
+      $links[] = l(t('First unread followup'), "node/$node->nid", array(), NULL, 'new');
     }
+    // No unread replies; link to most recent follow-up.
     else {
-      // No unread replies; link to most recent follow-up.
-      $links[] = l(t('Most recent followup'), "node/$node->nid", array(), NULL, "comment-$followup_cid");
+      $links[] = l(t('Most recent followup'), "node/$node->nid", array(), NULL, "comment-$followup->cid");
     }
 
   }

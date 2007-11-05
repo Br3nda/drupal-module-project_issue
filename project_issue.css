@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.15 2007/11/05 00:06:15 dww Exp $ */
+/* $Id: project_issue.css,v 1.16 2007/11/05 00:17:15 dww Exp $ */
 /* $Name:  $ */
 
 /* Summary content */
@@ -10,6 +10,7 @@
 }
 #project-issue-summary-links li {
   list-style-type: none;
+  margin-left: 0;
   padding-left: 0;
 }
 

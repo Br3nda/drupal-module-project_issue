@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.275 2007/11/04 06:32:31 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.276 2007/11/05 00:10:54 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -867,7 +867,7 @@ function theme_project_issue_summary($summary_table_rows, $summary_links) {
 }
 
 /**
- * Generates internal page links for issue followup pages.
+ * Generates internal page links for issue pages.
  *
  * @param $node
  *   The issue node.
@@ -877,20 +877,20 @@ function theme_project_issue_summary($summary_table_rows, $summary_links) {
 function project_issue_internal_links($node) {
   $links = array();
 
-  // Link for most recent followup.
-  $followup = db_fetch_object(db_query_range("SELECT pic.cid, pic.timestamp FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
+  // Link for most recent comment.
+  $comment = db_fetch_object(db_query_range("SELECT pic.cid, pic.timestamp FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
   // No link if there are no comments, or if the user has never viewed
   // the issue before.
-  $mark = node_mark($node->nid, $followup->timestamp);
-  if ($followup && $mark != MARK_NEW) {
+  $mark = node_mark($node->nid, $comment->timestamp);
+  if ($comment && $mark != MARK_NEW) {
     // Link to first new comment if new comments exist.
     if ($mark == MARK_UPDATED) {
       // This issue has unread replies; link to the first unread one.
-      $links[] = l(t('First unread followup'), "node/$node->nid", array(), NULL, 'new');
+      $links[] = l(t('First unread comment'), "node/$node->nid", array(), NULL, 'new');
     }
-    // No unread replies; link to most recent follow-up.
+    // No unread replies; link to most recent comment.
     else {
-      $links[] = l(t('Most recent followup'), "node/$node->nid", array(), NULL, "comment-$followup->cid");
+      $links[] = l(t('Most recent comment'), "node/$node->nid", array(), NULL, "comment-$comment->cid");
     }
 
   }
@@ -907,11 +907,11 @@ function project_issue_internal_links($node) {
 
     // Comment form isn't on the page, link to the comment reply page.
     if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
-      $links[] = l(t('Post a followup'), "comment/reply/$node->nid");
+      $links[] = l(t('Add new comment'), "comment/reply/$node->nid");
     }
     // Comment form is on the page, generate an internal page link for it.
     else {
-      $links[] = l(t('Post a followup'), "node/$node->nid", array(), NULL, "comment-form");
+      $links[] = l(t('Add new comment'), "node/$node->nid", array(), NULL, "comment-form");
     }
   }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.15 2007/10/23 06:30:47 dww Exp $
+// $Id: mail.inc,v 1.60.2.16 2007/11/06 17:23:53 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -339,6 +339,9 @@ function project_mail_notify($node) {
 }
 
 function project_mail_reminder() {
+  if (defined('PROJECT_NOMAIL')) {
+    return;
+  }
   $projects = array();
   $result = db_query(db_rewrite_sql('SELECT p.nid, n.title FROM {project_issue_projects} p INNER JOIN {node} n ON p.nid = n.nid WHERE p.mail_reminder = 1 AND n.status = 1', 'p'));
   while ($project = db_fetch_object($result)) {
@@ -390,6 +393,9 @@ function project_mail_reminder() {
 }
 
 function project_mail_digest() {
+  if (defined('PROJECT_NOMAIL')) {
+    return;
+  }
   $body = array();
   $header = array(
     'Date: '. date('r'),

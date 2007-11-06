@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.94 2007/11/06 17:24:07 dww Exp $
+// $Id: mail.inc,v 1.95 2007/11/06 21:55:26 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -253,7 +253,7 @@ function project_mail_notify($nid) {
   // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
   // which requires double quotes when special characters (including
   // some punctuation) are used.  See example in Appendix A.1.2.
-  $from = "\"$sender->name \"<$sender->mail>";
+  $from = "\"$sender->name\" <$sender->mail>";
   $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url);
   $header = array(
     'Return-Path' => "<$sender->mail>",

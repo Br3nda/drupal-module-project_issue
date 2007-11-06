@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.92 2007-11-04 21:50:23 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.93 2007-11-06 17:13:39 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -318,7 +318,7 @@ function project_mail_notify($nid) {
   }
 
   if ($project->mail_copy) {
-    drupal_mail('project_issue_update', $project->mail_copy, $node->title, $body, NULL, $header);
+    drupal_mail('project_issue_update', $project->mail_copy, $subject, $body, $from, $header);
   }
 }
 

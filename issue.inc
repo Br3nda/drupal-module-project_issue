@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.276 2007/11/05 00:10:54 dww Exp $
+// $Id: issue.inc,v 1.277 2007/11/08 17:21:28 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -877,23 +877,19 @@ function theme_project_issue_summary($summary_table_rows, $summary_links) {
 function project_issue_internal_links($node) {
   $links = array();
 
-  // Link for most recent comment.
-  $comment = db_fetch_object(db_query_range("SELECT pic.cid, pic.timestamp FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.timestamp DESC", $node->nid, 0, 1));
-  // No link if there are no comments, or if the user has never viewed
-  // the issue before.
-  $mark = node_mark($node->nid, $comment->timestamp);
-  if ($comment && $mark != MARK_NEW) {
-    // Link to first new comment if new comments exist.
-    if ($mark == MARK_UPDATED) {
-      // This issue has unread replies; link to the first unread one.
-      $links[] = l(t('First unread comment'), "node/$node->nid", array(), NULL, 'new');
-    }
-    // No unread replies; link to most recent comment.
-    else {
-      $links[] = l(t('Most recent comment'), "node/$node->nid", array(), NULL, "comment-$comment->cid");
-    }
-
+  // Link to the first unread, or most recent comment.
+  if (comment_num_new($node->nid)) {
+    // There are unread replies; link to first unread comment.
+    $links[] = l(t('First unread comment'), "node/$node->nid", array(), NULL, 'new');
   }
+  else {
+    // No unread replies; link to most recent comment.
+    $comment_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.cid DESC", $node->nid, 0, 1));
+    if ($comment_cid) {
+      $links[] = l(t('Most recent comment'), "node/$node->nid", array(), NULL, "comment-$comment_cid");
+    }
+  }
+
   // Link for most recent patch.
   $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
   if ($file_cid) {

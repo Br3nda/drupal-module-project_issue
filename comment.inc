@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.110 2007-11-03 23:46:28 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.111 2007-11-11 21:37:12 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -97,7 +97,6 @@ function project_issue_comment(&$arg, $op) {
         db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
         db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['nid']);
         project_issue_update_by_comment($arg, 'insert');
-
       }
       else {
         drupal_set_message(t('There was an error submitting your comment -- please try again. If the problem persists, contact the system administrator.'), 'error');
@@ -275,7 +274,7 @@ function project_issue_update_by_comment($comment_data, $op) {
   $node = node_load($comment_data->nid, NULL, TRUE);  // Don't use cached since we changed data above.
   $node->title = $comment_data->title;
 
-  // This also triggers the mail notification, and updates the changed date of the issue.
+  // This also updates the changed date of the issue.
   node_save($node);
 }
 

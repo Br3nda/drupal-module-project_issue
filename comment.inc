@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.111 2007/11/11 21:37:12 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.112 2007/11/11 22:22:19 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -95,7 +95,7 @@ function project_issue_comment(&$arg, $op) {
 
       if (isset($id)) {
         db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
-        db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['nid']);
+        db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['cid']);
         project_issue_update_by_comment($arg, 'insert');
       }
       else {

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.71 2007/11/06 18:56:36 dww Exp $
+// $Id: project_issue.module,v 1.72 2007/11/12 22:36:51 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -204,6 +204,8 @@ function project_issue_validate_issues_per_page($form) {
 }
 
 function project_issue_cron() {
+  global $user;
+
   if (time() - variable_get('project_issue_digest_last', 0) > variable_get('project_issue_digest_interval', 7 * 24 * 60 * 60)) {
     variable_set('project_issue_digest_last', time());
     project_mail_digest();
@@ -215,15 +217,72 @@ function project_issue_cron() {
   }
 
   $result = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.rid, p.assigned, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.sid = 2 AND n.changed < %d', time() - 14 * 24 * 60 * 60);
-  while ($node = db_fetch_object($result)) {
-    unset($comment); // Make sure we start with a clean object every time.
-    foreach (array('nid', 'pid', 'category', 'component', 'priority', 'rid', 'assigned', 'title') as $var) {
-      $comment->$var = $node->$var;
-    }
-    $comment->sid = 7;
-    // TODO: rewrite for ifac.
-    //project_comment_save($comment);
+
+  // Set up the persistent {comments} data.
+  $comment['pid'] = 0;
+  $comment['uid'] = $user->uid;
+  // The correct subject number is supplied during the save cycle.
+  $comment['subject'] = 'temp';
+  $comment['comment'] = theme('project_issue_auto_close_message');
+  $comment['format'] = FILTER_FORMAT_DEFAULT;
+  $comment['status'] = COMMENT_PUBLISHED;
+  $comment['name'] = $user->name;
+  $comment['mail'] = '';
+  $comment['homepage'] = '';
+
+  $roles = variable_get('comment_roles', array());
+  $score = 0;
+  foreach (array_intersect(array_keys($roles), array_keys($user->roles)) as $rid) {
+    $score = max($roles[$rid], $score);
   }
+  $users = serialize(array(0 => $score));
+
+  // Set up the persistent {project_issue_comments} data.
+  // TODO: It's evil to hard-code the status here.
+  $comment['sid'] = 7;
+
+  $clear_cache = FALSE;
+
+  while ($issue = db_fetch_object($result)) {
+    $clear_cache = TRUE;
+
+    $comment['cid'] = db_next_id('{comments}_cid');
+    $comment['timestamp'] = time();
+    $comment['nid'] = $issue->nid;
+    $comment['category'] = $issue->category;
+    $comment['priority'] = $issue->priority;
+    $comment['assigned'] = $issue->assigned;
+    $comment['title'] = $issue->title;
+    $comment['project_info']['pid'] = $issue->pid;
+    $comment['project_info']['rid'] = $issue->rid;
+    $comment['project_info']['component'] = $issue->component;
+
+    // Build vancode
+    $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $comment['nid']));
+    // Strip the "/" from the end of the thread.
+    $max = rtrim($max, '/');
+    // Finally, build the thread field for this new comment.
+    $thread = int2vancode(vancode2int($max) + 1) .'/';
+
+    db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '%s', %d, %d, %d, '%s', '%s', '%s', '%s', '%s')", $comment['cid'], $comment['nid'], $comment['pid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['format'], $_SERVER['REMOTE_ADDR'], $comment['timestamp'], $comment['status'], $score, $users, $thread, $comment['name'], $comment['mail'], $comment['homepage']);
+
+    _comment_update_node_statistics($comment['nid']);
+
+    // Tell the other modules a new comment has been submitted.
+    comment_invoke_comment($comment, 'insert');
+  }
+
+  if ($clear_cache) {
+    // Clear cache so anonymous users can see the new post.
+    cache_clear_all();
+  }
+}
+
+/**
+ * Comment left when cron auto-closes an issue.
+ */
+function theme_project_issue_auto_close_message() {
+  return t('Automatically closed -- issue fixed for two weeks with no activity.');
 }
 
 function project_issue_menu($may_cache) {

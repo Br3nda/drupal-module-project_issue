@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.76.2.5 2007/11/06 17:24:03 dww Exp $
+// $Id: mail.inc,v 1.76.2.6 2007/11/13 01:28:24 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -271,7 +271,7 @@ function project_mail_notify($node) {
 
   // Create mail header
   $sender->name = mime_header_encode("$project->title ". t('issue queue'));
-  $sender->mail = $project->mail;
+  $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->uri));
   $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']);
   $header = array(
     'Return-Path' => "<$sender->mail>",

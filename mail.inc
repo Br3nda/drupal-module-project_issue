@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.95 2007-11-06 21:55:26 dww Exp $
+// $Id: mail.inc,v 1.96 2007-11-13 01:28:13 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -248,7 +248,8 @@ function project_mail_notify($nid) {
 
   // Create mail header
   $sender->name = mime_header_encode(t('!name (!site)', array('!name' => $user->name, '!site' => variable_get('site_name', 'Drupal'))));
-  $sender->mail = $project->mail;
+  $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->uri));
+
   // The sender name is enclosed by double quotes below
   // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
   // which requires double quotes when special characters (including

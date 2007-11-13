@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.72 2007/11/12 22:36:51 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.73 2007/11/13 01:28:13 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -176,6 +176,12 @@ function project_issue_settings_form() {
     '#description' => t('If selected, user signatures will be appended to the display of issue followups.'),
   );
 
+  $form['project_issue_reply_to'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Reply-to address on e-mail notifications'),
+    '#default_value' => variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))),
+    '#description' => t('All issue e-mails sent via subscriptions will appear from this e-mail address. You can use %project as a placeholder which will be replaced with the %short_project_name setting for the issue\'s current project.', array('%project' => '%project', '%short_project_name' => t('Short project name'))),
+  );
   if (module_exists('mailhandler')) {
     // TODO: move this stuff to mailhandler.module ?
     $items = array(t('<none>'));
@@ -183,12 +189,10 @@ function project_issue_settings_form() {
     while ($mail = db_result($result, $i++)) {
       $items[$mail] = $mail;
     }
-    $form['project_issue_reply_to'] = array(
-      '#type' => 'select',
-      '#title' => t('Reply-to address on e-mail notifications'),
-      '#default_value' => variable_get('project_reply_to', ''),
-      '#options' => $items,
-    );
+
+    // Switch reply-to to a select box instead.
+    $form['project_issue_reply_to']['#type'] = 'select';
+    $form['project_issue_reply_to']['#options'] = $items;
   }
 
   return system_settings_form($form);

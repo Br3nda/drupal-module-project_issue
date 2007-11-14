@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.112 2007-11-11 22:22:19 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.113 2007-11-14 05:57:42 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -52,7 +52,7 @@ function project_issue_comment(&$arg, $op) {
         '#title' => t('Edit issue settings'),
         '#description' => t('Note: changing any of these items will update the issue\'s overall values.'),
         '#collapsible' => TRUE,
-        '#weight' => 3,
+        '#weight' => -10,
       );
 
       $form['original_issue']['title'] = array(
@@ -63,6 +63,10 @@ function project_issue_comment(&$arg, $op) {
         '#weight' => -30,
         '#required' => TRUE,
       );
+
+      // Remove the 'Project information' and 'Issue information' fieldsets,
+      // they're ugly after we move things inside the 'Edit issue settings' fieldset.
+      unset($form['project_info']['#type'], $form['project_info']['#title'], $form['issue_info']['#type'], $form['issue_info']['#title']);
 
       // Restructure the UI to de-emphasize the original project form inputs.
       $form['original_issue']['project_info'] = $form['project_info'];

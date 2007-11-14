@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.277 2007/11/08 17:21:28 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.278 2007/11/14 23:09:03 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1823,7 +1823,7 @@ function project_issue_query_sql_field($field, $values, $like = 0, $operator = '
     if ($callback) {
       $value = $callback($value);
     }
-    $sql[] = ($like && $field != 'p.pid') ? "$field LIKE '%$value%'" : "$field = '$value'";
+    $sql[] = ($like && $field != 'p.pid') ? "$field LIKE '". str_replace('%', '%%', "%$value%") ."'" : "$field = '$value'";
   }
   if ($sql) {
     return '('. implode($operator, $sql) .')';

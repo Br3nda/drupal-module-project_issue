@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.16 2007/11/05 00:17:15 dww Exp $ */
+/* $Id: project_issue.css,v 1.17 2007/11/14 05:57:42 thehunmonkgroup Exp $ */
 /* $Name:  $ */
 
 /* Summary content */
@@ -41,20 +41,28 @@
 }
 
 /* Issue node and comment followup form UI */
-.project-issue .node-form .inline-options fieldset .form-item {
+.project-issue .node-form div.inline-options .form-item {
   float: left;
   padding-right: 0.8em;
   margin: 0.05em 0.1em;
 }
-.project-issue .node-form fieldset:after {
+.project-issue .node-form div.inline-options {
+  overflow: hidden;  /* Gets rid of ugly scrollbars on comments */
+}
+.project-issue .node-form div.inline-options:after {
   content: ".";
   display: block;
   height: 0;
   clear: both;
   visibility: hidden;
 }
-.project-issue .node-form #edit-pid {
-  width: 200px;
+.project-issue .node-form fieldset {
+  display: inline-block;  /* Fixes fieldset display problems in Safari 2 */
+  width: 97%;
+}
+.project-issue .node-form #edit-pid,
+.project-issue .node-form #edit-project-info-pid {
+  width: 225px;
 }
 
 /* "My Projects" table UI */

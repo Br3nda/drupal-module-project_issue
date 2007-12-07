@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255.2.6 2007/11/14 23:31:16 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.255.2.7 2007/12/07 15:16:50 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1043,6 +1043,8 @@ function project_issue_access($op, $node) {
  * @param $is_author
  *   Boolean that indicates if the current user is the author of the
  *   issue, which can potentially grant a wider selection of states.
+ * @param $current_sid
+ *   The current integer state id for the issue. 
  * @param $defaults
  *   Boolean to request the states used for default issue queries.
  *

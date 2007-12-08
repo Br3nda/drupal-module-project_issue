@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255.2.7 2007/12/07 15:16:50 dww Exp $
+// $Id: issue.inc,v 1.255.2.8 2007/12/08 09:50:57 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1039,20 +1039,25 @@ function project_issue_access($op, $node) {
  *   Integer state id to return information about, or 0 for all states.
  * @param $restrict
  *   Boolean to determine if states should be restricted based on the
- *   permissions of the current user.
+ *   permissions of the current user or $account if that parameter
+ *   is provided.
  * @param $is_author
  *   Boolean that indicates if the current user is the author of the
  *   issue, which can potentially grant a wider selection of states.
  * @param $current_sid
- *   The current integer state id for the issue. 
+ *   The current integer state id for the issue.
  * @param $defaults
  *   Boolean to request the states used for default issue queries.
+ * @param $account
+ *   Account of a user to pass to user_access() for access checking.
+ *   This parameter will have no effect unless $restrict is also
+ *   set to TRUE.
  *
  * @return
  *   An array of states (sid as key, name as value) that match the
  *   given filters, or the name of the requested state.
  */
-function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false) {
+function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false, $account = NULL) {
   static $options;
 
   if (!$options) {
@@ -1069,8 +1074,8 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false, $c
       // or if user is original issue author and author has access,
       // or if the issue is already in a state, even if the user doesn't have
       //   access to that state themselves.
-      if (user_access('set issue status '. str_replace("'", "", $state->name))
-          || user_access('administer projects')
+      if (user_access('set issue status '. str_replace("'", "", $state->name), $account)
+          || user_access('administer projects', $account)
           || ($state->sid == variable_get('project_issue_default_state', 1))
           || ($state->author_has && $is_author)
           || ($state->sid == $current_sid) ) {

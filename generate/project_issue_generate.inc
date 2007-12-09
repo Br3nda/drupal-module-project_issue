@@ -1,4 +1,5 @@
 <?php
+// $Id: project_issue_generate.inc,v 1.1.2.2 2007/12/09 03:46:02 dww Exp $
 
 // If not in 'safe mode', increase the maximum execution time :
 if (!ini_get('safe_mode')) {

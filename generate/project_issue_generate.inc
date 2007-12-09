@@ -48,9 +48,9 @@ function project_issue_generate_issues($num) {
     // to the user creating the project_issue node (or in the case of comments
     // the user creating the comment).
     $possible_assignments = array(0, $account->uid);
-    $issue['assigned'] = $possible_assignments[array_rand($possible_assignments)];
+//    $issue['assigned'] = $possible_assignments[array_rand($possible_assignments)];
 
-    _project_issue_generate_drupal_execute('project_issue_node_form', $issue, array('type' => 'project_issue'));
+    drupal_execute('project_issue_node_form', $issue, array('type' => 'project_issue', 'pid' => $issue['pid'], 'assigned' => $issue['assigned']));
   }
 }
 
@@ -121,58 +121,4 @@ function _project_issue_generate_get_permitted_sids($user) {
     }
   }
   return array();
-}
-
-/**
- * Hack: Somehow $form_values gets populated inside drupal_process_form() when
- *       this is submitted by a user but is not when using drupal_execute()
- *       to programmaticaly send the project_issue form . . This fork of the
- *       core code works by setting the $form_values parameter in drupal_execute()
- *       to the global version and by removing $form_values = array() inside
- *       process_form() as to not reset its contents.
- */
-function _project_issue_generate_drupal_execute($form_id, $form_values) {
-  global $form_values;
-  $args = func_get_args();
- 
-  $form_id = array_shift($args);
-  $form_values = array_shift($args);
-  array_unshift($args, $form_id);
- 
-  if (isset($form_values)) {
-    $form = call_user_func_array('drupal_retrieve_form', $args);
-    $form['#post'] = $form_values;
-    return _project_issue_generate_drupal_process_form($form_id, $form);
-  }
-}
-
-function _project_issue_generate_drupal_process_form($form_id, &$form) {
-  global $form_values, $form_submitted, $user, $form_button_counter;
-  static $saved_globals = array();
-  // In some scenarios, this function can be called recursively. Pushing any pre-existing
-  // $form_values and form submission data lets us start fresh without clobbering work done
-  // in earlier recursive calls.
-  array_push($saved_globals, array($form_values, $form_submitted, $form_button_counter));
- 
-  $form_submitted = FALSE;
-  $form_button_counter = array(0, 0);
- 
-  drupal_prepare_form($form_id, $form);
-  if (($form['#programmed']) || (!empty($_POST) && (($_POST['form_id'] == $form_id)))) {
-    drupal_validate_form($form_id, $form);
-    // IE does not send a button value when there is only one submit button (and no non-submit buttons)
-    // and you submit by pressing enter.
-    // In that case we accept a submission without button values.
-    if ((($form['#programmed']) || $form_submitted || (!$form_button_counter[0] && $form_button_counter[1])) && !form_get_errors()) {
-      $redirect = drupal_submit_form($form_id, $form);
-      if (!$form['#programmed']) {
-        drupal_redirect_form($form, $redirect);
-      }
-    }
-  }
- 
-  // We've finished calling functions that alter the global values, so we can
-  // restore the ones that were there before this function was called.
-  list($form_values, $form_submitted, $form_button_counter) = array_pop($saved_globals);
-  return $redirect;
 }

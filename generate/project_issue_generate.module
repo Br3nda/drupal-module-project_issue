@@ -1,8 +1,8 @@
 <?php
+// $Id: project_issue_generate.module,v 1.2 2007/12/09 03:46:25 dww Exp $
 
 /**
  * Implementation of hook_menu().
- *
  */
 function project_issue_generate_menu($may_cache) {
   $items = array();

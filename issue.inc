@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.280 2007-12-08 09:48:42 dww Exp $
+// $Id: issue.inc,v 1.281 2007-12-09 03:17:19 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -509,21 +509,66 @@ function theme_project_issue_subscribe($form) {
   return $output;
 }
 
+function project_issue_pick_project_page() {
+  $types = node_get_types();
+  drupal_set_title(t('Submit @name', array('@name' => $types['project_issue']->name)));
+  return drupal_get_form('project_issue_pick_project_form');
+}
+
+/**
+ * Form builder for a simple form to select a project when creating a new
+ * issue (as the first "page", but this is not really a multi-page form).
+ */
+function project_issue_pick_project_form() {
+  $form = array();
+
+  // Fetch a list of all projects.
+  $uris = NULL;
+  $projects = array(t('<none>')) + project_projects_select_options($uris);
+  if (count($projects) == 1) {
+    drupal_set_message(t('You do not have access to any projects.'), 'error');
+  }
+  
+  $form['pid'] = array(
+    '#type' => 'select',
+    '#title' => t('Project'),
+    '#options' => $projects,
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next'),
+  );
+  return $form;
+}
+
+function project_issue_pick_project_form_validate($form_id, $form_values) {
+  if (empty($form_values['pid'])) {
+    form_set_error('pid', t('You must select a project.'));
+  }
+  $node = node_load($form_values['pid']);
+  if (empty($node) || $node->type != 'project_project') {
+    form_set_error('pid', t('Invalid project selected.'));
+  }
+}
+
+function project_issue_pick_project_form_submit($form_id, $form_values) {
+  $project = node_load($form_values['pid']);
+  return 'node/add/project-issue/'. $project->uri;
+}
+
 /**
  * Implementation of hook_form().
  */
-function project_issue_form($node, $param) {
+function project_issue_form($node) {
   global $user;
 
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Create content'), 'node/add');
+  drupal_set_breadcrumb($breadcrumb);
+
   $default_state = variable_get('project_issue_default_state', 1);
-
-  // Set the pre-render function for adjustments to the form stages
-  $form['#pre_render'] = array('project_issue_form_pre_render');
-
-  $form['page'] = array(
-    '#type' => 'hidden',
-    '#value' => isset($_POST['page']) ? $_POST['page'] : 1,
-  );
 
   $form['#prefix'] = '<div class="project-issue">';
   $form['#suffix'] = '</div>';
@@ -533,17 +578,13 @@ function project_issue_form($node, $param) {
   $projects = array(t('<none>')) + project_projects_select_options($uris);
   if (count($projects) == 1) {
     drupal_set_message(t('You do not have access to any projects.'), 'error');
+    drupal_goto('node/add/project-issue');
+    return;
   }
 
-  // Try to find the active project, if not already known.
   if (empty($node->pid)) {
-    if (isset($_POST['pid'])) {
-      $pid = $_POST['pid'];
-    }
-    else {
-      $pid = arg(3);
-    }
-    if (isset($pid)) {
+    $pid = arg(3);
+    if (!empty($pid)) {
       if (is_numeric($pid)) {
         $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
       }
@@ -553,256 +594,182 @@ function project_issue_form($node, $param) {
     }
   }
   $pid = $node->pid;
-  if ($pid) {
-    // Load Javascript. This is needed only if we already have a project selected.
-    drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
-    drupal_add_js(array('projectUrl' => url('project/issues/update_project')), 'setting');
 
-    // Load the project and initialize some support arrays.
-    $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
+  if (empty($pid)) {
+    drupal_set_message(t('Invalid project selected.'), 'error');
+    drupal_goto('node/add/project-issue');
+    return;
+  }
 
-    if (module_exists('project_release') &&
-        $releases = project_release_get_releases($project, 0)) {
-      $releases = array(t('<none>')) + $releases;
-    }
-    $components = array();
-    if ($project->components) {
-      $components = array(t('<none>'));
-      foreach ($project->components as $component) {
-        $component = check_plain($component);
-        $components[$component] = $component;
-      }
-    }
-    $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
-    $priorities = project_issue_priority();
-    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
+  // Load Javascript.
+  drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
+  drupal_add_js(array('projectUrl' => url('project/issues/update_project')), 'setting');
 
-    if ($user->uid == $node->assigned) {
-      $assigned = array(0 => t('Unassign'), $user->uid => $user->name);
-    }
-    else {
-      $assigned = array(
-        $node->assigned => ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned')),
-        $user->uid => $user->name
-      );
-    }
+  // Load the project and initialize some support arrays.
+  $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
 
-    if (trim($project->help)) {
-      $form['project_help'] = array(
-        '#prefix' => '<div class="messages status">',
-        '#value' => filter_xss($project->help),
-        '#suffix' => '</div>',
-      );
+  if (module_exists('project_release') &&
+      $releases = project_release_get_releases($project, 0)) {
+    $releases = array(t('<none>')) + $releases;
+  }
+  $components = array();
+  if ($project->components) {
+    $components = array(t('<none>'));
+    foreach ($project->components as $component) {
+      $component = check_plain($component);
+      $components[$component] = $component;
     }
+  }
+  $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
+  $priorities = project_issue_priority();
+  $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
 
-    $form['project_info'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Project information'),
-      '#prefix' => '<div class="inline-options">',
-      '#suffix' => '</div>',
-    );
-    $form['project_info']['pid'] = array(
-      '#type' => 'select',
-      '#title' => t('Project'),
-      '#default_value' => $node->pid,
-      '#options' => $projects,
-      '#required' => TRUE,
-    );
-    if ($releases) {
-      $form['project_info']['rid'] = array(
-        '#type' => 'select',
-        '#title' => t('Version'),
-        '#default_value' => $node->rid,
-        '#options' => $releases,
-      );
-    }
-    $form['project_info']['component'] = array(
-      '#type' => 'select',
-      '#title' => t('Component'),
-      '#default_value' => $node->component,
-      '#options' => $components,
-    );
-
-    $form['issue_info'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Issue information'),
-      '#prefix' => '<div class="inline-options">',
-      '#suffix' => '</div>',
-    );
-    $form['issue_info']['category'] = array(
-      '#type' => 'select',
-      '#title' => t('Category'),
-      '#default_value' => $node->category ? $node->category : arg(4),
-      '#options' => $categories,
-    );
-    $form['issue_info']['priority'] = array(
-      '#type' => 'select',
-      '#title' => t('Priority'),
-      '#default_value' => $node->priority ? $node->priority : 2,
-      '#options' => $priorities,
-    );
-    $form['issue_info']['assigned'] = array(
-      '#type' => 'select',
-      '#title' => t('Assigned'),
-      '#default_value' => $node->assigned,
-      '#options' => $assigned,
-    );
-    if (count($states) > 1) {
-      $form['issue_info']['sid'] = array(
-        '#type' => 'select',
-        '#title' => t('Status'),
-        '#default_value' => $node->sid ? $node->sid : $default_state,
-        '#options' => $states,
-      );
-    }
-    else {
-      $form['issue_info']['sid'] = array(
-        '#type' => 'hidden',
-        '#value' => $default_state,
-      );
-      $form['issue_info']['status'] = array(
-        '#type' => 'item',
-        '#title' => t('Status'),
-        '#value' => project_issue_state($default_state),
-      );
-    }
-
-    $form['issue_details'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Issue details'),
-      '#prefix' => '</div><div class="standard">',
-    );
-    $form['issue_details']['title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Title'),
-      '#default_value' => $node->title,
-      '#size' => 60,
-      '#maxlength' => 128,
-    );
-    $form['issue_details']['body'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Description'),
-      '#default_value' => $node->body,
-      '#rows' => 10,
-    );
-    $form['issue_details']['format'] = filter_form($node->format);
-
-    $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
-    if (!file_check_directory($directory, 0)) {
-      $msg = t('File attachments are disabled. The issue directory has not been properly configured.');
-      if (user_access('administer site configuration')) {
-        $msg .= ' '. t('Please visit the !admin-project-issue-settings page.', array('!admin-project-issue-settings' => l(t('Project issue settings'), 'admin/project/project-issue-settings')));
-      }
-      else {
-        $msg .= ' '. t('Please contact the site administrator.');
-      }
-      drupal_set_message($msg, 'warning');
-    }
+  if ($user->uid == $node->assigned) {
+    $assigned = array(0 => t('Unassign'), $user->uid => $user->name);
   }
   else {
-    $form['pid'] = array(
-      '#type' => 'select',
-      '#title' => t('Project'),
-      '#options' => $projects,
-      '#required' => TRUE,
+    $assigned = array(
+      $node->assigned => ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned')),
+      $user->uid => $user->name
     );
-
   }
 
+  if (trim($project->help)) {
+    $form['project_help'] = array(
+      '#prefix' => '<div class="messages status">',
+      '#value' => filter_xss($project->help),
+      '#suffix' => '</div>',
+    );
+  }
+
+  $form['project_info'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Project information'),
+    '#prefix' => '<div class="inline-options">',
+    '#suffix' => '</div>',
+  );
+  $form['project_info']['pid'] = array(
+    '#type' => 'select',
+    '#title' => t('Project'),
+    '#default_value' => $node->pid,
+    '#options' => $projects,
+    '#required' => TRUE,
+  );
+  if ($releases) {
+    $form['project_info']['rid'] = array(
+      '#type' => 'select',
+      '#title' => t('Version'),
+      '#default_value' => $node->rid,
+      '#options' => $releases,
+      '#required' => TRUE,
+    );
+  }
+  $form['project_info']['component'] = array(
+    '#type' => 'select',
+    '#title' => t('Component'),
+    '#default_value' => $node->component,
+    '#options' => $components,
+    '#required' => TRUE,
+  );
+
+  $form['issue_info'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Issue information'),
+    '#prefix' => '<div class="inline-options">',
+    '#suffix' => '</div>',
+  );
+  $form['issue_info']['category'] = array(
+    '#type' => 'select',
+    '#title' => t('Category'),
+    '#default_value' => $node->category ? $node->category : arg(4),
+    '#options' => $categories,
+    '#required' => TRUE,
+  );
+  $form['issue_info']['priority'] = array(
+    '#type' => 'select',
+    '#title' => t('Priority'),
+    '#default_value' => $node->priority ? $node->priority : 2,
+    '#options' => $priorities,
+  );
+  $form['issue_info']['assigned'] = array(
+    '#type' => 'select',
+    '#title' => t('Assigned'),
+    '#default_value' => $node->assigned,
+    '#options' => $assigned,
+  );
+  if (count($states) > 1) {
+    $form['issue_info']['sid'] = array(
+      '#type' => 'select',
+      '#title' => t('Status'),
+      '#default_value' => $node->sid ? $node->sid : $default_state,
+      '#options' => $states,
+    );
+  }
+  else {
+    $form['issue_info']['sid'] = array(
+      '#type' => 'hidden',
+      '#value' => $default_state,
+    );
+    $form['issue_info']['status'] = array(
+      '#type' => 'item',
+      '#title' => t('Status'),
+      '#value' => project_issue_state($default_state),
+    );
+  }
+
+  $form['issue_details'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Issue details'),
+    '#prefix' => '</div><div class="standard">',
+  );
+  $form['issue_details']['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => $node->title,
+    '#size' => 60,
+    '#maxlength' => 128,
+    '#required' => TRUE,
+  );
+  $form['issue_details']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Description'),
+    '#default_value' => $node->body,
+    '#rows' => 10,
+    '#required' => TRUE,
+  );
+  $form['issue_details']['format'] = filter_form($node->format);
+
+  $directory = file_create_path(variable_get('project_directory_issues', 'issues'));
+  if (!file_check_directory($directory, 0)) {
+    $msg = t('File attachments are disabled. The issue directory has not been properly configured.');
+    if (user_access('administer site configuration')) {
+      $msg .= ' '. t('Please visit the !admin-project-issue-settings page.', array('!admin-project-issue-settings' => l(t('Project issue settings'), 'admin/project/project-issue-settings')));
+    }
+    else {
+      $msg .= ' '. t('Please contact the site administrator.');
+    }
+    drupal_set_message($msg, 'error');
+  }
   return $form;
 }
 
-function project_issue_form_pre_render($form_id, &$form) {
-  if ($form_id == 'project_issue_node_form') {
-
-    // Only move to the next page if there were no form errors.
-    // We don't want to keep incrementing page forever, since users
-    // can successfully preview many times.  However, if we already
-    // have a value for 'Project' (via a submit with project in the
-    // URL), we'll already be on page 2 of the form and must increment
-    // our page or we'll display the wrong buttons.
-    if (!form_get_errors() && $form['page']['#value'] < 2 && (isset($_POST['page']) || isset($form['project_info']['pid']['#value']))) {
-      $form['page']['#value'] = $form['page']['#value'] + 1;
-    }
-
-    if ($form['page']['#value'] == 1) {
-      // If we're on the first page, we want to convert 'preview' into
-      // a 'next' button and hide 'submit'.
-      $form['preview'] = array(
-        '#type' => 'button',
-        '#value' => t('Next'),
-        '#weight' => 19,
-      );
-      $form['submit'] = array(
-        '#type' => 'value',
-        '#value' => 'hidden',
-      );
-    }
-    else {
-      /*
-        We're on page 2.  In this case, we want all the default
-        buttons.  Furthermore, we must now set the #required attribute
-        on all the fields that are now in the form (which are only
-        added once we know the project from page #1 or from a direct
-        link), so that when we now attempt to validate the input (and
-        display the form), these fields will be required.
-      */
-      _project_issue_form_add_required_fields($form, TRUE);
-    }
-  }
-}
-
-/**
- * Private helper method to set the '#required' attribute to TRUE for
- * all the fields that should be required on the issue form.  These
- * fields can't be set to required from project_issue_form() because
- * this is a 2 page form, and so the FAPI validation code would mark
- * them all as an error as soon as the user lands on page 2.
- * Therefore, they're set to required by the pre_render hook (after
- * initially validating the page, but before it is displayed).  This
- * This is a separate method so that it can also be called from
- * comment.inc, which shares the project_issue_form() code, but
- * doesn't use it as a 2-page form, so we want these fields to be
- * required right away in that case.
- *
- * @param $form
- *   Reference to the form to modify
- * @param $needs_body
- *   Boolean that specifies if the 'body' field should be required
- */
-function _project_issue_form_add_required_fields(&$form, $needs_body) {
-  $form['project_info']['rid']['#required'] = TRUE;
-  $form['project_info']['component']['#required'] = TRUE;
-  $form['issue_info']['category']['#required'] = TRUE;
-  $form['issue_details']['title']['#required'] = TRUE;
-  if ($needs_body) {
-    $form['issue_details']['body']['#required'] = TRUE;
-  }
-}
-
-function project_issue_node_form_validate($form_id, $form) {
-  global $form_values;
-  $edit = $_POST;
-
+function project_issue_node_form_validate($form_id, $form_values) {
   if (!$form_values['pid']) {
     form_set_error('pid', t('You have to specify a valid project.'));
   }
-
-  if ($form_values['page'] == 2) {
-    if ($form_values['pid'] && $project = node_load($form_values['pid'])) {
-      $node->title = $form_values['title'];
-      if (module_exists('project_release') &&
-          $releases = project_release_get_releases($project, 0)) {
-        empty($form_values['rid']) and form_set_error('rid', t('You have to specify a valid version.'));
-      }
-      if ($form_values['component'] && !in_array($form_values['component'], $project->components)) {
-        $form_values['component'] = 0;
-      }
-      empty($form_values['component']) && form_set_error('component', t('You have to specify a valid component.'));
-      empty($form_values['category']) && form_set_error('category', t('You have to specify a valid category.'));
-      empty($form_values['title']) && form_set_error('title', t('You have to specify a valid title.'));
-      empty($form_values['body']) && form_set_error('body', t('You have to specify a valid description.'));
+  if ($form_values['pid'] && $project = node_load($form_values['pid'])) {
+    $node->title = $form_values['title'];
+    if (module_exists('project_release') &&
+        $releases = project_release_get_releases($project, 0)) {
+      empty($form_values['rid']) and form_set_error('rid', t('You have to specify a valid version.'));
     }
+    if ($form_values['component'] && !in_array($form_values['component'], $project->components)) {
+      $form_values['component'] = 0;
+    }
+    empty($form_values['component']) && form_set_error('component', t('You have to specify a valid component.'));
+    empty($form_values['category']) && form_set_error('category', t('You have to specify a valid category.'));
+    empty($form_values['title']) && form_set_error('title', t('You have to specify a valid title.'));
+    empty($form_values['body']) && form_set_error('body', t('You have to specify a valid description.'));
   }
 }
 

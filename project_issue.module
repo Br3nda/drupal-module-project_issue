@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.73 2007-11-13 01:28:13 dww Exp $
+// $Id: project_issue.module,v 1.74 2007-12-09 03:17:19 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -406,6 +406,18 @@ function project_issue_menu($may_cache) {
       'type' => MENU_CALLBACK,
     );
 
+    // Special menu item for the "first page" of submitting a new issue.
+    // Instead of the treachery of a true multipage form, we just have
+    // a simple form at node/add/project-issue that provides a project
+    // selector which redirects to node/add/project-issue/[project-name].
+    $types = node_get_types();
+    $items[] = array(
+      'path' => 'node/add/project-issue',
+      'title' => $types['project_issue']->name,
+      'callback' => 'project_issue_pick_project_page',
+      'type' => MENU_NORMAL_ITEM,
+    );
+
   }
   else {
     // Dynamic menu items
@@ -433,6 +445,16 @@ function project_issue_menu($may_cache) {
          'type' => MENU_CALLBACK,
         );
       }
+    }
+
+    if (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'project-issue' && arg(3)) {
+      $items[] = array(
+        'path' => 'node/add/project-issue/'. arg(3),
+        'callback' => 'node_add',
+        'callback arguments' => array('project-issue'),
+        'access' => $access_create,
+        'type' => MENU_CALLBACK,
+      );
     }
 
     drupal_add_css(drupal_get_path('module', 'project_issue') .'/project_issue.css');

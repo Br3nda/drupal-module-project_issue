@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.281 2007/12/09 03:17:19 dww Exp $
+// $Id: issue.inc,v 1.282 2007/12/10 03:59:44 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -563,10 +563,12 @@ function project_issue_pick_project_form_submit($form_id, $form_values) {
 function project_issue_form($node) {
   global $user;
 
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Create content'), 'node/add');
-  drupal_set_breadcrumb($breadcrumb);
+  if (arg(0) == 'node' && arg(1) == 'add') {
+    $breadcrumb = array();
+    $breadcrumb[] = l(t('Home'), NULL);
+    $breadcrumb[] = l(t('Create content'), 'node/add');
+    drupal_set_breadcrumb($breadcrumb);
+  }
 
   $default_state = variable_get('project_issue_default_state', 1);
 

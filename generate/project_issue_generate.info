@@ -1,5 +1,5 @@
-; $Id: project_issue_generate.info,v 1.2 2007/12/09 03:46:25 dww Exp $
+; $Id: project_issue_generate.info,v 1.3 2007/12/16 02:45:57 dww Exp $
 name = Project issue generator
-description = Generate random issues.
+description = Generate random issues and comments.
 dependencies = project_issue devel
 package = Development

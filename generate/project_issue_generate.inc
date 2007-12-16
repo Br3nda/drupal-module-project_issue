@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.3 2007/12/09 03:46:25 dww Exp $
+// $Id: project_issue_generate.inc,v 1.4 2007/12/16 02:45:57 dww Exp $
 
 // If not in 'safe mode', increase the maximum execution time :
 if (!ini_get('safe_mode')) {
@@ -9,10 +9,10 @@ if (!ini_get('safe_mode')) {
 /**
  * Generate some random project issues.
  *
- * @param $num
+ * @param $number
  *  Number of issues to generate.
  */
-function project_issue_generate_issues($num) {
+function project_issue_generate_issues($number) {
   require_once(drupal_get_path('module', 'devel') .'/devel_generate.inc');
 
   $projects = _project_issue_generate_get_field('projects');
@@ -21,9 +21,8 @@ function project_issue_generate_issues($num) {
   $users = _project_issue_generate_get_field('users');
   $loaded_users = array();
 
-  for ($i = 0; $i < $num; $i++) {
-    srand((double) microtime() * 1000000);
-
+  srand((double) microtime() * 1000000);
+  for ($i = 0; $i < $number; $i++) {
     $project = $projects[array_rand($projects)];
     $components = unserialize($project->components);
     $issue = array();
@@ -55,10 +54,94 @@ function project_issue_generate_issues($num) {
   }
 }
 
+/**
+ * Generate some random project issues.
+ *
+ * @param $number
+ *  Number of comments to generate.
+ */
+function project_issue_generate_issue_comments($number) {
+  $issues = _project_issue_generate_get_field('issues');
+  $projects = _project_issue_generate_get_field('projects');
+  $categories = _project_issue_generate_get_field('categories');
+  $priorities = _project_issue_generate_get_field('priorities');
+  $users = _project_issue_generate_get_field('users');
+
+  srand((double) microtime() * 1000000);
+
+  for ($i = 0; $i < $number; $i++) {
+    $k = array_rand($issues);
+
+    $account = user_load(array('uid' => $users[array_rand($users)]->uid));
+    $project = $projects[array_rand($projects)];
+    if (rand(0,1)) {
+      $issues[$k]->pid = $project->nid;
+    }
+    if (rand(0,1)) {
+      $components = unserialize($project->components);
+      $issues[$k]->component = $components[array_rand($components)];
+    }
+    if (rand(0,1)) {
+      $issues[$k]->category = $categories[array_rand($categories)];
+    }
+    if (rand(0,1)) {
+      $issues[$k]->priority = array_rand($priorities);
+    }
+    if (rand(0,1)) {
+      $issues[$k]->title = devel_create_greeking(rand(2, 10), true);
+    }
+    if (rand(0,1)) {
+      $issues[$k]->sid = array_rand(_project_issue_generate_get_permitted_sids($account));
+      if (!isset($issues[$k]->sid)) {
+        unset($comment);
+        continue;
+      }
+    }
+    /**
+     * We put everything in the $issues array before put in $comment to
+     * post it because doing it we keep the $issues array updated with
+     * the latest comments to "randomly" don't change the info if
+     * rand(0,1)==0.
+     */
+    $comment = array();
+    $comment['uid'] = $account->uid;
+    $comment['project_info'] = array('pid' => $issues[$k]->pid, 'component' => $issues[$k]->component);
+    $comment['category'] = $issues[$k]->category;
+    $comment['priority'] = $issues[$k]->priority;
+    $comment['title'] = $issues[$k]->title;
+    $comment['sid'] = $issues[$k]->sid;
+    if (rand(0,1)) {
+      $comment['comment'] = devel_create_content();
+    }
+    else {
+      $comment['comment'] = '';
+    }
+    $comment['format'] = 1;
+    $comment['cid'] = '';
+
+    // We can't use UID in drupal_execute, because if so a normal user could
+    // hack the system by passing a UID by post in comment_form.
+    drupal_execute('comment_form', $comment, array('pid' => '', 'nid' => $issues[$k]->nid));
+    $result = db_query("SELECT MAX(cid) AS cid FROM {comments}");
+    $newres = db_fetch_object($result);
+    $newcid = $newres->cid;
+    db_query("UPDATE {comments} SET uid=%d WHERE cid=%d", $comment['uid'], $newcid);
+  }
+  drupal_set_message(format_plural($number, 'Your comment has been created.', '@count comments have been created.'));
+}
+
 function _project_issue_generate_get_field($field, $pool_size = 100) {
-  require_once(drupal_get_path('module', 'project_issue') . '/issue.inc');
+  require_once(drupal_get_path('module', 'project_issue') .'/issue.inc');
 
   switch($field) {
+    case 'issues':
+      $issues = array();
+      $results = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid');
+      while ($result = db_fetch_object($results)) {
+        $issues[] = $result;
+      }
+      return $issues;
+
     case 'projects':
       $projects = array();
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.module,v 1.2 2007-12-09 03:46:25 dww Exp $
+// $Id: project_issue_generate.module,v 1.3 2007-12-16 02:45:57 dww Exp $
 
 /**
  * Implementation of hook_menu().
@@ -22,10 +22,16 @@ function project_issue_generate_menu($may_cache) {
 }
 
 function project_issue_generate_issues_form() {
-  $form['num'] = array(
+  $form['issues'] = array(
     '#type' => 'textfield',
     '#title' => t('How many issues would you like to generate?'),
     '#default_value' => 100,
+    '#size' => 10,
+  );
+  $form['comments'] = array(
+    '#type' => 'textfield',
+    '#title' => t('How many issue comments would you like to generate?'),
+    '#default_value' => 200,
     '#size' => 10,
   );
   $form['submit'] = array(
@@ -36,6 +42,8 @@ function project_issue_generate_issues_form() {
 }
 
 function project_issue_generate_issues_form_submit($form_id, $form_values) {
-  require_once('project_issue_generate.inc');
-  project_issue_generate_issues($form_values['num']);
+  $file = drupal_get_path('module', 'project_issue_generate') .'/project_issue_generate.inc';
+  require_once($file);
+  project_issue_generate_issues($form_values['issues']);
+  project_issue_generate_issue_comments($form_values['comments']);
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.module,v 1.3 2007-12-16 02:45:57 dww Exp $
+// $Id: project_issue_generate.module,v 1.4 2007-12-16 02:50:26 dww Exp $
 
 /**
  * Implementation of hook_menu().
@@ -11,7 +11,7 @@ function project_issue_generate_menu($may_cache) {
     $items[] = array(
       'path' => 'admin/project/generate_issue',
       'title' => t('Generate issues'),
-      'description' => t('Generate a given number of issues.'),
+      'description' => t('Generate random issues and issue comments.'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('project_issue_generate_issues_form'),
       'access' => user_access('administer nodes'),
@@ -26,13 +26,13 @@ function project_issue_generate_issues_form() {
     '#type' => 'textfield',
     '#title' => t('How many issues would you like to generate?'),
     '#default_value' => 100,
-    '#size' => 10,
+    '#size' => 4,
   );
   $form['comments'] = array(
     '#type' => 'textfield',
     '#title' => t('How many issue comments would you like to generate?'),
     '#default_value' => 200,
-    '#size' => 10,
+    '#size' => 4,
   );
   $form['submit'] = array(
     '#type' => 'submit',
@@ -42,8 +42,8 @@ function project_issue_generate_issues_form() {
 }
 
 function project_issue_generate_issues_form_submit($form_id, $form_values) {
-  $file = drupal_get_path('module', 'project_issue_generate') .'/project_issue_generate.inc';
-  require_once($file);
+  $path = drupal_get_path('module', 'project_issue_generate');
+  require_once($path .'/project_issue_generate.inc');
   project_issue_generate_issues($form_values['issues']);
   project_issue_generate_issue_comments($form_values['comments']);
 }

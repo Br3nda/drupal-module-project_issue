@@ -1,7 +1,7 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.4 2007-12-16 02:45:57 dww Exp $
+// $Id: project_issue_generate.inc,v 1.5 2007-12-16 02:50:26 dww Exp $
 
-// If not in 'safe mode', increase the maximum execution time :
+// If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
   set_time_limit(240);
 }
@@ -48,7 +48,7 @@ function project_issue_generate_issues($number) {
     // to the user creating the project_issue node (or in the case of comments
     // the user creating the comment).
     $possible_assignments = array(0, $account->uid);
-//    $issue['assigned'] = $possible_assignments[array_rand($possible_assignments)];
+    $issue['assigned'] = $possible_assignments[array_rand($possible_assignments)];
 
     drupal_execute('project_issue_node_form', $issue, array('type' => 'project_issue', 'pid' => $issue['pid'], 'assigned' => $issue['assigned']));
   }
@@ -70,8 +70,12 @@ function project_issue_generate_issue_comments($number) {
   srand((double) microtime() * 1000000);
 
   for ($i = 0; $i < $number; $i++) {
+    // Select a random issue to add a comment to.
     $k = array_rand($issues);
 
+    // Update our copy of the issue to randomly decide what to change with
+    // the new comment. This way, if we decide not to alter something, we
+    // can leave the current value alone.
     $account = user_load(array('uid' => $users[array_rand($users)]->uid));
     $project = $projects[array_rand($projects)];
     if (rand(0,1)) {
@@ -97,12 +101,7 @@ function project_issue_generate_issue_comments($number) {
         continue;
       }
     }
-    /**
-     * We put everything in the $issues array before put in $comment to
-     * post it because doing it we keep the $issues array updated with
-     * the latest comments to "randomly" don't change the info if
-     * rand(0,1)==0.
-     */
+    // Construct a comment to put the issue into the state we just decided.
     $comment = array();
     $comment['uid'] = $account->uid;
     $comment['project_info'] = array('pid' => $issues[$k]->pid, 'component' => $issues[$k]->component);
@@ -119,13 +118,13 @@ function project_issue_generate_issue_comments($number) {
     $comment['format'] = 1;
     $comment['cid'] = '';
 
-    // We can't use UID in drupal_execute, because if so a normal user could
-    // hack the system by passing a UID by post in comment_form.
-    drupal_execute('comment_form', $comment, array('pid' => '', 'nid' => $issues[$k]->nid));
+    // Unfortunately, we can't specify a user for the comment, so we have to
+    // create it as the current user and then change the owner as needed.
+    drupal_execute('comment_form', $comment, array('nid' => $issues[$k]->nid));
     $result = db_query("SELECT MAX(cid) AS cid FROM {comments}");
     $newres = db_fetch_object($result);
     $newcid = $newres->cid;
-    db_query("UPDATE {comments} SET uid=%d WHERE cid=%d", $comment['uid'], $newcid);
+    db_query("UPDATE {comments} SET uid = %d WHERE cid = %d", $comment['uid'], $newcid);
   }
   drupal_set_message(format_plural($number, 'Your comment has been created.', '@count comments have been created.'));
 }
@@ -144,21 +143,17 @@ function _project_issue_generate_get_field($field, $pool_size = 100) {
 
     case 'projects':
       $projects = array();
-
       $result = db_query('SELECT nid, components FROM {project_issue_projects}');
       while ($project = db_fetch_object($result)) {
         $projects[] = $project;
       }
-
       return $projects;
 
     case 'categories':
-      $categories = array_keys(project_issue_category());
-      return $categories;
+      return array_keys(project_issue_category());
 
     case 'priorities':
-      $priorities = project_issue_priority();
-      return $priorities;
+      return project_issue_priority();
 
     case 'users':
       // Determine what role ids have permission to create project_issue nodes.

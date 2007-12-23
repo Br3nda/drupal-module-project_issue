@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.282 2007-12-10 03:59:44 dww Exp $
+// $Id: issue.inc,v 1.283 2007-12-23 04:14:54 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -626,15 +626,22 @@ function project_issue_form($node) {
   $priorities = project_issue_priority();
   $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
 
-  if ($user->uid == $node->assigned) {
-    $assigned = array(0 => t('Unassign'), $user->uid => $user->name);
+  // Setup the array of choices for who the issue is assigned to.
+  $assigned = array();
+  if (empty($node->assigned)) {
+    $assigned[0] = t('Unassigned');
   }
   else {
-    $assigned = array(
-      $node->assigned => ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned')),
-      $user->uid => $user->name
-    );
+    // It's currently assigned, so always let people unassign it.
+    $assigned[0] = t('Unassign');
+    if ($user->uid != $node->assigned) {
+      // Assigned to someone else, add the currently assigned user.
+      $account = user_load(array('uid' => $node->assigned));
+      $assigned[$node->assigned] = $account->name;
+    }
   }
+  // Always let the person replying assign it to themselves.
+  $assigned[$user->uid] = $user->name;
 
   if (trim($project->help)) {
     $form['project_help'] = array(

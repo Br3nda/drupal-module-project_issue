@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255.2.8 2007/12/08 09:50:57 dww Exp $
+// $Id: issue.inc,v 1.255.2.9 2008/01/01 20:48:11 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -950,17 +950,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
       '#weight' => 2,
     );
 
-    // Breadcrumb navigation
-    $breadcrumb[] = array('path' => 'project', 'title' => t('Projects'));
-    if (project_use_taxonomy()) {
-      $taxonomy_terms = taxonomy_node_get_terms($node->pid);
-      $term = reset($taxonomy_terms);
-      $breadcrumb[] = array('path' => 'project/'. $term->name, 'title' => $term->name);
-    }
-    $breadcrumb[] = array('path' => 'node/'. $project->nid, 'title' => $project->title);
-    $breadcrumb[] = array('path' => 'project/issues/'. $project->uri, 'title' => t('Issues'));
-    $breadcrumb[] = array('path' => 'node/'. $node->nid);
-    menu_set_location($breadcrumb);
+    project_issue_set_breadcrumb($node, $project);
   }
   return $node;
 }

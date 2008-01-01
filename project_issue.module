@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.38.2.5 2007/11/13 01:28:24 dww Exp $
+// $Id: project_issue.module,v 1.38.2.6 2008/01/01 20:48:11 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -873,4 +873,33 @@ function _project_issue_roles($permission) {
     $roles = user_roles(empty($roles[DRUPAL_ANONYMOUS_RID]));
   }
   return $roles;
+}
+
+/**
+ * Set the breadcrumb trail for project issues and issue followups.
+ *
+ * @param $node
+ *   The issue node object.
+ * @param $project
+ *   The project node object.
+ */
+function project_issue_set_breadcrumb($node, $project) {
+  $extra = array();
+  $extra[] = l($project->title, 'node/'. $project->nid);
+  $extra[] = l('Issues', 'project/issues/'. $project->uri);
+  // Add the issue title if we're on a followup page.
+  if (project_issue_is_followup()) {
+    $extra[] = l($node->title, 'node/'. $node->nid);
+  }
+  project_project_set_breadcrumb($project, $extra);
+}
+
+/**
+ * Test to determine if the active page is the followup form.
+ *
+ * @return
+ *   TRUE if the active page is the followup form, FALSE otherwise.
+ */
+function project_issue_is_followup() {
+  return arg(0) == 'project' && arg(1) == 'comments' && arg(2) == 'add' && is_numeric(arg(3));
 }

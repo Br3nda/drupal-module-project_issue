@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.76.2.6 2007/11/13 01:28:24 dww Exp $
+// $Id: mail.inc,v 1.76.2.7 2008/01/01 21:09:33 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -196,6 +196,8 @@ function project_mail_summary($field, $value) {
 }
 
 function project_mail_notify($node) {
+  global $user;
+
   if (defined('PROJECT_NOMAIL')) {
     return;
   }
@@ -270,22 +272,23 @@ function project_mail_notify($node) {
   $hr = str_repeat('-', 72);
 
   // Create mail header
-  $sender->name = mime_header_encode("$project->title ". t('issue queue'));
+  $sender->name = mime_header_encode(t('!name (!site)', array('!name' => $user->name, '!site' => variable_get('site_name', 'Drupal'))));
   $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->uri));
+  // The sender name is enclosed by double quotes below
+  // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
+  // which requires double quotes when special characters (including
+  // some punctuation) are used.  See example in Appendix A.1.2.
+  $from = "\"$sender->name\" <$sender->mail>";
   $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $GLOBALS['base_url']);
   $header = array(
     'Return-Path' => "<$sender->mail>",
     'Date' => date('r'),
-    'From' => "$sender->name <$sender->mail>",
     'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
     'List-Id' => "$project->title <$project->uri-issues-$domain>",
     'List-Archive' => '<'. url("project/issues/$project->uri", NULL, NULL, 1) .'>',
     'List-Subscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>',
     'List-Unsubscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>'
   );
-  if ($replyto = variable_get('project_reply_to', '')) {
-    $header['Reply-To'] = "$project->title <$replyto>";
-  }
 
   if (count($history)) {
     $prev = end($history);
@@ -326,10 +329,10 @@ function project_mail_notify($node) {
   }
 
   project_mail_output($node->title, 0);
-  $node->title = "[". t($node->category) ."] $node->title";
+  $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->uri, '!category' => $node->category, '!title' => $node->title));
 
   while ($recipient = db_fetch_object($result)) {
-    drupal_mail('project_issue_update', $recipient->mail, $node->title, $body, NULL, $header);
+    drupal_mail('project_issue_update', $recipient->mail, $subject, $body, $from, $header);
   }
 
   if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {
@@ -341,7 +344,7 @@ function project_mail_notify($node) {
   }
 
   if ($project->mail_copy) {
-    drupal_mail('project_issue_update', $project->mail_copy, $node->title, $body, NULL, $header);
+    drupal_mail('project_issue_update', $project->mail_copy, $subject, $body, $from, $header);
   }
 }
 

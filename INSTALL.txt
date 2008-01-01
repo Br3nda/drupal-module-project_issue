@@ -24,6 +24,18 @@ New Installation
 
 8. Grant the proper access to users under admin/user/access
 
+9. Enable the project issue to link filter in proper input formats at 
+   admin/settings/filters.  If your site uses ANY node access
+   control modules (including, but not limited to, Organic
+   Groups, Simple Access, and Node Access), you should not enable
+   this filter.  Furthermore, if your site does not give the
+   'access project issues' permission to all users (including
+   anonymous users), you should not use this filter.  In both cases
+   this is because the output of the project issue to link filter
+   is cached, and it is not possible to ensure that the user who initially
+   viewed the content and set the cache has the same access permissions as
+   another user that might view the (now cached) content.
+
 
 --------------------------------------------------------------
 Upgrading
@@ -31,4 +43,4 @@ Upgrading
 
 Consult UPGRADE.txt
 
-$Id: INSTALL.txt,v 1.6 2007/11/02 01:47:16 thehunmonkgroup Exp $
+$Id: INSTALL.txt,v 1.7 2008/01/01 03:54:39 thehunmonkgroup Exp $

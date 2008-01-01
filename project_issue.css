@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.17 2007-11-14 05:57:42 thehunmonkgroup Exp $ */
+/* $Id: project_issue.css,v 1.18 2008-01-01 03:54:39 thehunmonkgroup Exp $ */
 /* $Name:  $ */
 
 /* Summary content */
@@ -155,4 +155,13 @@ table.projects .project-project-links {
 .project-issue-numeric-light {
   text-align: right;
   color: #999;
+}
+
+/* Automatic issue links */
+.project-issue-status-2,
+.project-issue-status-3,
+.project-issue-status-5,
+.project-issue-status-6,
+.project-issue-status-7 {
+  text-decoration: line-through;
 }

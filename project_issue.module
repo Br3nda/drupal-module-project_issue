@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.74 2007-12-09 03:17:19 dww Exp $
+// $Id: project_issue.module,v 1.75 2008-01-01 03:54:39 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -969,4 +969,157 @@ function project_issue_link_alter(&$node, &$links) {
   if ($node->type == 'project_issue' && arg(0) == 'node' && is_numeric(arg(1))) {
     unset($links['comment_add']);
   }
+}
+
+
+/**
+ * @defgroup project_issue_filter Project Issue number to link filter.
+ */
+
+/**
+ * Theme automatic Project Issue links.
+ * @ingroup project_issue_filter themeable
+ *
+ * @param $node
+ *   The issue node object to be linked.
+ * @param $comment_id
+ *   The comment id to be appended to the link, optional.
+ * @param $comment_number
+ *   The comment's number, as visible to users, optional.
+ */
+function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_number = NULL) {
+  $path = "node/$node->nid";
+  $attributes = array('title' => project_issue_state($node->sid));
+  if ($comment_id) {
+    $title = "#$node->nid-$comment_number: $node->title";
+    $link = l($title, $path, $attributes, NULL, "comment-$comment_id");
+  }
+  else {
+    $title = "#$node->nid: $node->title";
+    $link = l($title, $path, $attributes);
+  }
+  $output = "<span class=\"project-issue-status-$node->sid\">$link</span>";
+  return $output;
+}
+
+/**
+ * Implementation of hook_form_filter_tips().
+ * @ingroup project_issue_filter
+ */
+function project_issue_filter_tips($delta, $format, $long = FALSE) {
+  if ($long) {
+    return t('References to project issues in the form of [#1234] (or [#1234-2] for comments) turn into links automatically, with the title of the issue appended. The status of the issue is shown on hover.');
+  }
+  else {
+    return t('Project issue numbers (ex. [#12345]) turn into links automatically.');
+  }
+}
+
+/**
+ * Implementation of hook_form_filter().
+ * @ingroup project_issue_filter
+ */
+function project_issue_filter($op, $delta = 0, $format = -1, $text = '') {
+  switch ($op) {
+    case 'list':
+      return array(0 => t('Project Issue to link filter'));
+    case 'description':
+      return t('Converts references to project issues (in the form of [#12345]) into links. Caching should be disabled if node access control modules are used.');
+    case 'no cache':
+      return FALSE;
+    case 'prepare':
+      return $text;
+    case 'process':
+      $regex = '(?<!\w)(\[#(\d+)(-(\d+))?\])(?![^<]*<\/a>|([^<]|(<(?!code)))*<\/code>|([^<]|(<(?!pre)))*<\/pre>|\w)';
+      $offset = 0;
+      while(preg_match("/$regex/", $text, $preg_matches, PREG_OFFSET_CAPTURE, $offset)) {
+        $offset++;
+        $match = $preg_matches[1];
+        $nid = $preg_matches[2][0];
+        $comment_number = $preg_matches[4][0];
+        $node = node_load($nid);
+        if (is_object($node) && node_access('view', $node) && $node->type == 'project_issue') {
+          if (!is_null($comment_number)) {
+            // Pull comment id based on the comment number.
+            $comment_id = db_result(db_query("SELECT cid FROM {comments} WHERE nid = %d AND thread = '%s'", $nid, int2vancode($comment_number) .'/'));
+            $link = theme('project_issue_issue_link', $node, $comment_id, $comment_number);
+          }
+          else {
+            $link = theme('project_issue_issue_link', $node);
+          }
+          $text = substr_replace($text, $link, $match[1], strlen($match[0]));
+          $offset = max($offset, $match[1] + strlen($link));
+        }
+        else {
+          $offset = max($offset, $match[1] + strlen($match[0]));
+        }
+      }
+      return $text;
+  }
+}
+
+/**
+ * Implementation of hook_requirements().
+ * @ingroup project_issue_filter
+ *
+ * Check for conflicts with:
+ *   installed node access control modules,
+ *   'access project issues' restrictions,
+ *   filters escaping code with higher weight.
+ */
+function project_issue_requirements($phase) {
+  $requirements = array();
+  $input_formats = array();
+  if ($phase == 'runtime') {
+
+    $grants = module_implements('node_grants');
+    if (!empty($grants)) {
+      $conflict_grants = TRUE;
+    }
+    $allowed_roles = user_roles(FALSE, 'access project issues');
+    if (!isset($allowed_roles[DRUPAL_ANONYMOUS_RID])) {
+      $conflict_anonymous = TRUE;
+    }
+
+    foreach (filter_formats() as $format => $input_format) {
+      $filters = filter_list_format($format);
+      if (isset($filters['project_issue/0'])) {
+        if ($conflict_grants && filter_format_allowcache($format)) {
+          $requirements[] = array(
+            'title' => t('Project Issue to link filter'),
+            'value' => t('Some module conflicts were detected.'),
+            'description' => t('%issuefilter should not be enabled when a node access control is also in use. Users may be able to see cached titles of project issues they would otherwise not have access to. You should disable this filter in !inputformat input format.', array('%issuefilter' => t('Project Issue to link filter'), '!inputformat' => l($input_format->name, "admin/settings/filters/$format"))),
+            'severity' => REQUIREMENT_ERROR,
+          );
+        }
+
+        if ($conflict_anonymous && filter_format_allowcache($format)) {
+          $requirements[] = array(
+            'title' => t('Project Issue to link filter'),
+            'value' => t('Some security conflicts were detected.'),
+            'description' => t('%issuefilter conflicts with project issue access settings. Users who do not have access to all project issues may be able to see titles of project issues. You should disable this filter in !inputformat input format.', array('%issuefilter' => t('Project Issue to link filter'), '!inputformat' => l($input_format->name, "admin/settings/filters/$format"))),
+            'severity' => REQUIREMENT_ERROR,
+          );
+        }
+
+        // Put up an error when some code escaping filter's weight is higher.
+        $low_filters = array('filter/0', 'filter/1', 'bbcode/0', 'codefilter/0', 'geshifilter/0');
+        foreach ($low_filters as $lfilter) {
+          if (isset($filters[$lfilter]) && $filters['project_issue/0']->weight <= $filters[$lfilter]->weight) {
+            $description_names['%issuefilter'] = $filters['project_issue/0']->name;
+            $description_names['%lowfilter']  = $filters[$lfilter]->name;
+            $requirements[] = array(
+              'title' => t('Project Issue to link filter'),
+              'value' => t('Some filter conflicts were detected.'),
+              'description' => t('%issuefilter should come after %lowfilter to prevent loss of layout and highlighting.', $description_names) .' '. l(t('Please rearrange the filters.'), "admin/settings/filters/$format/order"),
+              'severity' => REQUIREMENT_ERROR,
+            );
+          }
+        }
+
+      }
+    }
+
+  }
+  return $requirements;
 }

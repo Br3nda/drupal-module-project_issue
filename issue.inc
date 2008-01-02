@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.61 2007/10/23 21:50:06 dww Exp $
+// $Id: issue.inc,v 1.172.2.62 2008/01/02 02:23:58 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -73,7 +73,7 @@ function project_issue_page() {
  *   Value returned from arg(2)
  */
 function project_issue_build_form_url($url_arg) {
-  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'versions', 'participated', 'states', 'categories', 'priorities');
+  $adv_filters = array('text', 'attachment', 'components', 'submitted', 'assigned', 'versions', 'participated', 'projects', 'states', 'categories', 'priorities');
   $filters = array_slice($adv_filters, 6);
   // Remember this is a request for "my issues"
   if ($url_arg == 'user') {

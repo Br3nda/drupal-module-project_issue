@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.96 2007-11-13 01:28:13 dww Exp $
+// $Id: mail.inc,v 1.97 2008-01-06 10:19:50 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -170,7 +170,7 @@ function project_mail_summary($field, $value) {
       $project = node_load(array('nid' => $value, 'type' => 'project_project'));
       return $project->title;
     case 'category':
-      return $value ? project_issue_category($value) : t('<none>');
+      return $value ? project_issue_category($value, 0) : t('<none>');
     case 'priority':
       return $value ? project_issue_priority($value) : t('<none>');
     case 'rid':

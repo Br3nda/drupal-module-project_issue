@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.22.2.47 2008/01/06 10:20:23 dww Exp $
+// $Id: issue.inc,v 1.172.2.22.2.48 2008/01/06 16:16:21 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -957,8 +957,7 @@ function project_issue_state($sid = 0, $restrict = false, $is_author = false, $c
 }
 
 function project_issue_priority($priority = 0) {
-  // NOTE: these values should not be translated!
-  $priorities = array(1 => 'critical', 'normal', 'minor');
+  $priorities = array(1 => t('critical'), t('normal'), t('minor'));
   return $priority ? $priorities[$priority] : $priorities;
 }
 

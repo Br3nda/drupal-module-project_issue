@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.39 2007/11/02 04:28:57 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.40 2008/01/06 01:58:36 dww Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -745,7 +745,14 @@ function project_issue_check_update_abort($modules, $current_update) {
     // Unfortunately, there's no elegant way to properly reset the schema version
     // programatically, so we'll have to instruct the user to redo the update
     // manually.
-    $message .= '<p>'. t("This and all subsequent updates of Project issue were safely aborted. Correct the problems listed above, then <a href=\"". base_path() ."update.php?op=selection\">re-run update.php</a>, click 'Select versions', select update %update for project_issue, and click 'Update'.", array('%update' => $current_update)) .'</p><p><em>'. t("Note: you will most likely need to disable the Project issue module temporarily in order to resolve the issues above. If necessary, please refer to Project issue's UPGRADE.txt for further details regarding this upgrade problem.") .'</em></p>';
+    $message .= '<p>'. 
+      t("This and all subsequent updates of Project issue were safely aborted. 
+        Correct the problems listed above, then <a href=\"!update_path\">re-run update.php</a>, 
+        click 'Select versions', select update %update for project_issue, and click 'Update'.", 
+        array('%update' => $current_update, '!update_path' => base_path() .'update.php?op=selection')) .'</p><p><em>'. 
+      t("Note: you will most likely need to disable the Project issue module temporarily in order to resolve the issues above. 
+        If necessary, please refer to Project issue's UPGRADE.txt for further details regarding this upgrade problem.") 
+      .'</em></p>';
 
     $ret = array(array('success' => FALSE, 'query' => $message));
   }

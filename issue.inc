@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.62 2008/01/02 02:23:58 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.63 2008/01/06 10:20:27 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -209,7 +209,7 @@ function project_issue_statistics($project = 0) {
   $result = db_query(db_rewrite_sql('SELECT p.category, SUM(n.changed - n.created) / COUNT(p.category) AS duration FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s AND p.sid > 1 GROUP BY p.category'), $filter);
   while ($stat = db_fetch_object($result)) {
     $i++;
-    $rows[$i][0] = project_issue_category($stat->category);;
+    $rows[$i][0] = project_issue_category($stat->category);
     $rows[$i][1] = array('data' => format_interval($stat->duration, 2), 'class' => 'numeric');
   }
 
@@ -820,7 +820,7 @@ function project_issue_view(&$node, $teaser = false, $page = false) {
       $rows[] = array('Version:', check_plain($release->version));
     }
     $rows[] = array(t('Component:'),  check_plain($node->component));
-    $rows[] = array(t('Category:'), check_plain($node->category));
+    $rows[] = array(t('Category:'), project_issue_category($node->category, 0));
     $rows[] = array(t('Priority:'), project_issue_priority($node->priority));
     $rows[] = array(t('Assigned:'), $assigned);
     $rows[] = array(t('Status:'), project_issue_state($node->sid));
@@ -1510,7 +1510,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
       $row[] = l(drupal_substr($node->title, 0, 50), "node/$node->nid") . theme('mark', node_mark($node->nid, $node->changed));
       $row[] = $states[$node->sid];
       $row[] = $priorities[$node->priority];
-      $row[] = t($node->category);
+      $row[] = project_issue_category($node->category, 0);
       if (count($releases)) {
         $row[] = $releases[$node->rid];
       }

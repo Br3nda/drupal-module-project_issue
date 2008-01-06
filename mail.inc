@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.60.2.17 2008/01/06 10:20:27 dww Exp $
+// $Id: mail.inc,v 1.60.2.18 2008/01/06 21:52:16 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -318,7 +318,7 @@ function project_mail_notify($node) {
   }
 
   project_mail_output($node->title, 0);
-  $node->title = "[$project->title " . t("$node->category") ."] $node->title";
+  $node->title = "[$project->title $node->category] $node->title";
 
   while ($recipient = db_fetch_object($result)) {
     user_mail($recipient->mail, $node->title, $body, implode("\n", $header));

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.77 2008/01/04 15:14:48 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.78 2008/01/14 20:01:25 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -532,7 +532,7 @@ function project_issue_project_edit_form($node) {
     '#default_value' => isset($node->mail_copy) ? $node->mail_copy : NULL,
     '#size' => 20,
     '#maxlength' => 255,
-    '#description' => t('If you wish to receive a copy of all the issues to a central location specify an address here.'),
+    '#description' => t('If you wish to receive a copy of all the issues to a central location specify an address here. <em>Note: the copy will contain links to file attachments.</em>'),
   );
   $options = project_issue_category();
   $form['email']['categories'] = array(

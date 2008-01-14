@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.97 2008/01/06 10:19:50 dww Exp $
+// $Id: mail.inc,v 1.98 2008/01/14 20:01:24 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -296,6 +296,9 @@ function project_mail_notify($nid) {
   // is NOT the case.
   $check_file_perms = !db_num_rows(db_query("SELECT rid FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
 
+  project_mail_output($node->title, 0);
+  $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->uri, '!category' => $node->category, '!title' => $node->title));
+
   while ($recipient = db_fetch_object($result)) {
     if ($check_file_perms) {
       $account = user_load(array('uid' => $recipient->uid));
@@ -304,8 +307,6 @@ function project_mail_notify($nid) {
     else {
       $display_files = TRUE;
     }
-    project_mail_output($node->title, 0);
-    $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->uri, '!category' => $node->category, '!title' => $node->title));
     $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, $display_files);
     drupal_mail('project_issue_update', $recipient->mail, $subject, $body, $from, $header);
   }
@@ -319,6 +320,7 @@ function project_mail_notify($nid) {
   }
 
   if ($project->mail_copy) {
+    $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, TRUE);
     drupal_mail('project_issue_update', $project->mail_copy, $subject, $body, $from, $header);
   }
 }

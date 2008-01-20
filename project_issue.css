@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.18 2008-01-01 03:54:39 thehunmonkgroup Exp $ */
+/* $Id: project_issue.css,v 1.19 2008-01-20 17:33:21 thehunmonkgroup Exp $ */
 /* $Name:  $ */
 
 /* Summary content */
@@ -150,11 +150,14 @@ table.projects .project-project-links {
 
 /* Issue statistics page */
 .project-issue-numeric {
-  text-align: right;
+  text-align: center;
 }
 .project-issue-numeric-light {
-  text-align: right;
+  text-align: center;
   color: #999;
+}
+.project-issue-statistics-overview-table {
+  overflow: auto;
 }
 
 /* Automatic issue links */

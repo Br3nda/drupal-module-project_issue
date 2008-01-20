@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.98 2008/01/14 20:01:24 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.99 2008/01/20 00:01:42 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -206,7 +206,7 @@ function project_mail_notify($nid) {
   $node = node_load($nid, NULL, TRUE);
   $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
 
-  $fields = project_mail_summary_fields();
+  $fields = project_issue_field_labels('email');
 
   // Store a copy of the issue, so we can load the original issue values
   // below.
@@ -326,23 +326,6 @@ function project_mail_notify($nid) {
 }
 
 /**
- * Provide an array of project issue summary fields.
- */
-function project_mail_summary_fields() {
-  return array(
-    'pid' => t('Project'),
-    'rid' => t('Version'),
-    'component' => t('Component'),
-    'category' => t('Category'),
-    'priority' => t('Priority'),
-    'assigned' => t('Assigned to'),
-    'name' => t('Reported by'),
-    'updator' => t('Updated by'),
-    'sid' => t('Status')
-  );
-}
-
-/**
  * Format the body of an issue followup email.
  *
  * @param $node
@@ -370,7 +353,7 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
     }
   }
 
-  $fields = project_mail_summary_fields();
+  $fields = project_issue_field_labels('email');
 
   // Get most recent update.
   $entry = array_pop($history);

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.114 2007/12/09 03:17:19 dww Exp $
+// $Id: comment.inc,v 1.115 2008/01/20 00:01:42 dww Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -128,7 +128,7 @@ function project_issue_comment(&$arg, $op) {
         $test->component = $arg->project_info['component'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
         $test->rid = $arg->project_info['rid'] ? $arg->project_info['rid'] : 0;
-        $project_issue_table = _project_issue_comment_table(_project_issue_comment_labels(), $original_node, $test);
+        $project_issue_table = _project_issue_comment_table(project_issue_field_labels('web'), $original_node, $test);
       }
       if ($project_issue_table) {
         $arg->comment = '<div class="project-issue"><div class="summary">'. $project_issue_table .'</div></div>' . $arg->comment;
@@ -170,19 +170,6 @@ function project_issue_comment(&$arg, $op) {
       empty($arg['category']) && form_set_error('category', t('You have to specify a valid category.'));
       break;
   }
-}
-
-function _project_issue_comment_labels() {
-  return array(
-    'title' => t('Title'),
-    'pid' => t('Project'),
-    'rid' => t('Version'),
-    'component' => t('Component'),
-    'category' => t('Category'),
-    'priority' => t('Priority'),
-    'assigned' => t('Assigned to'),
-    'sid' => t('Status'),
-  );
 }
 
 /**
@@ -228,7 +215,7 @@ function project_issue_comment_view(&$node, $comment = NULL) {
   }
   if ($node->comment_count) {
     $old = unserialize(db_result(db_query('SELECT original_issue_data FROM {project_issues} WHERE nid = %d', $node->nid)));
-    $labels = _project_issue_comment_labels();
+    $labels = project_issue_field_labels('web');
     $result = db_query('SELECT cid, title, pid, rid, component, category, priority, assigned, sid FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp ASC', $node->nid);
     while ($followup = db_fetch_object($result)) {
       $project_issue_tables[$followup->cid] = _project_issue_comment_table($labels, $old, $followup);

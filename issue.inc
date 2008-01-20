@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.287 2008/01/06 16:16:08 dww Exp $
+// $Id: issue.inc,v 1.288 2008/01/20 00:01:42 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1922,6 +1922,41 @@ function project_issue_query_rss($result, $project) {
   $channel['link'] = url('project/issues', NULL, NULL, TRUE); // not 100% correct
 
   node_feed($result, $channel);
+}
+
+/**
+ * Provide an array of project issue summary fields.
+ * @param $context
+ *   The context in which the fields will be displayed.
+ *     'web' for project_issue node and comment summary tables.
+ *     'email' for project_issue notification e-mail messages.
+ */
+function project_issue_field_labels($context) {
+
+  if ($context == 'web') {
+    $labels = array('title' => t('Title'));
+  }
+  else {
+    $labels = array();
+  }
+
+  $labels += array(
+    'pid' => t('Project'),
+    'rid' => t('Version'),
+    'component' => t('Component'),
+    'category' => t('Category'),
+    'priority' => t('Priority'),
+    'assigned' => t('Assigned to'),
+    'sid' => t('Status'),
+  );
+
+  if ($context == 'email') {
+    $labels +=  array(
+      'name' => t('Reported by'),
+      'updator' => t('Updated by'),
+    );
+  }
+  return $labels;
 }
 
 function theme_project_issue_follow_up_forbidden($nid) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.289 2008/01/20 17:33:21 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.290 2008/01/20 21:56:41 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -391,7 +391,7 @@ function project_issue_statistics($project = 0) {
     $sort = (isset($_GET['sort']) && $_GET['sort'] == 'desc') || !isset($_GET['sort']) ? 'DESC' : 'ASC';
 
     $rows = array();
-    $projects = pager_query(db_rewrite_sql("SELECT pn.nid, pn.title, COUNT(n.nid) AS total FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.nid INNER JOIN {node} pn ON p.pid = pn.nid WHERE n.status = 1 AND pn.status = 1$where GROUP BY pn.nid, pn.title ORDER BY $column $sort"), 50, 0, "SELECT COUNT(DISTINCT(pn.nid)) FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.nid INNER JOIN {node} pn ON p.pid = pn.nid WHERE n.status = 1 AND pn.status = 1$where", $args);
+    $projects = pager_query(db_rewrite_sql("SELECT pn.nid, pn.title, COUNT(n.nid) AS total FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.nid INNER JOIN {node} pn ON p.pid = pn.nid WHERE n.status = 1 AND pn.status = 1$where GROUP BY pn.nid, pn.title ORDER BY $column $sort"), 50, 0, db_rewrite_sql("SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.pid INNER JOIN {node} pin ON p.nid = pin.nid WHERE n.status = 1 AND pin.status = 1$where"), $args);
     $orig = array('project' => array('data' => 0));
     foreach ($states as $key => $value) {
       $orig[$key] = array('data' => '', 'class' => 'project-issue-numeric');

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.115 2008-01-20 00:01:42 dww Exp $
+// $Id: comment.inc,v 1.116 2008-01-21 17:34:45 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -13,7 +13,7 @@ function project_issue_comment(&$arg, $op) {
   $node = node_load($nid);
   // Make a copy here so we have all the original metadata, since some
   // of it can change below.
-  $original_node = $node;
+  $original_node = drupal_clone($node);
 
   if ($node->type != 'project_issue') {
     return;

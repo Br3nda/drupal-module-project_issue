@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.99 2008-01-20 00:01:42 dww Exp $
+// $Id: mail.inc,v 1.100 2008-01-21 23:59:21 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -229,7 +229,7 @@ function project_mail_notify($nid) {
 
   // Create complete history of the bug report.
   $history = array($issue);
-  $result = db_query('SELECT u.name, c.cid, c.comment, c.uid, c.format, pic.* FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid INNER JOIN {users} u ON u.uid = c.uid WHERE c.nid = %d AND c.status = %d ORDER BY pic.timestamp', $node->nid, COMMENT_PUBLISHED);
+  $result = db_query('SELECT u.name, c.cid, c.nid, c.subject, c.comment, c.uid, c.format, pic.* FROM {project_issue_comments} pic INNER JOIN {comments} c ON c.cid = pic.cid INNER JOIN {users} u ON u.uid = c.uid WHERE c.nid = %d AND c.status = %d ORDER BY pic.timestamp', $node->nid, COMMENT_PUBLISHED);
 
   while ($comment = db_fetch_object($result)) {
     $comment->comment = db_decode_blob($comment->comment);
@@ -456,7 +456,15 @@ function project_mail_format_entry($entry, $display_files, $is_original = FALSE)
   // Nodes and comments have different stamp fields.
   $timestamp = isset($entry->created) ? $entry->created : $entry->timestamp;
 
-  $output .= ($is_original ? '' : $history_count++ .'. ') . format_date($timestamp, 'large') ." : $entry->name\n";
+  if (!$is_original) {
+    $output .= "$entry->subject -- ";
+  }
+
+  $output .= format_date($timestamp, 'large') ." : $entry->name\n";
+
+  if (!$is_original) {
+    $output .= url("node/$entry->nid", NULL, "comment-$entry->cid", TRUE) ."\n";
+  }
 
   $output .= project_mail_format_attachments($entry, $display_files);
 

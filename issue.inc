@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.291 2008-01-21 15:58:00 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.292 2008-01-23 19:15:53 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -2011,6 +2011,48 @@ function project_issue_field_labels($context) {
     );
   }
   return $labels;
+}
+
+/**
+ * Provide the text displayed to a user for a specific metadata field.
+ *
+ * @param $field
+ *   Name of the field.
+ * @param $value
+ *   Value of the field.
+ *
+ * @return
+ *   Text to display to user.
+ */
+function project_issue_change_summary($field, $value) {
+  switch ($field) {
+    case 'pid':
+      $project = node_load(array('nid' => $value, 'type' => 'project_project'));
+      return $project->title;
+    case 'category':
+      return $value ? project_issue_category($value, 0) : t('<none>');
+    case 'priority':
+      return $value ? project_issue_priority($value) : t('<none>');
+    case 'rid':
+      if ($value) {
+        $release->nid = $value;
+        if (module_exists('project_release')) {
+          $release = project_release_load($release);
+        }
+        else {
+          $release->version = t('Unknown');
+        }
+        return $release->version;
+      }
+      return t('<none>');
+    case 'assigned':
+      $user = user_load(array('uid' => $value));
+      return $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
+    case 'sid':
+      return $value ? project_issue_state($value) : t('<none>');
+    default:
+      return check_plain($value);
+  }
 }
 
 function theme_project_issue_follow_up_forbidden($nid) {

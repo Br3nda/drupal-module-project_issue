@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.100 2008-01-21 23:59:21 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.101 2008-01-23 19:15:53 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -161,37 +161,6 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
   }
   else {
     $body = decode_entities($body);
-  }
-}
-
-function project_mail_summary($field, $value) {
-  switch ($field) {
-    case 'pid':
-      $project = node_load(array('nid' => $value, 'type' => 'project_project'));
-      return $project->title;
-    case 'category':
-      return $value ? project_issue_category($value, 0) : t('<none>');
-    case 'priority':
-      return $value ? project_issue_priority($value) : t('<none>');
-    case 'rid':
-      if ($value) {
-        $release->nid = $value;
-        if (module_exists('project_release')) {
-          $release = project_release_load($release);
-        }
-        else {
-          $release->version = t('Unknown');
-        }
-        return $release->version;
-      }
-      return t('<none>');
-    case 'assigned':
-      $user = user_load(array('uid' => $value));
-      return $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
-    case 'sid':
-      return $value ? project_issue_state($value) : t('<none>');
-    default:
-      return check_plain($value);
   }
 }
 
@@ -368,16 +337,18 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
     $content = $entry->comment;
   }
 
+  $comment_changes = project_issue_comment_changes($node, $previous, $entry, $fields);
+
   // Mail summary (status values).
   $summary = '';
-  foreach ($fields as $field => $text) {
-    $text = str_pad("$text:", 14);
-    if (isset($previous) && $previous->$field != $entry->$field && $field != 'updator' && $field != 'name') {
-      $summary .= "-$text". project_mail_summary($field, $previous->$field) ."\n";
-      $summary .= "+$text". project_mail_summary($field, $entry->$field) ."\n";
+  foreach ($comment_changes as $field => $change) {
+    $text = str_pad($change['label']. ':', 14);
+    if (!empty($change['label']) && isset($change['old']) && isset($change['new']) && $field != 'updator' && $field != 'name') {
+      $summary .= "-$text". project_issue_change_summary($field, $change['old']) ."\n";
+      $summary .= "+$text". project_issue_change_summary($field, $change['new']) ."\n";
     }
-    else {
-      $summary .= " $text". project_mail_summary($field, $node->$field) ."\n";
+    elseif (!empty($change['label'])) {
+      $summary .= " $text". project_issue_change_summary($field, $node->$field) ."\n";
     }
   }
 

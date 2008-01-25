@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.117 2008/01/23 19:15:53 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.118 2008/01/25 16:34:29 dww Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -256,22 +256,16 @@ function project_issue_comment_view(&$node, $comment = NULL) {
  *  )
  */
 function project_issue_comment_changes($node, $old_data, $new_data, $field_labels = array()) {
-  // Populate output array with available names and labels.
   $changes = array();
   foreach ($field_labels as $property => $name) {
-    $changes[$property] = array('label' => $name);
-  }
-
-  // Create an array that contains the name of all properties in both $old_data and $new_data
-  $all_properties = array();
-  if (!empty($old_data)){
-    $all_properties = array_keys(get_object_vars($old_data));
-  }
-  if (!empty($new_data)) {
-    $all_properties = array_merge($all_properties, array_keys(get_object_vars($new_data)));
-  }
-  $all_properties = array_unique($all_properties);
-  foreach ($all_properties as $property) {
+    if ($property == 'rid' && empty($old_data->rid) && empty($new_data->rid)) {
+      // Special case for version -- if both are empty, leave it out entirely,
+      // since maybe this project doesn't have (and/or disabled) releases.
+      continue;
+    }
+    if (isset($old_data->$property) || isset($new_data->$property)) {
+      $changes[$property] = array('label' => $name);
+    }
     if (isset($old_data->$property) && isset($new_data->$property)) {
       if ($old_data->$property != $new_data->$property) {
         $changes[$property]['old'] = $old_data->$property;
@@ -280,10 +274,8 @@ function project_issue_comment_changes($node, $old_data, $new_data, $field_label
     }
     elseif (isset($old_data->$property)) {
       $changes[$property]['old'] = $old_data->$property;
-      $changes[$property]['new'] = '';
     }
     else {
-      $changes[$property]['old'] = '';
       $changes[$property]['new'] = $new_data->$property;
     }
   }

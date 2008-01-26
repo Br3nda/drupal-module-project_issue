@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.292 2008-01-23 19:15:53 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.293 2008-01-26 02:41:40 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -334,7 +334,7 @@ function project_issue_statistics($project = 0) {
   $total = db_result(db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s', 'p'), $filter));
   $result = db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total, p.sid FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s GROUP BY p.sid', 'p'), $filter);
   while ($stat = db_fetch_object($result)) {
-    $rows[$stat->sid][0] = project_issue_state($stat->sid);;
+    $rows[$stat->sid][0] = project_issue_state($stat->sid);
     $rows[$stat->sid][1] = array('data' => $stat->total, 'class' => 'project-issue-numeric');
     $rows[$stat->sid][2] = array('data' => number_format($stat->total / $total * 100) .'%', 'class' => 'project-issue-numeric-light');
     $rows[$stat->sid][3] = array('data' => '0', 'class' => 'project-issue-numeric');

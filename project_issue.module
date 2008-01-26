@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.79 2008/01/17 04:32:34 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.80 2008/01/26 06:41:51 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -841,19 +841,14 @@ function project_issue_user_page($arg = 0) {
       'class' => 'project-issue-updated',
     ),
     array(
-      'data' => t('Issues'),
+      'data' => t('Open issues'),
       'field' => 'count',
       'class' => 'project-issues',
     ),
     array('data' => t('Issue links'), 'class' => 'project-issue-links'),
-    array(
-      'data' => t('Project updated'),
-      'field' => 'n.changed',
-      'class' => 'project-project-updated',
-    ),
   );
   $default_states = implode(',', project_issue_default_states());
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, n.changed, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} p ON n.nid = p.pid AND p.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = p.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title, n.changed") . tablesort_sql($header), $user->uid);
+  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} p ON n.nid = p.pid AND p.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = p.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $user->uid);
 
   if (!db_num_rows($result)) {
     return ($current_user ? t('You have no projects.') : t('This user has no projects.'));
@@ -865,6 +860,7 @@ function project_issue_user_page($arg = 0) {
     $node_obj = node_load($node->nid);
     $node->is_admin = node_access('update', $node_obj);
     $node->issues = $node_obj->issues;
+    $node->releases = isset($node_obj->releases) ? $node_obj->releases : 0;
     if ($node->is_admin) {
       $any_admin = TRUE;
     }
@@ -892,7 +888,7 @@ function project_issue_user_page($arg = 0) {
           'href' => "node/$node->nid/edit",
         ),
       );
-      if (module_exists('project_release')) {
+      if (module_exists('project_release') && $node->releases) {
         $project_links[] = array(
           'title' => t('Add release'),
           'href' => "node/add/project-release/$node->nid",
@@ -910,27 +906,14 @@ function project_issue_user_page($arg = 0) {
           'class' => 'project-issue-updated',
         ),
         array(
-          'data' => "$node->count open",
-          'class' => 'project-issues', 'align' => 'right',
+          'data' => $node->count,
+          'class' => 'project-issues',
         ),
         array(
           'data' => theme('links', $issue_links),
           'class' => 'project-issue-links',
         ),
-        array(
-          'data' => format_interval(time() - $node->changed, 2),
-          'class' => 'project-project-updated',
-        ),
       );
-      if ($node->is_admin) {
-        $row[] = array(
-          'data' => theme('links', $project_links),
-          'class' => 'project-project-links',
-        );
-      }
-      elseif ($any_admin) {
-        $row[] = array();
-      }
     }
     else {
       $row = array(
@@ -939,14 +922,27 @@ function project_issue_user_page($arg = 0) {
           'class' => 'project-name',
         ),
         array(
-          'data' => t('Issue tracking is disabled for this project.'),
-          'colspan' => $any_admin ? '4' : '3',
-        ),
-        array(
-          'data' => l(t('Enable'), "node/$node->nid/edit/issues", array(), drupal_get_destination())
+          'data' => t('Issue tracking is disabled.'),
+          'colspan' => $node->is_admin ? 2 : 3,
         ),
       );
+      if ($node->is_admin) {
+        $row[] = array(
+          'data' => l(t('Enable'), "node/$node->nid/edit/issues", array(), drupal_get_destination()),
+          'class' => 'project-issue-links',
+        );
+      }
     }
+    if ($node->is_admin) {
+      $row[] = array(
+        'data' => theme('links', $project_links),
+        'class' => 'project-project-links',
+      );
+    }
+    elseif ($any_admin) {
+      $row[] = array();
+    }
+
     $rows[] = $row;
     $query->projects[] = $node->nid;
   }

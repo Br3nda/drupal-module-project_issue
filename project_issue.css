@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.19 2008/01/20 17:33:21 thehunmonkgroup Exp $ */
+/* $Id: project_issue.css,v 1.20 2008/01/26 06:41:51 dww Exp $ */
 /* $Name:  $ */
 
 /* Summary content */
@@ -70,24 +70,28 @@ table.projects {
   width: 100%;
 }
 table.projects .project-name {
-  width: 22%;
+  width: 24%;
 }
 table.projects .project-issue-updated {
-  width: 12%;
-}
-table.projects .project-issues {
-  width: 9%;
-  text-align: right;
-}
-table.projects .project-issue-links {
-  width: 24%;
-  padding-left: 0.8em;
-}
-table.projects .project-project-updated {
   width: 15%;
 }
+table.projects .project-issues {
+  width: 11%;
+  text-align: center;
+}
+table.projects .project-issue-links {
+  width: 28%;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+  text-align: center;
+
+}
 table.projects .project-project-links {
-  width: 18%;
+  width: 22%;
+  text-align: center;
+}
+table.projects .project-project-links a {
+  white-space:nowrap;
 }
 
 /* Issue query bar UI */

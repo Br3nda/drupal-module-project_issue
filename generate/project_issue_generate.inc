@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.5 2007/12/16 02:50:26 dww Exp $
+// $Id: project_issue_generate.inc,v 1.6 2008/01/26 02:53:46 dww Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -78,23 +78,23 @@ function project_issue_generate_issue_comments($number) {
     // can leave the current value alone.
     $account = user_load(array('uid' => $users[array_rand($users)]->uid));
     $project = $projects[array_rand($projects)];
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $issues[$k]->pid = $project->nid;
     }
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $components = unserialize($project->components);
       $issues[$k]->component = $components[array_rand($components)];
     }
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $issues[$k]->category = $categories[array_rand($categories)];
     }
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $issues[$k]->priority = array_rand($priorities);
     }
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $issues[$k]->title = devel_create_greeking(rand(2, 10), true);
     }
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $issues[$k]->sid = array_rand(_project_issue_generate_get_permitted_sids($account));
       if (!isset($issues[$k]->sid)) {
         unset($comment);
@@ -109,7 +109,7 @@ function project_issue_generate_issue_comments($number) {
     $comment['priority'] = $issues[$k]->priority;
     $comment['title'] = $issues[$k]->title;
     $comment['sid'] = $issues[$k]->sid;
-    if (rand(0,1)) {
+    if (rand(0, 1)) {
       $comment['comment'] = devel_create_content();
     }
     else {
@@ -132,7 +132,7 @@ function project_issue_generate_issue_comments($number) {
 function _project_issue_generate_get_field($field, $pool_size = 100) {
   require_once(drupal_get_path('module', 'project_issue') .'/issue.inc');
 
-  switch($field) {
+  switch ($field) {
     case 'issues':
       $issues = array();
       $results = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid');

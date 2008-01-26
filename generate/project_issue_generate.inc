@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.1.2.2 2007/12/09 03:46:02 dww Exp $
+// $Id: project_issue_generate.inc,v 1.1.2.3 2008/01/26 02:53:48 dww Exp $
 
 // If not in 'safe mode', increase the maximum execution time :
 if (!ini_get('safe_mode')) {
@@ -58,7 +58,7 @@ function project_issue_generate_issues($num) {
 function _project_issue_generate_get_field($field, $pool_size = 100) {
   require_once(drupal_get_path('module', 'project_issue') . '/issue.inc');
 
-  switch($field) {
+  switch ($field) {
     case 'projects':
       $projects = array();
 

@@ -1,11 +1,11 @@
 <?php
-// $Id: project_issue.module,v 1.4.2.3.2.30 2008/01/02 01:52:22 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.4.2.3.2.31 2008/01/30 22:38:13 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments
 
-define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png html doc xls pdf ppt pps odt ods odp odg');
+define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png doc xls pdf ppt pps odt ods odp odg');
 
 $path = drupal_get_path('module', 'project_issue');
 if (file_exists("$path/issue.inc")) {

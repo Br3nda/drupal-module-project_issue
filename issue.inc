@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.293 2008-01-26 02:41:40 dww Exp $
+// $Id: issue.inc,v 1.294 2008-01-30 22:58:42 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -2022,7 +2022,8 @@ function project_issue_field_labels($context) {
  *   Value of the field.
  *
  * @return
- *   Text to display to user.
+ *   Text to display to user. NOTE: This is unfiltered text! If this output is
+ *   being sent over the web, you must use check_plain().
  */
 function project_issue_change_summary($field, $value) {
   switch ($field) {
@@ -2051,7 +2052,7 @@ function project_issue_change_summary($field, $value) {
     case 'sid':
       return $value ? project_issue_state($value) : t('<none>');
     default:
-      return check_plain($value);
+      return $value;
   }
 }
 

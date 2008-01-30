@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.85.2.1 2008/01/01 20:48:11 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.85.2.2 2008/01/30 22:54:57 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_comment_page($op, $nid) {
@@ -167,15 +167,15 @@ function _project_comment_view_single($comment, $count) {
     if (isset($comment->old->$field) && isset($comment->new->$field)) {
       $summary[] = array(
         $text .':',
-        project_mail_summary($field, $comment->old->$field),
-        '&raquo; '. project_mail_summary($field, $comment->new->$field)
+        check_plain(project_mail_summary($field, $comment->old->$field)),
+        '&raquo; '. check_plain(project_mail_summary($field, $comment->new->$field))
       );
     }
     elseif (isset($node->$field) && isset($comment->$field) && $node->$field != $comment->$field ) {
       $summary[] = array(
         $text .':',
-        project_mail_summary($field, $node->$field),
-        '&raquo; '. project_mail_summary($field, $comment->$field)
+        check_plain(project_mail_summary($field, $node->$field)),
+        '&raquo; '. check_plain(project_mail_summary($field, $comment->$field))
       );
     }
   }

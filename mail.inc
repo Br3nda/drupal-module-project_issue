@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.76.2.8 2008/01/06 10:20:18 dww Exp $
+// $Id: mail.inc,v 1.76.2.9 2008/01/30 22:54:57 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -164,6 +164,11 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
   }
 }
 
+/**
+ * Provide the text displayed to a user for a specific metadata field.
+ * @return
+ *   Text to display to user. Note: this value is unfiltered!
+ */
 function project_mail_summary($field, $value) {
   switch ($field) {
     case 'pid':
@@ -191,7 +196,7 @@ function project_mail_summary($field, $value) {
     case 'sid':
       return $value ? project_issue_state($value) : t('<none>');
     default:
-      return check_plain($value);
+      return $value;
   }
 }
 

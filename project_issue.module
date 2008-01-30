@@ -1,11 +1,11 @@
 <?php
-// $Id: project_issue.module,v 1.38.2.8 2008/01/04 15:18:04 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.38.2.9 2008/01/30 22:36:47 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_comments
 
-define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png html doc xls pdf ppt pps odt ods odp odg');
+define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png doc xls pdf ppt pps odt ods odp odg');
 
 /// How many issues should be displayed per page by default.
 define('PROJECT_ISSUES_PER_PAGE', 20);

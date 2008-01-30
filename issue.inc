@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.255.2.13 2008/01/06 16:16:14 dww Exp $
+// $Id: issue.inc,v 1.255.2.14 2008/01/30 22:36:47 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -785,9 +785,7 @@ function _project_issue_form_add_required_fields(&$form, $needs_body) {
   }
 }
 
-function project_issue_node_form_validate($form_id, $form) {
-  global $form_values;
-  $edit = $_POST;
+function project_issue_node_form_validate($form_id, $form_values, $form) {
 
   if (!$form_values['pid']) {
     form_set_error('pid', t('You have to specify a valid project.'));
@@ -814,6 +812,7 @@ function project_issue_node_form_validate($form_id, $form) {
         }
       }
     }
+    node_form_validate($form_id, $form_values, $form);
   }
 }
 

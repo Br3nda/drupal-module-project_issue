@@ -1,12 +1,12 @@
-# $Id: project_issue.pot,v 1.11 2008-01-06 22:14:51 dww Exp $
+# $Id: project_issue.pot,v 1.12 2008-01-31 00:23:49 dww Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  comment.inc,v 1.114 2007/12/09 03:17:19 dww
-#  issue.inc,v 1.287 2008/01/06 16:16:08 dww
-#  mail.inc,v 1.97 2008/01/06 10:19:50 dww
-#  project_issue.module,v 1.77 2008/01/04 15:14:48 thehunmonkgroup
+#  comment.inc,v 1.119 2008/01/30 22:58:42 thehunmonkgroup
+#  issue.inc,v 1.295 2008/01/31 00:22:17 dww
+#  project_issue.module,v 1.80 2008/01/26 06:41:51 dww
+#  mail.inc,v 1.101 2008/01/23 19:15:53 thehunmonkgroup
 #  project_issue.info,v 1.5 2007/11/02 01:47:16 thehunmonkgroup
 #  project_issue.install,v 1.40 2008/01/06 01:58:36 dww
 #
@@ -14,7 +14,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2008-01-06 13:56-0800\n"
+"POT-Creation-Date: 2008-01-30 16:22-0800\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -43,63 +43,31 @@ msgstr ""
 msgid "Error obtaining lock for project issue %nid"
 msgstr ""
 
-#: comment.inc:158 issue.inc:773
+#: comment.inc:159 issue.inc:835
 msgid "You have to specify a valid version."
 msgstr ""
 
-#: comment.inc:165 issue.inc:778
+#: comment.inc:166 issue.inc:840
 msgid "You have to specify a valid component."
 msgstr ""
 
-#: comment.inc:168 issue.inc:767
+#: comment.inc:169 issue.inc:830
 msgid "You have to specify a valid project."
 msgstr ""
 
-#: comment.inc:170 issue.inc:779
+#: comment.inc:171 issue.inc:841
 msgid "You have to specify a valid category."
 msgstr ""
 
-#: comment.inc:177 issue.inc:736
-msgid "Title"
-msgstr ""
-
-#: comment.inc:178 issue.inc:344;490;534;662;1546;1689 mail.inc:20;331 project_issue.module:752 project_issue.info:0
-msgid "Project"
-msgstr ""
-
-#: comment.inc:179 issue.inc:119;670;1553 mail.inc:24;332
-msgid "Version"
-msgstr ""
-
-#: comment.inc:180 issue.inc:148;678 mail.inc:22;333
-msgid "Component"
-msgstr ""
-
-#: comment.inc:181 issue.inc:306;692;1551;1701 mail.inc:21;334
-msgid "Category"
-msgstr ""
-
-#: comment.inc:182 issue.inc:699;1550;1707 mail.inc:23;335
-msgid "Priority"
-msgstr ""
-
-#: comment.inc:183 issue.inc:1556 mail.inc:25;336
-msgid "Assigned to"
-msgstr ""
-
-#: comment.inc:184 issue.inc:324;712;724;1186;1549;1695 mail.inc:26;339
-msgid "Status"
-msgstr ""
-
-#: comment.inc:358
+#: comment.inc:425
 msgid "Preview comment"
 msgstr ""
 
-#: comment.inc:103 project_issue.module:0
+#: comment.inc:103 project_issue.module:292;297;0
 msgid "project_issue"
 msgstr ""
 
-#: issue.inc:40;478;1492;1530 project_issue.module:353
+#: issue.inc:40;532;1552;1590 project_issue.module:438
 msgid "Subscribe"
 msgstr ""
 
@@ -115,443 +83,487 @@ msgstr ""
 msgid "Malicious attempt to access unauthorized information detected."
 msgstr ""
 
-#: issue.inc:105;136;527;580;615;619;625 mail.inc:173;175;187;192 project_issue.module:187
+#: issue.inc:105;136;581;634;669;673;679;2040;2042;2054;2059 project_issue.module:211
 msgid "<none>"
 msgstr ""
 
-#: issue.inc:306;324
+#: issue.inc:119;724;1613;2005 mail.inc:24
+msgid "Version"
+msgstr ""
+
+#: issue.inc:148;732;2006 mail.inc:22
+msgid "Component"
+msgstr ""
+
+#: issue.inc:307;746;1611;1761;2007 mail.inc:21
+msgid "Category"
+msgstr ""
+
+#: issue.inc:307;328
 msgid "Overall"
 msgstr ""
 
-#: issue.inc:306;324
+#: issue.inc:307;330
 msgid "Last month"
 msgstr ""
 
-#: issue.inc:321
+#: issue.inc:314
+msgid "N/A"
+msgstr ""
+
+#: issue.inc:323
 msgid "Average lifetime"
 msgstr ""
 
-#: issue.inc:339
+#: issue.inc:327;766;778;1246;1609;1755;2010 mail.inc:26
+msgid "Status"
+msgstr ""
+
+#: issue.inc:347
 msgid "Issue activity"
 msgstr ""
 
-#: issue.inc:344
+#: issue.inc:356;544;588;716;1606;1749;2004 mail.inc:20 project_issue.module:837 project_issue.info:0
+msgid "Project"
+msgstr ""
+
+#: issue.inc:360
 msgid "Total"
 msgstr ""
 
-#: issue.inc:362
+#: issue.inc:410
 msgid "Project overview"
 msgstr ""
 
-#: issue.inc:375;403;489
+#: issue.inc:429;457;543
 msgid "None"
 msgstr ""
 
-#: issue.inc:375;403;489
+#: issue.inc:429;457;543
 msgid "Own issues"
 msgstr ""
 
-#: issue.inc:375;403;489
+#: issue.inc:429;457;543
 msgid "All issues"
 msgstr ""
 
-#: issue.inc:394
+#: issue.inc:448
 msgid "Subscription settings saved."
 msgstr ""
 
-#: issue.inc:413
+#: issue.inc:467
 msgid "Subscribe to receive e-mail notification when an issue for this project is updated."
 msgstr ""
 
-#: issue.inc:418
+#: issue.inc:472
 msgid "Subscribe to @project issues"
 msgstr ""
 
-#: issue.inc:428
+#: issue.inc:482
 msgid "All projects"
 msgstr ""
 
-#: issue.inc:514
+#: issue.inc:568
 msgid "Submit @name"
 msgstr ""
 
-#: issue.inc:529;582
+#: issue.inc:583;636
 msgid "You do not have access to any projects."
 msgstr ""
 
-#: issue.inc:540
+#: issue.inc:594
 msgid "Next"
 msgstr ""
 
-#: issue.inc:547
+#: issue.inc:601
 msgid "You must select a project."
 msgstr ""
 
-#: issue.inc:551;601
+#: issue.inc:605;655
 msgid "Invalid project selected."
 msgstr ""
 
-#: issue.inc:568
+#: issue.inc:622
 msgid "Home"
 msgstr ""
 
-#: issue.inc:569
+#: issue.inc:623
 msgid "Create content"
 msgstr ""
 
-#: issue.inc:632;798
+#: issue.inc:686;858
 msgid "Unassigned"
 msgstr ""
 
-#: issue.inc:636
+#: issue.inc:690
 msgid "Unassign"
 msgstr ""
 
-#: issue.inc:656
+#: issue.inc:710
 msgid "Project information"
 msgstr ""
 
-#: issue.inc:686 project_issue.module:486
+#: issue.inc:740 project_issue.module:571
 msgid "Issue information"
 msgstr ""
 
-#: issue.inc:705;1202
+#: issue.inc:753;1610;1767;2008 mail.inc:23
+msgid "Priority"
+msgstr ""
+
+#: issue.inc:759;1262
 msgid "Assigned"
 msgstr ""
 
-#: issue.inc:731
+#: issue.inc:785
 msgid "Issue details"
 msgstr ""
 
-#: issue.inc:744;817
+#: issue.inc:790;1997
+msgid "Title"
+msgstr ""
+
+#: issue.inc:798;877
 msgid "Description"
 msgstr ""
 
-#: issue.inc:753
+#: issue.inc:807
 msgid "File attachments are disabled. The issue directory has not been properly configured."
 msgstr ""
 
-#: issue.inc:755
+#: issue.inc:809
 msgid "Please visit the !admin-project-issue-settings page."
 msgstr ""
 
-#: issue.inc:755 project_issue.module:380
+#: issue.inc:809 project_issue.module:465
 msgid "Project issue settings"
 msgstr ""
 
-#: issue.inc:758
+#: issue.inc:812
 msgid "Please contact the site administrator."
 msgstr ""
 
-#: issue.inc:780
-msgid "You have to specify a valid title."
-msgstr ""
-
-#: issue.inc:781
-msgid "You have to specify a valid description."
-msgstr ""
-
-#: issue.inc:805
+#: issue.inc:865
 msgid "Component:"
 msgstr ""
 
-#: issue.inc:806
+#: issue.inc:866
 msgid "Category:"
 msgstr ""
 
-#: issue.inc:807
+#: issue.inc:867
 msgid "Priority:"
 msgstr ""
 
-#: issue.inc:808
+#: issue.inc:868
 msgid "Assigned:"
 msgstr ""
 
-#: issue.inc:809
+#: issue.inc:869
 msgid "Status:"
 msgstr ""
 
-#: issue.inc:839
+#: issue.inc:899
 msgid "Jump to:"
 msgstr ""
 
-#: issue.inc:859
+#: issue.inc:919
 msgid "First unread comment"
 msgstr ""
 
-#: issue.inc:865
+#: issue.inc:925
 msgid "Most recent comment"
 msgstr ""
 
-#: issue.inc:872
+#: issue.inc:932
 msgid "Most recent attachment"
 msgstr ""
 
-#: issue.inc:882;886
+#: issue.inc:942;946
 msgid "Add new comment"
 msgstr ""
 
-#: issue.inc:1046
+#: issue.inc:1106
 msgid "critical"
 msgstr ""
 
-#: issue.inc:1046
+#: issue.inc:1106
 msgid "normal"
 msgstr ""
 
-#: issue.inc:1046
+#: issue.inc:1106
 msgid "minor"
 msgstr ""
 
-#: issue.inc:1052
+#: issue.inc:1112
 msgid "bug reports"
 msgstr ""
 
-#: issue.inc:1052
+#: issue.inc:1112
 msgid "tasks"
 msgstr ""
 
-#: issue.inc:1052
+#: issue.inc:1112
 msgid "feature requests"
 msgstr ""
 
-#: issue.inc:1052
+#: issue.inc:1112
 msgid "support requests"
 msgstr ""
 
-#: issue.inc:1055
+#: issue.inc:1115
 msgid "bug report"
 msgstr ""
 
-#: issue.inc:1055
+#: issue.inc:1115
 msgid "task"
 msgstr ""
 
-#: issue.inc:1055
+#: issue.inc:1115
 msgid "feature request"
 msgstr ""
 
-#: issue.inc:1055
+#: issue.inc:1115
 msgid "support request"
 msgstr ""
 
-#: issue.inc:1084
+#: issue.inc:1144
 msgid "Search issues for %name"
 msgstr ""
 
-#: issue.inc:1097
+#: issue.inc:1157
 msgid "Search issues for all projects"
 msgstr ""
 
-#: issue.inc:1120
+#: issue.inc:1180
 msgid "Search for"
 msgstr ""
 
-#: issue.inc:1126
+#: issue.inc:1186
 msgid "Has attachment."
 msgstr ""
 
-#: issue.inc:1133
+#: issue.inc:1193
 msgid "Projects"
 msgstr ""
 
-#: issue.inc:1141;1169 project_issue.module:540
+#: issue.inc:1201;1229 project_issue.module:625
 msgid "Categories"
 msgstr ""
 
-#: issue.inc:1152
+#: issue.inc:1212
 msgid "Versions"
 msgstr ""
 
-#: issue.inc:1161 project_issue.module:502
+#: issue.inc:1221 project_issue.module:587
 msgid "Components"
 msgstr ""
 
-#: issue.inc:1178
+#: issue.inc:1238
 msgid "Priorities"
 msgstr ""
 
-#: issue.inc:1194
+#: issue.inc:1254
 msgid "Submitted by"
 msgstr ""
 
-#: issue.inc:1210
+#: issue.inc:1270
 msgid "Participant"
 msgstr ""
 
-#: issue.inc:1218;1721 project_issue.module:336;795
+#: issue.inc:1278;1781 project_issue.module:421;876
 msgid "Search"
 msgstr ""
 
-#: issue.inc:1274
+#: issue.inc:1334
 msgid "ID"
 msgstr ""
 
-#: issue.inc:1275
+#: issue.inc:1335
 msgid "Name"
 msgstr ""
 
-#: issue.inc:1276 project_issue.module:38
+#: issue.inc:1336 project_issue.module:38
 msgid "Weight"
 msgstr ""
 
-#: issue.inc:1277 project_issue.module:40
+#: issue.inc:1337 project_issue.module:40
 msgid "Author may set"
 msgstr ""
 
-#: issue.inc:1278 project_issue.module:42
+#: issue.inc:1338 project_issue.module:42
 msgid "In default queries"
 msgstr ""
 
-#: issue.inc:1279 project_issue.module:44
+#: issue.inc:1339 project_issue.module:44
 msgid "Default status"
 msgstr ""
 
-#: issue.inc:1280
+#: issue.inc:1340
 msgid "Operations"
 msgstr ""
 
-#: issue.inc:1336;1430 project_issue.module:402
+#: issue.inc:1396;1490 project_issue.module:487
 msgid "Delete"
 msgstr ""
 
-#: issue.inc:1365
+#: issue.inc:1425
 msgid "Save"
 msgstr ""
 
-#: issue.inc:1397
+#: issue.inc:1457
 msgid "Status %status already exists."
 msgstr ""
 
-#: issue.inc:1411
+#: issue.inc:1471
 msgid "Reassign status"
 msgstr ""
 
-#: issue.inc:1414
+#: issue.inc:1474
 msgid "There are !total existing issues with the status of @name. Please select a new status for these issues."
 msgstr ""
 
-#: issue.inc:1427
+#: issue.inc:1487
 msgid "Are you sure you want to delete the status option %name?"
 msgstr ""
 
-#: issue.inc:1429
+#: issue.inc:1489
 msgid "This action cannot be undone."
 msgstr ""
 
-#: issue.inc:1430
+#: issue.inc:1490
 msgid "Cancel"
 msgstr ""
 
-#: issue.inc:1436
+#: issue.inc:1496
 msgid "Choose a new issue status for existing issues of status %name."
 msgstr ""
 
-#: issue.inc:1442
+#: issue.inc:1502
 msgid "Project issue status %issue deleted."
 msgstr ""
 
-#: issue.inc:1453;1454;1455;1647
+#: issue.inc:1513;1514;1515;1707
 msgid "<all>"
 msgstr ""
 
-#: issue.inc:1464
+#: issue.inc:1524
 msgid "Issues for %name"
 msgstr ""
 
-#: issue.inc:1474;1512 project_issue.module:316;799
+#: issue.inc:1534;1572 project_issue.module:401;880
 msgid "Create"
 msgstr ""
 
-#: issue.inc:1476
+#: issue.inc:1536
 msgid "Create a new issue for @project."
 msgstr ""
 
-#: issue.inc:1486;1524 project_issue.module:329
+#: issue.inc:1546;1584 project_issue.module:414
 msgid "Statistics"
 msgstr ""
 
-#: issue.inc:1488
+#: issue.inc:1548
 msgid "See statistics about @project issues."
 msgstr ""
 
-#: issue.inc:1494
+#: issue.inc:1554
 msgid "Receive email updates about @project issues."
 msgstr ""
 
-#: issue.inc:1498;1536
+#: issue.inc:1558;1596
 msgid "Advanced search"
 msgstr ""
 
-#: issue.inc:1500
+#: issue.inc:1560
 msgid "Use the advanced search page to find @project issues."
 msgstr ""
 
-#: issue.inc:1507
+#: issue.inc:1567
 msgid "Issues for all projects"
 msgstr ""
 
-#: issue.inc:1514
+#: issue.inc:1574
 msgid "Create a new issue."
 msgstr ""
 
-#: issue.inc:1526
+#: issue.inc:1586
 msgid "See statistics about issues."
 msgstr ""
 
-#: issue.inc:1532
+#: issue.inc:1592
 msgid "Receive email updates about issues."
 msgstr ""
 
-#: issue.inc:1538
+#: issue.inc:1598
 msgid "Use the advanced search page for finding issues."
 msgstr ""
 
-#: issue.inc:1548
+#: issue.inc:1608
 msgid "Summary"
 msgstr ""
 
-#: issue.inc:1555
+#: issue.inc:1615
 msgid "Last updated"
 msgstr ""
 
-#: issue.inc:1621
+#: issue.inc:1616;2009 mail.inc:25
+msgid "Assigned to"
+msgstr ""
+
+#: issue.inc:1681
 msgid "#"
 msgstr ""
 
-#: issue.inc:1621
+#: issue.inc:1681
 msgid "Permalink to search query."
 msgstr ""
 
-#: issue.inc:1627
+#: issue.inc:1687
 msgid "No issues found."
 msgstr ""
 
-#: issue.inc:1909
+#: issue.inc:1969
 msgid "Username '@user' not found."
 msgstr ""
 
-#: issue.inc:1917
+#: issue.inc:1977
 msgid "issues for !name"
 msgstr ""
 
-#: issue.inc:1920
+#: issue.inc:1980
 msgid "issues"
 msgstr ""
 
-#: issue.inc:1937
+#: issue.inc:2015
+msgid "Reported by"
+msgstr ""
+
+#: issue.inc:2016
+msgid "Updated by"
+msgstr ""
+
+#: issue.inc:2050
+msgid "Unknown"
+msgstr ""
+
+#: issue.inc:2057 project_issue.module:189;242;251;297
+msgid "Anonymous"
+msgstr ""
+
+#: issue.inc:2075
 msgid "<a href=\"@login\">Login</a> or <a href=\"@register\">register</a> to follow up"
 msgstr ""
 
-#: issue.inc:1940
+#: issue.inc:2078
 msgid "<a href=\"@login\">Login</a> to follow up"
 msgstr ""
 
-#: issue.inc:1954
+#: issue.inc:2092
 msgid "<a href=\"@login\">Login</a> or <a href=\"@register\">register</a> to create an issue"
 msgstr ""
 
-#: issue.inc:1957
+#: issue.inc:2095
 msgid "<a href=\"@login\">Login</a> to create an issue"
 msgstr ""
 
@@ -567,55 +579,39 @@ msgstr ""
 msgid "Email submission to !sn failed - !subj"
 msgstr ""
 
-#: mail.inc:183
-msgid "Unknown"
-msgstr ""
-
-#: mail.inc:190
-msgid "Anonymous"
-msgstr ""
-
-#: mail.inc:250
+#: mail.inc:219
 msgid "!name (!site)"
 msgstr ""
 
-#: mail.inc:290
+#: mail.inc:259
 msgid "Issue status update for !link"
 msgstr ""
 
-#: mail.inc:291
+#: mail.inc:260
 msgid "Post a follow up: !link"
 msgstr ""
 
-#: mail.inc:308
+#: mail.inc:269
 msgid "[!short_name] [!category] !title"
 msgstr ""
 
-#: mail.inc:337
-msgid "Reported by"
-msgstr ""
-
-#: mail.inc:338
-msgid "Updated by"
-msgstr ""
-
-#: mail.inc:410
+#: mail.inc:366
 msgid "Original issue:"
 msgstr ""
 
-#: mail.inc:413
+#: mail.inc:369
 msgid "Previous comments (!count):"
 msgstr ""
 
-#: mail.inc:447
+#: mail.inc:403
 msgid "Attachment"
 msgstr ""
 
-#: mail.inc:525
+#: mail.inc:489
 msgid "Your submitted bugs for !date"
 msgstr ""
 
-#: mail.inc:590
+#: mail.inc:554
 msgid "Release critical bugs for !date"
 msgstr ""
 
@@ -691,7 +687,7 @@ msgstr ""
 msgid "An issue that can be tracked, such as a bug report, feature request, or task."
 msgstr ""
 
-#: project_issue.module:153;203;206
+#: project_issue.module:153;227;230
 msgid "Issues per page"
 msgstr ""
 
@@ -727,215 +723,235 @@ msgstr ""
 msgid "Short project name"
 msgstr ""
 
-#: project_issue.module:203
+#: project_issue.module:200
+msgid "Auto-close user"
+msgstr ""
+
+#: project_issue.module:204
+msgid "Enter the user which will auto-close fixed issues -- leave empty to disable auto-closing or set to %anon to use the anonymous user."
+msgstr ""
+
+#: project_issue.module:227
 msgid "%setting must be a number."
 msgstr ""
 
-#: project_issue.module:206
+#: project_issue.module:230
 msgid "%setting must be greater than 0."
 msgstr ""
 
-#: project_issue.module:289
+#: project_issue.module:251;297
+msgid "%name does not have sufficient permissions to auto-close issues."
+msgstr ""
+
+#: project_issue.module:255
+msgid "%name is not a valid user."
+msgstr ""
+
+#: project_issue.module:292
+msgid "Auto-close user failed to load."
+msgstr ""
+
+#: project_issue.module:374
 msgid "Automatically closed -- issue fixed for two weeks with no activity."
 msgstr ""
 
-#: project_issue.module:308;344;430;759;875;974
+#: project_issue.module:393;429;515;956;1055
 msgid "Issues"
 msgstr ""
 
-#: project_issue.module:362
+#: project_issue.module:447
 msgid "My projects"
 msgstr ""
 
-#: project_issue.module:371
+#: project_issue.module:456
 msgid "My issues"
 msgstr ""
 
-#: project_issue.module:381
+#: project_issue.module:466
 msgid "Specify where attachments to issues should be stored on your site, and what filename extensions should be allowed."
 msgstr ""
 
-#: project_issue.module:392
+#: project_issue.module:477
 msgid "Project issue status options"
 msgstr ""
 
-#: project_issue.module:393
+#: project_issue.module:478
 msgid "Configure what issue status values should be used on your site."
 msgstr ""
 
-#: project_issue.module:442
+#: project_issue.module:527
 msgid "Comments"
 msgstr ""
 
-#: project_issue.module:491
+#: project_issue.module:576
 msgid "Issue tracker"
 msgstr ""
 
-#: project_issue.module:495
+#: project_issue.module:580
 msgid "Enable issue tracker"
 msgstr ""
 
-#: project_issue.module:498
+#: project_issue.module:583
 msgid "Let users submit bug requests, patches, feature requests, support requests, etc."
 msgstr ""
 
-#: project_issue.module:509
+#: project_issue.module:594
 msgid "Submission guidelines"
 msgstr ""
 
-#: project_issue.module:518
+#: project_issue.module:603
 msgid "Issue e-mail options"
 msgstr ""
 
-#: project_issue.module:523
+#: project_issue.module:608
 msgid "Weekly critical issues report"
 msgstr ""
 
-#: project_issue.module:527
+#: project_issue.module:612
 msgid "To get a weekly digest of critical issues specify an e-mail address."
 msgstr ""
 
-#: project_issue.module:531
+#: project_issue.module:616
 msgid "Issues e-mail address"
 msgstr ""
 
-#: project_issue.module:535
-msgid "If you wish to receive a copy of all the issues to a central location specify an address here."
+#: project_issue.module:620
+msgid "If you wish to receive a copy of all the issues to a central location specify an address here. <em>Note: the copy will contain links to file attachments.</em>"
 msgstr ""
 
-#: project_issue.module:541
+#: project_issue.module:626
 msgid "Which issue categories to e-mail. If none is checked all categories will be posted."
 msgstr ""
 
-#: project_issue.module:556
+#: project_issue.module:641
 msgid "States"
 msgstr ""
 
-#: project_issue.module:557
+#: project_issue.module:642
 msgid "Which issue states to e-mail. If none is checked all states will be posted."
 msgstr ""
 
-#: project_issue.module:572
+#: project_issue.module:657
 msgid "Monthly reminder"
 msgstr ""
 
-#: project_issue.module:576
+#: project_issue.module:661
 msgid "Send monthly reminders to users"
 msgstr ""
 
-#: project_issue.module:579
+#: project_issue.module:664
 msgid "Enabling this will send a monthly reminder to users that have open issues registered."
 msgstr ""
 
-#: project_issue.module:586
+#: project_issue.module:671
 msgid "Submit"
 msgstr ""
 
-#: project_issue.module:617
+#: project_issue.module:702
 msgid "Issue settings have been saved."
 msgstr ""
 
-#: project_issue.module:653
+#: project_issue.module:738
 msgid "Invalid issue status %status: you do not have permission to set this status"
 msgstr ""
 
-#: project_issue.module:738
+#: project_issue.module:823
 msgid "Projects by @user"
 msgstr ""
 
-#: project_issue.module:748
+#: project_issue.module:833
 msgid "You need to log in to see your projects."
 msgstr ""
 
-#: project_issue.module:754
+#: project_issue.module:839
 msgid "Last issue update"
 msgstr ""
 
-#: project_issue.module:763
+#: project_issue.module:844
+msgid "Open issues"
+msgstr ""
+
+#: project_issue.module:848
 msgid "Issue links"
 msgstr ""
 
-#: project_issue.module:765
-msgid "Project updated"
-msgstr ""
-
-#: project_issue.module:774
+#: project_issue.module:854
 msgid "You have no projects."
 msgstr ""
 
-#: project_issue.module:774
+#: project_issue.module:854
 msgid "This user has no projects."
 msgstr ""
 
-#: project_issue.module:791
+#: project_issue.module:872
 msgid "View"
 msgstr ""
 
-#: project_issue.module:806
+#: project_issue.module:887
 msgid "Edit"
 msgstr ""
 
-#: project_issue.module:812
+#: project_issue.module:893
 msgid "Add release"
 msgstr ""
 
-#: project_issue.module:824
+#: project_issue.module:905
 msgid "n/a"
 msgstr ""
 
-#: project_issue.module:857
-msgid "Issue tracking is disabled for this project."
+#: project_issue.module:925
+msgid "Issue tracking is disabled."
 msgstr ""
 
-#: project_issue.module:861
+#: project_issue.module:931
 msgid "Enable"
 msgstr ""
 
-#: project_issue.module:870
+#: project_issue.module:951
 msgid "Project links"
 msgstr ""
 
-#: project_issue.module:1029
+#: project_issue.module:1110
 msgid "References to project issues in the form of [#1234] (or [#1234-2] for comments) turn into links automatically, with the title of the issue appended. The status of the issue is shown on hover."
 msgstr ""
 
-#: project_issue.module:1032
+#: project_issue.module:1113
 msgid "Project issue numbers (ex. [#12345]) turn into links automatically."
 msgstr ""
 
-#: project_issue.module:1043;1107;1109;1116;1118;1130
+#: project_issue.module:1124;1188;1190;1197;1199;1211
 msgid "Project Issue to link filter"
 msgstr ""
 
-#: project_issue.module:1045
+#: project_issue.module:1126
 msgid "Converts references to project issues (in the form of [#12345]) into links. Caching should be disabled if node access control modules are used."
 msgstr ""
 
-#: project_issue.module:1108
+#: project_issue.module:1189
 msgid "Some module conflicts were detected."
 msgstr ""
 
-#: project_issue.module:1109
+#: project_issue.module:1190
 msgid "%issuefilter should not be enabled when a node access control is also in use. Users may be able to see cached titles of project issues they would otherwise not have access to. You should disable this filter in !inputformat input format."
 msgstr ""
 
-#: project_issue.module:1117
+#: project_issue.module:1198
 msgid "Some security conflicts were detected."
 msgstr ""
 
-#: project_issue.module:1118
+#: project_issue.module:1199
 msgid "%issuefilter conflicts with project issue access settings. Users who do not have access to all project issues may be able to see titles of project issues. You should disable this filter in !inputformat input format."
 msgstr ""
 
-#: project_issue.module:1131
+#: project_issue.module:1212
 msgid "Some filter conflicts were detected."
 msgstr ""
 
-#: project_issue.module:1132
+#: project_issue.module:1213
 msgid "%issuefilter should come after %lowfilter to prevent loss of layout and highlighting."
 msgstr ""
 
-#: project_issue.module:1132
+#: project_issue.module:1213
 msgid "Please rearrange the filters."
 msgstr ""
 

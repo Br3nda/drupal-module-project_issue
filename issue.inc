@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.294 2008/01/30 22:58:42 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.295 2008/01/31 00:22:17 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -816,23 +816,29 @@ function project_issue_form($node) {
   return $form;
 }
 
-function project_issue_node_form_validate($form_id, $form_values) {
-  if (!$form_values['pid']) {
+/**
+ * Implmentation of hook_validate().
+ *
+ * Ensures that the issue node form has valid values for all required fields.
+ * We use hook_validate() here instead of a #validate handler or even defining
+ * project_issue_node_form_validate() since if we did, node_form_validate()
+ * itself would not be invoked, which would lead to all kinds of problems,
+ * including hook_nodeapi('validate') never being invoked.
+ */
+function project_issue_validate(&$node) {
+  if (empty($node->pid)) {
     form_set_error('pid', t('You have to specify a valid project.'));
   }
-  if ($form_values['pid'] && $project = node_load($form_values['pid'])) {
-    $node->title = $form_values['title'];
+  elseif ($project = node_load($node->pid)) {
     if (module_exists('project_release') &&
         $releases = project_release_get_releases($project, 0)) {
-      empty($form_values['rid']) and form_set_error('rid', t('You have to specify a valid version.'));
+      empty($node->rid) and form_set_error('rid', t('You have to specify a valid version.'));
     }
-    if ($form_values['component'] && !in_array($form_values['component'], $project->components)) {
-      $form_values['component'] = 0;
+    if (isset($node->component) && !in_array($node->component, $project->components)) {
+      $node->component = 0;
     }
-    empty($form_values['component']) && form_set_error('component', t('You have to specify a valid component.'));
-    empty($form_values['category']) && form_set_error('category', t('You have to specify a valid category.'));
-    empty($form_values['title']) && form_set_error('title', t('You have to specify a valid title.'));
-    empty($form_values['body']) && form_set_error('body', t('You have to specify a valid description.'));
+    empty($node->component) && form_set_error('component', t('You have to specify a valid component.'));
+    empty($node->category) && form_set_error('category', t('You have to specify a valid category.'));
   }
 }
 

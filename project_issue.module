@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.4.2.3.2.31 2008/01/30 22:38:13 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.4.2.3.2.32 2008/02/02 19:45:12 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -7,11 +7,13 @@
 
 define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png doc xls pdf ppt pps odt ods odp odg');
 
-$path = drupal_get_path('module', 'project_issue');
-if (file_exists("$path/issue.inc")) {
-  require_once "$path/issue.inc";
-  require_once "$path/comment.inc";
-  require_once "$path/mail.inc";
+if (function_exists('drupal_get_path')) {
+  $path = drupal_get_path('module', 'project_issue');
+  if (file_exists("$path/issue.inc")) {
+    require_once "$path/issue.inc";
+    require_once "$path/comment.inc";
+    require_once "$path/mail.inc";
+  }
 }
 
 function project_issue_help($section) {

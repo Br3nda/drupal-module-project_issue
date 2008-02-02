@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.38.2.9 2008/01/30 22:36:47 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.38.2.10 2008/02/02 19:45:05 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -10,11 +10,13 @@ define('PROJECT_ISSUE_DEFAULT_FILE_EXTENSIONS', 'txt patch jpg jpeg gif png doc 
 /// How many issues should be displayed per page by default.
 define('PROJECT_ISSUES_PER_PAGE', 20);
 
-$path = drupal_get_path('module', 'project_issue');
-if (file_exists("$path/issue.inc")) {
-  require_once "$path/issue.inc";
-  require_once "$path/comment.inc";
-  require_once "$path/mail.inc";
+if (function_exists('drupal_get_path')) {
+  $path = drupal_get_path('module', 'project_issue');
+  if (file_exists("$path/issue.inc")) {
+    require_once "$path/issue.inc";
+    require_once "$path/comment.inc";
+    require_once "$path/mail.inc";
+  }
 }
 
 function project_issue_help($section) {

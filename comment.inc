@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.119 2008/01/30 22:58:42 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.120 2008/02/03 04:47:43 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -169,6 +169,40 @@ function project_issue_comment(&$arg, $op) {
         form_set_error('project_info][pid', t('You have to specify a valid project.'));
       }
       empty($arg['category']) && form_set_error('category', t('You have to specify a valid category.'));
+
+      // Now, make sure the comment changes *something* about the issue.
+      // Unfortunately, hook_comment() is evil, and in the 'validate' case, we
+      // get a form_values array in $arg, whereas in 'view', we get an
+      // object. So, we can't really share the code to initialize this array
+      // of changes, and have to do it again here using the array.
+      if (empty($arg['comment'])) {
+        $comment = drupal_clone((object)$arg);
+        $comment->pid = $arg['project_info']['pid'];
+        $comment->component = $arg['project_info']['component'];
+        // Add a dummy rid if necessary -- prevents incorrect change data.
+        $comment->rid = $arg['project_info']['rid'] ? $arg['project_info']['rid'] : 0;
+        $comment_changes = project_issue_comment_changes($node, $original_node, $comment, project_issue_field_labels('web'));
+        $has_change = FALSE;
+        $files = isset($arg['files']) ? $arg['files'] : array();
+        // For testing purposes, get rid of any files that were loaded
+        // then marked for removal.
+        foreach ($files as $number => $data) {
+          if ($data['remove']) {
+            unset($files[$number]);
+          }
+        }
+        foreach ($comment_changes as $field => $changes) {
+          // Comment changes something if any metadata has been changed,
+          // or if files have been added.
+          if (isset($changes['new']) || !empty($files)) {
+            $has_change = TRUE;
+            break;
+          }
+        }
+        if (!$has_change) {
+          form_set_error('comment', t('You must either add a comment or change something about this issue.'));
+        }
+      }
       break;
   }
 }

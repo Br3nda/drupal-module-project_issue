@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.81 2008/02/04 03:49:07 dww Exp $
+// $Id: project_issue.module,v 1.82 2008/02/04 23:27:12 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -1138,7 +1138,7 @@ function project_issue_filter($op, $delta = 0, $format = -1, $text = '') {
     case 'prepare':
       return $text;
     case 'process':
-      $regex = '(?<!\w)(\[#(\d+)(-(\d+))?\])(?![^<]*<\/a>|([^<]|(<(?!code)))*<\/code>|([^<]|(<(?!pre)))*<\/pre>|\w)';
+      $regex = '(?<!\w)(\[#(\d+)(-(\d+))?\])(?![^<]*<\/a>|([^<]++|(<(?!code)))*<\/code>|([^<]++|(<(?!pre)))*<\/pre>|\w)';
       $offset = 0;
       while(preg_match("/$regex/", $text, $preg_matches, PREG_OFFSET_CAPTURE, $offset)) {
         $offset++;

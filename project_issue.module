@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.80 2008/01/26 06:41:51 dww Exp $
+// $Id: project_issue.module,v 1.81 2008/02/04 03:49:07 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -218,6 +218,15 @@ function project_issue_settings_form() {
     $form['project_issue_reply_to']['#type'] = 'select';
     $form['project_issue_reply_to']['#options'] = $items;
   }
+
+  $form['project_issue_site_help'] = array(
+    '#title' => t('Site-wide help text for new issues'),
+    '#type' => 'textarea',
+    '#default_value' => variable_get('project_issue_site_help', ''),
+    '#cols' => 20,
+    '#rows' => 5,
+    '#description' => t('Optionally enter site-wide help text that will be displayed whenever a user tries to create a new issue. Please note that there is no automatic formatting on this text, but you can use regular HTML tags as necessary (for example %p, %ul, and so on).', array('%p' => '<p>', '%ul' => '<ul>')),
+  );
 
   return system_settings_form($form);
 }

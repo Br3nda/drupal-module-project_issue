@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.295 2008/01/31 00:22:17 dww Exp $
+// $Id: issue.inc,v 1.296 2008/02/04 03:49:07 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -697,10 +697,20 @@ function project_issue_form($node) {
   // Always let the person replying assign it to themselves.
   $assigned[$user->uid] = $user->name;
 
-  if (trim($project->help)) {
-    $form['project_help'] = array(
-      '#prefix' => '<div class="messages status">',
-      '#value' => filter_xss($project->help),
+  // Display the site-wide and/or per-project help text.
+  $site_help = trim(variable_get('project_issue_site_help', ''));
+  if (!empty($site_help)) {
+    $form['project_help']['site'] = array(
+      '#prefix' => '<div class="messages status site">',
+      '#value' => filter_xss($site_help),
+      '#suffix' => '</div>',
+    );
+  }
+  $project_help = trim($project->help);
+  if (!empty($project_help)) {
+    $form['project_help']['project'] = array(
+      '#prefix' => '<div class="messages status project">',
+      '#value' => filter_xss($project_help),
       '#suffix' => '</div>',
     );
   }

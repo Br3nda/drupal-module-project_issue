@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.172.2.65 2008/01/30 22:39:37 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.172.2.66 2008/02/08 22:51:23 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1343,7 +1343,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $search = t
 
   // Load active project
   if (count($query->projects) == 1) {
-    $project = node_load($query->projects[0]);
+    $project = node_load(array('nid' => (int) $query->projects[0], 'type' => 'project_project'));
   }
 
   if ($project) {

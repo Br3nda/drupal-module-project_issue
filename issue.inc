@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.296 2008-02-04 03:49:07 dww Exp $
+// $Id: issue.inc,v 1.297 2008-02-08 22:47:05 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1526,7 +1526,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
 
   // Load active project
   if (count($query->projects) == 1) {
-    $project = node_load($query->projects[0]);
+    $project = node_load(array('nid' => (int) $query->projects[0], 'type' => 'project_project'));
   }
 
   if ($project) {

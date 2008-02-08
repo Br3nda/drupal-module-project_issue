@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.82 2008/02/04 23:27:12 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.83 2008/02/08 17:49:26 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -114,6 +114,14 @@ function project_issue_form_alter($form_id, &$form) {
           // selected yet, so unset the file attachments fieldset entirely.
           unset($form['attachments']);
         }
+      }
+      break;
+
+    case 'comment_confirm_delete':
+      $comment = $form['comment']['#value'];
+      $type = db_result(db_query("SELECT type FROM {node} WHERE nid = %d", $comment->nid));
+      if (!empty($type) && $type == 'project_issue') {
+        $form['description']['#value'] = t('This action cannot be undone.');
       }
       break;
 

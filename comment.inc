@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.121 2008-02-03 16:29:57 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.122 2008-02-10 23:02:36 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -243,12 +243,12 @@ function project_issue_comment_view(&$node, $comment = NULL) {
   static $project_issue_tables;
 
   if (isset($comment)) {
-    return $project_issue_tables[$comment->cid];
+    return isset($project_issue_tables[$comment->cid]) ? $project_issue_tables[$comment->cid] : '';
   }
   if ($node->comment_count) {
     $old = unserialize(db_result(db_query('SELECT original_issue_data FROM {project_issues} WHERE nid = %d', $node->nid)));
     $labels = project_issue_field_labels('web');
-    $result = db_query('SELECT cid, title, pid, rid, component, category, priority, assigned, sid FROM {project_issue_comments} WHERE nid = %d ORDER BY timestamp ASC', $node->nid);
+    $result = db_query('SELECT p.cid, p.title, p.pid, p.rid, p.component, p.category, p.priority, p.assigned, p.sid FROM {project_issue_comments} p INNER JOIN {comments} c ON p.cid = c.cid WHERE p.nid = %d AND c.status = %d ORDER BY p.timestamp ASC', $node->nid, COMMENT_PUBLISHED);
     while ($followup = db_fetch_object($result)) {
       $followup_changes = project_issue_comment_changes($node, $old, $followup, project_issue_field_labels('web'));
       $project_issue_tables[$followup->cid] = _project_issue_comment_table($followup_changes);

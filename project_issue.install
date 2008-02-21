@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.41 2008-02-04 03:49:07 dww Exp $
+// $Id: project_issue.install,v 1.42 2008-02-21 21:56:54 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -65,7 +65,7 @@ function project_issue_install() {
         ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE IF NOT EXISTS {project_issue_state} (
           sid int(10) unsigned NOT NULL auto_increment,
-          name varchar(32) NOT NULL default '',
+          name varchar(64) NOT NULL default '',
           weight tinyint(2) DEFAULT '0' NOT NULL,
           author_has tinyint(2) DEFAULT '0' NOT NULL,
           default_query tinyint(2) DEFAULT '0' NOT NULL,
@@ -138,7 +138,7 @@ function project_issue_install() {
       if (!db_table_exists('project_issue_state')) {
         db_query("CREATE TABLE {project_issue_state} (
             sid SERIAL,
-            name varchar(32) NOT NULL default '',
+            name varchar(64) NOT NULL default '',
             weight smallint DEFAULT '0' NOT NULL,
             author_has smallint DEFAULT '0' NOT NULL,
             default_query smallint DEFAULT '0' NOT NULL,
@@ -691,6 +691,22 @@ function project_issue_update_5204() {
 
   // Enable file attachments for issues.
   variable_set('upload_project_issue', '1');
+
+  return $ret;
+}
+
+/**
+ * Make issue status name field longer.
+ */
+function project_issue_update_5205() {
+  $ret = array();
+
+  if ($GLOBALS['db_type'] == 'mysql') {
+    $ret[] = update_sql("ALTER TABLE {project_issue_state} CHANGE name name varchar(64) NOT NULL default ''");
+  }
+  elseif ($GLOBALS['db_type'] == 'pgsql') {
+    db_change_column($ret, 'project_issue_state', 'name', 'name', 'varchar(64)', array('not null' => TRUE, 'default' => "''"));
+  }
 
   return $ret;
 }

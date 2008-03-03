@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.297 2008-02-08 22:47:05 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.298 2008-03-03 21:26:31 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -682,20 +682,12 @@ function project_issue_form($node) {
 
   // Setup the array of choices for who the issue is assigned to.
   $assigned = array();
-  if (empty($node->assigned)) {
-    $assigned[0] = t('Unassigned');
+  foreach (module_implements('project_issue_assignees') as $module) {
+    $function = "{$module}_project_issue_assignees";
+    $function($assigned, $node);
   }
-  else {
-    // It's currently assigned, so always let people unassign it.
-    $assigned[0] = t('Unassign');
-    if ($user->uid != $node->assigned) {
-      // Assigned to someone else, add the currently assigned user.
-      $account = user_load(array('uid' => $node->assigned));
-      $assigned[$node->assigned] = $account->name;
-    }
-  }
-  // Always let the person replying assign it to themselves.
-  $assigned[$user->uid] = $user->name;
+  natcasesort($assigned);
+  $assigned = array(0 => empty($node->assigned) ? t('Unassigned') : t('Unassign')) + $assigned;
 
   // Display the site-wide and/or per-project help text.
   $site_help = trim(variable_get('project_issue_site_help', ''));
@@ -891,6 +883,33 @@ function project_issue_view($node, $teaser = false, $page = false) {
     project_issue_set_breadcrumb($node, $project);
   }
   return $node;
+}
+
+/**
+ * Implementation of hook_project_issue_assignees().
+ *
+ * This hook is used to modify the list of 'Assigned' users when creating or
+ * commenting on an issue.
+ *
+ * @param $assigned
+ *  An array of key => value pairs in the format of uid => name that represents
+ *  the list of users that the issue may be assigned to. This parameter
+ *  is passed by reference so the hook may make changes, such as adding or
+ *  removing elements.
+ * @param $node
+ *  The node object for the issue.
+ */
+function project_issue_project_issue_assignees(&$assigned, $node) {
+  global $user;
+  if ($user->uid) {
+    if (isset($node->assigned) && $user->uid != $node->assigned) {
+      // Assigned to someone else, add the currently assigned user.
+      $account = user_load(array('uid' => $node->assigned));
+      $assigned[$node->assigned] = $account->name;
+    }
+    // Always let the person replying assign it to themselves.
+    $assigned[$user->uid] = $user->name;
+  }
 }
 
 /**

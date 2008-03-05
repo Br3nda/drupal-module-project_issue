@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.124 2008/03/04 20:14:12 dww Exp $
+// $Id: comment.inc,v 1.125 2008/03/05 16:08:24 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -94,7 +94,7 @@ function project_issue_comment(&$arg, $op) {
       }
 
       if (isset($id)) {
-        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp']);
+        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
         db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['cid']);
         project_issue_update_by_comment($arg, 'insert');
       }

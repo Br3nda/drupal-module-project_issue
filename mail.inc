@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.101 2008-01-23 19:15:53 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.102 2008-03-05 14:35:51 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -127,7 +127,16 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
 function project_mail_urls($url = 0) {
   static $urls = array();
   if ($url) {
-    $urls[] = strpos($url, '://') ? $url : url($url, NULL, NULL, 1);
+    // If $url is an internal link (eg. '/project/project'), such
+    // as might be returned from the url() function with the
+    // $absolute parameter set to FALSE, we must remove
+    // the leading slash before passing this path through the url()
+    // function again, or otherwise we'll get two slashes in a row
+    // and thus a bad URL.
+    if (substr($url, 0, 1) == '/') {
+      $url = substr($url, 1);
+    }
+    $urls[] = strpos($url, '://') ? $url : url($url, NULL, NULL, TRUE);
     return count($urls);
   }
   return $urls;
@@ -137,9 +146,9 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
   static $i = 0;
 
   if ($html) {
+    $body = check_markup($body, $format, FALSE);
     $pattern = '@<a +([^ >]+ )*?href *= *"([^>"]+?)"[^>]*>([^<]+?)</a>@ei';
     $body = preg_replace($pattern, "'\\3 ['. project_mail_urls('\\2') .']'", $body);
-    $body = check_markup($body, $format, FALSE);
     $urls = project_mail_urls();
     if (count($urls)) {
       $body .= "\n";

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.83 2008-02-08 17:49:26 dww Exp $
+// $Id: project_issue.module,v 1.84 2008-03-05 16:08:24 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -1155,9 +1155,8 @@ function project_issue_filter($op, $delta = 0, $format = -1, $text = '') {
         $comment_number = $preg_matches[4][0];
         $node = node_load($nid);
         if (is_object($node) && node_access('view', $node) && $node->type == 'project_issue') {
-          if (!is_null($comment_number)) {
-            // Pull comment id based on the comment number.
-            $comment_id = db_result(db_query("SELECT cid FROM {comments} WHERE nid = %d AND thread = '%s'", $nid, int2vancode($comment_number) .'/'));
+          // Pull comment id based on the comment number if we have one.
+          if (!is_null($comment_number) && ($comment_id = db_result(db_query("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {comments} c ON pic.cid = c.cid WHERE pic.nid = %d AND pic.comment_number = %d AND c.status = %d", $nid, $comment_number, COMMENT_PUBLISHED)))) {
             $link = theme('project_issue_issue_link', $node, $comment_id, $comment_number);
           }
           else {

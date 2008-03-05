@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.45 2008-03-05 15:33:00 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.46 2008-03-05 16:08:24 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -709,6 +709,29 @@ function project_issue_update_5205() {
       break;
     case 'pgsql':
       db_change_column($ret, 'project_issue_state', 'name', 'name', 'varchar(64)', array('not null' => TRUE, 'default' => "''"));
+      break;
+  }
+
+  return $ret;
+}
+
+/**
+ * Add a comment_number column to {project_issue_comments}.
+ */
+function project_issue_update_5206() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {project_issue_comments} ADD comment_number INT(10) NOT NULL DEFAULT '0'");
+      $ret[] = update_sql("ALTER TABLE {project_issue_comments} ADD INDEX (comment_number)");
+      $ret[] = update_sql("UPDATE {project_issue_comments} pic INNER JOIN {comments} c ON pic.cid = c.cid SET pic.comment_number = CONVERT(SUBSTRING(c.subject, 2), UNSIGNED)");
+      break;
+    case 'pgsql':
+      db_add_column($ret, 'project_issue_comments', 'comment_number', 'int', array('not null' => TRUE, 'default' => 0));
+      $ret[] = update_sql('CREATE INDEX {project_issue_comments}_comment_number_idx ON {project_issue_comments} (comment_number)');
+      $ret[] = update_sql("UPDATE ONLY {project_issue_comments} pic SET comment_number = CAST(substring(c.subject from 2) AS int) FROM comments c WHERE pic.cid = c.cid");
       break;
   }
 

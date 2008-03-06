@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.299 2008-03-04 18:43:59 dww Exp $
+// $Id: issue.inc,v 1.300 2008-03-06 05:31:02 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -613,8 +613,18 @@ function project_issue_pick_project_form_submit($form_id, $form_values) {
 
 /**
  * Implementation of hook_form().
+ *
+ * Create the project issue node form.
+ *
+ * @param $node
+ *   The project issue node object.
+ * @param $include_metadata_fields
+ *   If set, metadata fields (eg. status, assigned, title) will
+ *   be included in the form regardless of whether $node->nid is set.
+ *   Otherwise, metadata fields will only be included in the form
+ *   if $node->nid is empty.
  */
-function project_issue_form($node) {
+function project_issue_form($node, $include_metadata_fields = FALSE) {
   global $user;
 
   if (arg(0) == 'node' && arg(1) == 'add') {
@@ -657,41 +667,55 @@ function project_issue_form($node) {
     return;
   }
 
-  // Load Javascript.
-  drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
-  drupal_add_js(array('projectUrl' => url('project/issues/update_project')), 'setting');
+  // If this issue has already been created and is just being
+  // edited, we want to prevent any metadata changes.  However, allow
+  // the $include_metadata_fields parameter to override this check.
+  if ($include_metadata_fields) {
+    $allow_metadata_changes = TRUE;
+  }
+  else {
+    $allow_metadata_changes = empty($node->nid);
+  }
+
+  // Load Javascript (unless the issue is being edited).
+  if ($allow_metadata_changes) {
+    drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
+    drupal_add_js(array('projectUrl' => url('project/issues/update_project')), 'setting');
+  }
 
   // Load the project and initialize some support arrays.
   $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
 
-  if (module_exists('project_release') &&
-      $releases = project_release_get_releases($project, 0)) {
-    $releases = array(t('<none>')) + $releases;
-  }
-  // Remove releases marked as invalid release nodes for user selection.
-  foreach (variable_get('project_issue_invalid_releases', array()) as $rid) {
-    unset($releases[$rid]);
-  }
-  $components = array();
-  if ($project->components) {
-    $components = array(t('<none>'));
-    foreach ($project->components as $component) {
-      $component = check_plain($component);
-      $components[$component] = $component;
+  if ($allow_metadata_changes) {
+    if (module_exists('project_release') &&
+        $releases = project_release_get_releases($project, 0)) {
+      $releases = array(t('<none>')) + $releases;
     }
+    // Remove releases marked as invalid release nodes for user selection.
+    foreach (variable_get('project_issue_invalid_releases', array()) as $rid) {
+      unset($releases[$rid]);
+    }
+    $components = array();
+    if ($project->components) {
+      $components = array(t('<none>'));
+      foreach ($project->components as $component) {
+        $component = check_plain($component);
+        $components[$component] = $component;
+      }
+    }
+    $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
+    $priorities = project_issue_priority();
+    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
+  
+    // Setup the array of choices for who the issue is assigned to.
+    $assigned = array();
+    foreach (module_implements('project_issue_assignees') as $module) {
+      $function = "{$module}_project_issue_assignees";
+      $function($assigned, $node);
+    }
+    natcasesort($assigned);
+    $assigned = array(0 => empty($node->assigned) ? t('Unassigned') : t('Unassign')) + $assigned;
   }
-  $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
-  $priorities = project_issue_priority();
-  $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
-
-  // Setup the array of choices for who the issue is assigned to.
-  $assigned = array();
-  foreach (module_implements('project_issue_assignees') as $module) {
-    $function = "{$module}_project_issue_assignees";
-    $function($assigned, $node);
-  }
-  natcasesort($assigned);
-  $assigned = array(0 => empty($node->assigned) ? t('Unassigned') : t('Unassign')) + $assigned;
 
   // Display the site-wide and/or per-project help text.
   $site_help = trim(variable_get('project_issue_site_help', ''));
@@ -711,79 +735,80 @@ function project_issue_form($node) {
     );
   }
 
-  $form['project_info'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Project information'),
-    '#prefix' => '<div class="inline-options">',
-    '#suffix' => '</div>',
-  );
-  $form['project_info']['pid'] = array(
-    '#type' => 'select',
-    '#title' => t('Project'),
-    '#default_value' => $node->pid,
-    '#options' => $projects,
-    '#required' => TRUE,
-  );
-  if ($releases) {
-    $form['project_info']['rid'] = array(
+  if ($allow_metadata_changes) {
+    $form['project_info'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Project information'),
+      '#prefix' => '<div class="inline-options">',
+      '#suffix' => '</div>',
+    );
+    $form['project_info']['pid'] = array(
       '#type' => 'select',
-      '#title' => t('Version'),
-      '#default_value' => $node->rid,
-      '#options' => $releases,
+      '#title' => t('Project'),
+      '#default_value' => $node->pid,
+      '#options' => $projects,
       '#required' => TRUE,
     );
-  }
-  $form['project_info']['component'] = array(
-    '#type' => 'select',
-    '#title' => t('Component'),
-    '#default_value' => $node->component,
-    '#options' => $components,
-    '#required' => TRUE,
-  );
-
-  $form['issue_info'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Issue information'),
-    '#prefix' => '<div class="inline-options">',
-    '#suffix' => '</div>',
-  );
-  $form['issue_info']['category'] = array(
-    '#type' => 'select',
-    '#title' => t('Category'),
-    '#default_value' => $node->category ? $node->category : arg(4),
-    '#options' => $categories,
-    '#required' => TRUE,
-  );
-  $form['issue_info']['priority'] = array(
-    '#type' => 'select',
-    '#title' => t('Priority'),
-    '#default_value' => $node->priority ? $node->priority : 2,
-    '#options' => $priorities,
-  );
-  $form['issue_info']['assigned'] = array(
-    '#type' => 'select',
-    '#title' => t('Assigned'),
-    '#default_value' => $node->assigned,
-    '#options' => $assigned,
-  );
-  if (count($states) > 1) {
-    $form['issue_info']['sid'] = array(
+    if ($releases) {
+      $form['project_info']['rid'] = array(
+        '#type' => 'select',
+        '#title' => t('Version'),
+        '#default_value' => $node->rid,
+        '#options' => $releases,
+        '#required' => TRUE,
+      );
+    }
+    $form['project_info']['component'] = array(
       '#type' => 'select',
-      '#title' => t('Status'),
-      '#default_value' => $node->sid ? $node->sid : $default_state,
-      '#options' => $states,
+      '#title' => t('Component'),
+      '#default_value' => $node->component,
+      '#options' => $components,
+      '#required' => TRUE,
     );
-  }
-  else {
-    $form['issue_info']['sid'] = array(
-      '#type' => 'hidden',
-      '#value' => $default_state,
+    $form['issue_info'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Issue information'),
+      '#prefix' => '<div class="inline-options">',
+      '#suffix' => '</div>',
     );
-    $form['issue_info']['status'] = array(
-      '#type' => 'item',
-      '#title' => t('Status'),
-      '#value' => project_issue_state($default_state),
+    $form['issue_info']['category'] = array(
+      '#type' => 'select',
+      '#title' => t('Category'),
+      '#default_value' => $node->category ? $node->category : arg(4),
+      '#options' => $categories,
+      '#required' => TRUE,
     );
+    $form['issue_info']['priority'] = array(
+      '#type' => 'select',
+      '#title' => t('Priority'),
+      '#default_value' => $node->priority ? $node->priority : 2,
+      '#options' => $priorities,
+    );
+    $form['issue_info']['assigned'] = array(
+      '#type' => 'select',
+      '#title' => t('Assigned'),
+      '#default_value' => $node->assigned,
+      '#options' => $assigned,
+    );
+    if (count($states) > 1) {
+      $form['issue_info']['sid'] = array(
+        '#type' => 'select',
+        '#title' => t('Status'),
+        '#default_value' => $node->sid ? $node->sid : $default_state,
+        '#options' => $states,
+      );
+    }
+    else {
+      $form['issue_info']['sid'] = array(
+        '#type' => 'hidden',
+        '#value' => $default_state,
+      );
+      $form['issue_info']['status'] = array(
+        '#type' => 'item',
+        '#title' => t('Status'),
+        '#value' => project_issue_state($default_state),
+      );
+    }
   }
 
   $form['issue_details'] = array(
@@ -791,14 +816,18 @@ function project_issue_form($node) {
     '#title' => t('Issue details'),
     '#prefix' => '</div><div class="standard">',
   );
-  $form['issue_details']['title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Title'),
-    '#default_value' => $node->title,
-    '#size' => 60,
-    '#maxlength' => 128,
-    '#required' => TRUE,
-  );
+
+  if ($allow_metadata_changes) {
+    $form['issue_details']['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title'),
+      '#default_value' => $node->title,
+      '#size' => 60,
+      '#maxlength' => 128,
+      '#required' => TRUE,
+    );
+  }
+
   $form['issue_details']['body'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
@@ -832,19 +861,25 @@ function project_issue_form($node) {
  * including hook_nodeapi('validate') never being invoked.
  */
 function project_issue_validate(&$node) {
-  if (empty($node->pid)) {
-    form_set_error('pid', t('You have to specify a valid project.'));
-  }
-  elseif ($project = node_load($node->pid)) {
-    if (module_exists('project_release') &&
-        $releases = project_release_get_releases($project, 0)) {
-      empty($node->rid) and form_set_error('rid', t('You have to specify a valid version.'));
+  // If $node->nid is set, that means that the node was being
+  // edited and not created.  If that's the case, the user was
+  // not presented with any of themetadata fields, so there's no
+  // need to validate them here.
+  if (empty($node->nid)) {
+    if (empty($node->pid)) {
+      form_set_error('pid', t('You have to specify a valid project.'));
     }
-    if (isset($node->component) && !in_array($node->component, $project->components)) {
-      $node->component = 0;
+    elseif ($project = node_load($node->pid)) {
+      if (module_exists('project_release') &&
+          $releases = project_release_get_releases($project, 0)) {
+        empty($node->rid) and form_set_error('rid', t('You have to specify a valid version.'));
+      }
+      if (isset($node->component) && !in_array($node->component, $project->components)) {
+        $node->component = 0;
+      }
+      empty($node->component) && form_set_error('component', t('You have to specify a valid component.'));
+      empty($node->category) && form_set_error('category', t('You have to specify a valid category.'));
     }
-    empty($node->component) && form_set_error('component', t('You have to specify a valid component.'));
-    empty($node->category) && form_set_error('category', t('You have to specify a valid category.'));
   }
 }
 
@@ -1019,11 +1054,6 @@ function project_issue_insert($node) {
   }
 
   db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, serialize($original_issue_data), 0, 0);
-}
-
-function project_issue_update($node) {
-
-  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, $node->nid);
 }
 
 function project_issue_delete($node) {

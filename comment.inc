@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.125 2008/03/05 16:08:24 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.126 2008/03/06 05:31:02 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -38,7 +38,7 @@ function project_issue_comment(&$arg, $op) {
 
       // We need to ask for almost the same metadata as project issue itself
       // so let's reuse the form.
-      $form = drupal_retrieve_form('project_issue_form', $node, NULL);
+      $form = drupal_retrieve_form('project_issue_form', $node, TRUE);
       // We need this otherwise pid collides with comment.
       $form['project_info']['#tree'] = TRUE;
       $form['project_info']['#weight'] = -2;

@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.104 2008-03-07 04:41:56 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.105 2008-03-07 21:30:23 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -346,22 +346,23 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
     $content = $entry->comment;
   }
 
-  $comment_changes = project_issue_comment_changes($node, $previous, $entry, $fields);
+  $comment_changes = project_issue_metadata_changes($node, $previous, $entry, $fields);
 
-  // Mail summary (status values).
-  $summary = '';
-  foreach ($comment_changes as $field => $change) {
-    $text = str_pad($change['label']. ':', 14);
-    if (!empty($change['label']) && isset($change['old']) && isset($change['new']) && $field != 'updator' && $field != 'name') {
-      $summary .= "-$text". project_issue_change_summary($field, $change['old']) ."\n";
-      $summary .= "+$text". project_issue_change_summary($field, $change['new']) ."\n";
-    }
-    elseif (!empty($change['label'])) {
-      $summary .= " $text". project_issue_change_summary($field, $node->$field) ."\n";
-    }
-  }
+  // Since $node->name will always be the original issue author, and since $node->updator
+  // isn't a property of either $previous or #entry, these two properties
+  // will never show up as being different when project_issue_metadata_changes() is called,
+  // and therefore neither of these will ever be elements of the $comment_changes array.
+  // Since we do want them to be printed in issue emails, we just need to add their labels
+  // back into the $comment_changes array here, so that theme_project_issue_mail_summary_field()
+  // will know to print the data for these two fields.
+  $comment_changes['name'] = array(
+    'label' => $fields['name'],
+  );
+  $comment_changes['updator'] = array(
+    'label' => $fields['updator'],
+  );
 
-  $summary .= project_mail_format_attachments($entry, $display_files);
+  $summary = theme('project_issue_mail_summary', $entry, $node, $comment_changes, $display_files);
 
   // Create main body content
   project_mail_output($content, 1, $entry->format);
@@ -393,6 +394,109 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
   }
 
   return $output;
+}
+
+/**
+ * Themes the display of the issue metadata summary
+ * that is shown at the top of an issue emai.
+ *
+ * @param $entry
+ *  The object representing the current entry.  This will be a node object
+ *  if the current entry is the original issue node; otherwise this will be
+ *  a comment object.
+ * @param $node
+ *  The original issue node object.
+ * @param $changes
+ *  A nested array containing the metadata changes between the original
+ *  issue and the first comment, or two consecutive comments.  This array
+ *  is the output of the project_issue_metadata_changes() function.
+ * @param $display_files
+ *   Boolean indicating if file attachments should be displayed.
+ * @return
+ *   A string containing the themed text of the issue metadata table.
+ */
+function theme_project_issue_mail_summary($entry, $node, $changes, $display_files) {
+  // Mail summary (status values).
+  $summary = '';
+  foreach ($changes as $field => $change) {
+    $summary .= theme('project_issue_mail_summary_field', $node, $field, $change);
+  }
+
+  $summary .= project_mail_format_attachments($entry, $display_files);
+  return $summary;
+}
+
+/**
+ * Theme the email output of one project issue metadata field.
+ *
+ * @param $node
+ *   The project issue node object.
+ * @param $field_name
+ *   The name of the field to theme.
+ * @param $change
+ *   A nested array containing changes to project issue metadata
+ *   for the given issue or comment.
+ * @return
+ *  A themed line or lines of text ready for inclusion into the email body.
+ */
+function theme_project_issue_mail_summary_field($node, $field_name, $change) {
+  // We need to run the label name through strip_tags here so that
+  // the spacing isn't messed up if there are HTML tags in $change['label'].
+  $text = str_pad(strip_tags($change['label']). ':', 14);
+  $summary_row = '';
+  if (!empty($change['label']) && isset($change['old']) && isset($change['new']) && $field_name != 'updator' && $field_name != 'name') {
+    if (is_array($change['old']) || is_array($change['new'])) {
+      $removed = array();
+      if (is_array($change['old'])) {
+        foreach ($change['old'] as $item) {
+          $removed[] = '-'. $item;
+        }
+      }
+      elseif (!empty($change['old'])) {
+        $removed[] = '-'. $change['old'];
+      }
+
+      $added = array();
+      if (is_array($change['new'])) {
+        foreach ($change['new'] as $item) {
+          $added[] = '+'. $item;
+        }
+      }
+      elseif (!empty($change['new'])) {
+        $added[] = '+'. $change['new'];
+      }
+
+      $summary_row = " $text". trim(implode(', ', $removed). '  ' .implode(', ', $added)) ."\n";
+    }
+    else {
+      $summary_row .= "-$text". project_issue_change_summary($field_name, $change['old']) ."\n";
+      $summary_row .= "+$text". project_issue_change_summary($field_name, $change['new']) ."\n";
+    }
+  }
+  elseif (!empty($change['label'])) {
+    if (!empty($change['new'])) {
+      // This condition is necessary when building the first email message of an
+      // issue, since in this case $change['old'] should not exist.
+      if (is_array($change['new'])) {
+        $summary_row .= " $text". implode(', ', $change['new']) ."\n";
+      }
+      else {
+        $summary_row .= " $text". project_issue_change_summary($field_name, $change['new']) ."\n";
+      }
+    }
+    else {
+      // This condition is where fields that are stored in the $node object and
+      // which haven't changed but should be printed anyway get processed.
+      // For example, the project, category, etc. are printed in each email
+      // whether or not they have changed.
+      if (isset($node->$field_name)) {
+        $summary_row .= " $text". project_issue_change_summary($field_name, $node->$field_name) ."\n";
+      }
+    }
+  }
+  // HTML tags in the email will make it hard to read, so pass
+  // this output through strip_tags().
+  return strip_tags($summary_row);
 }
 
 /**

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.47 2008-03-07 04:25:15 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.48 2008-03-07 22:01:40 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -753,7 +753,7 @@ function project_issue_update_5207() {
   );
 
   foreach ($tables as $table => $columns) {
-  	foreach ($columns as $column) {
+    foreach ($columns as $column) {
       switch ($GLOBALS['db_type']) {
         case 'mysql':
         case 'mysqli':

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.46 2008/03/05 16:08:24 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.47 2008/03/07 04:25:15 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -30,9 +30,6 @@ function project_issue_install() {
           rid int(10) unsigned NOT NULL default '0',
           assigned int(10) unsigned NOT NULL default '0',
           sid int(10) unsigned NOT NULL default '0',
-          file_path varchar(255) NOT NULL default '',
-          file_mime varchar(255) NOT NULL default '',
-          file_size int NOT NULL default 0,
           original_issue_data text NOT NULL default '',
           last_comment_id int NOT NULL default 0,
           db_lock tinyint NOT NULL default 0,
@@ -53,9 +50,10 @@ function project_issue_install() {
           pid int(10) unsigned NOT NULL default '0',
           title varchar(255) NOT NULL,
           timestamp int(10) unsigned NOT NULL,
-          original_issue_data text NOT NULL default '',
+          comment_number int(10) NOT NULL default '0',
           PRIMARY KEY(cid),
-          INDEX nid_timestamp (nid, timestamp)
+          INDEX nid_timestamp (nid, timestamp),
+          INDEX comment_number (comment_number)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */");
       db_query("CREATE TABLE IF NOT EXISTS {project_subscriptions} (
           nid int(10) unsigned NOT NULL default '0',
@@ -98,9 +96,6 @@ function project_issue_install() {
             rid int NOT NULL default '0',
             assigned int NOT NULL default '0',
             sid int NOT NULL default '0',
-            file_path varchar(255) NOT NULL default '',
-            file_mime varchar(255) default '' NOT NULL,
-            file_size int default 0 NOT NULL,
             original_issue_data text NOT NULL default '',
             last_comment_id int NOT NULL default 0,
             db_lock smallint NOT NULL default 0,
@@ -123,9 +118,11 @@ function project_issue_install() {
           pid int NOT NULL default '0',
           title varchar(255) NOT NULL,
           timestamp int NOT NULL,
+          comment_number int NOT NULL default '0',
           PRIMARY KEY(cid)
         )");
         db_query('CREATE INDEX {project_issue_comments}_nid_timestamp_idx ON {project_issue_comments} (nid, timestamp)');
+        db_query('CREATE INDEX {project_issue_comments}_comment_number_idx ON {project_issue_comments} (comment_number)');
       }
       if (!db_table_exists('project_subscriptions')) {
         db_query("CREATE TABLE {project_subscriptions} (
@@ -733,6 +730,44 @@ function project_issue_update_5206() {
       $ret[] = update_sql('CREATE INDEX {project_issue_comments}_comment_number_idx ON {project_issue_comments} (comment_number)');
       $ret[] = update_sql("UPDATE ONLY {project_issue_comments} pic SET comment_number = CAST(substring(c.subject from 2) AS int) FROM comments c WHERE pic.cid = c.cid");
       break;
+  }
+
+  return $ret;
+}
+
+/**
+ * Remove erroneous columns from {project_issues} and {project_issue_comments}.
+ */
+function project_issue_update_5207() {
+  $ret = array();
+
+  $tables = array(
+    'project_issues' => array(
+      'file_path',
+      'file_mime',
+      'file_size',
+    ),
+    'project_issue_comments' => array(
+      'original_issue_data',
+    ),
+  );
+
+  foreach ($tables as $table => $columns) {
+  	foreach ($columns as $column) {
+      switch ($GLOBALS['db_type']) {
+        case 'mysql':
+        case 'mysqli':
+          if (db_fetch_object(db_query("SHOW COLUMNS FROM {". $table ."} LIKE '$column'"))) {
+            $ret[] = update_sql("ALTER TABLE {". $table ."} DROP COLUMN $column");
+          }
+          break;
+        case 'pgsql':
+          if (db_result(db_query("SELECT COUNT(pg_attribute.attname) FROM pg_class, pg_attribute WHERE pg_attribute.attrelid = pg_class.oid AND pg_class.relname = '{". $table ."}' AND attname = '$column'"))) {
+            $ret[] = update_sql("ALTER TABLE {". $table ."} DROP COLUMN $column");
+          }
+          break;
+      }
+    }
   }
 
   return $ret;

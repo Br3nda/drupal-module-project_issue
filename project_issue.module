@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.85 2008-03-07 01:49:07 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.86 2008-03-07 04:25:15 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -1226,4 +1226,107 @@ function project_issue_requirements($phase) {
 
   }
   return $requirements;
+}
+
+/**
+ * Calculate the differences in project_issue comment metadata
+ * between the original issue and a comment or between two
+ * comments.
+ *
+ * @param $node
+ *  The issue node.
+ * @param $old_data
+ *  Object containing old metadata.
+ * @param $new_data
+ *  Object containing new metadata.
+ * @param $field_labels
+ *  An associative array of field_name=>display_name pairs.
+ *  In most cases, this will be the array returned by project_issue_change_summary().
+ *
+ * @return
+ *  An associative array containing information about changes between
+ *  the two objects.
+ *  For example:
+ *  array(
+ *    'component' => array(
+ *      'label' => t('Component'),
+ *      'old' => 'Code',
+ *      'new' => 'User interface',
+ *    ),
+ *    'sid' => array(
+ *      'label' => t('Status'),
+ *      'old' => 8,
+ *      'new' => 13,
+ *    ),
+ *  )
+ */
+function project_issue_metadata_diff($node, $old_data, $new_data, $field_labels = array()) {
+  $changes = array();
+  foreach ($field_labels as $property => $name) {
+    if ($property == 'rid' && empty($old_data->rid) && empty($new_data->rid)) {
+      // Special case for version -- if both are empty, leave it out entirely,
+      // since maybe this project doesn't have (and/or disabled) releases.
+      continue;
+    }
+    if (isset($old_data->$property) || isset($new_data->$property)) {
+      $changes[$property] = array('label' => $name);
+    }
+    if (isset($old_data->$property) && isset($new_data->$property)) {
+      if ($old_data->$property != $new_data->$property) {
+        $changes[$property]['old'] = $old_data->$property;
+        $changes[$property]['new'] = $new_data->$property;
+      }
+    }
+    elseif (isset($old_data->$property)) {
+      $changes[$property]['old'] = $old_data->$property;
+    }
+    else {
+      $changes[$property]['new'] = $new_data->$property;
+    }
+  }
+
+  // Allow other modules to implement hook_project_issue_metadata() so that they
+  // can find changes in additional metadata.  In most cases other modules will
+  // be responsible for storing this metadata in their own tables.  Developers
+  // of modules that implement this hook should keep in mind the following:
+  // 1.  Implementations of hook_project_issue_metadata() must take the
+  //     $changes array by reference.
+  // 2.  Differences in properties will only be processed later on for
+  //     elements of the array which have the 'label', 'old', and 'new' properties
+  //     defined.
+  // In other words, for each line in the differences table (or field in the email)
+  // that is displayed, your hook should add something like the following as a
+  // new element of the $changes array:
+  //    'taxonomy_vid_10' => array(
+  //       'label' => 'Vocabulary 10',
+  //       'old' => 'MySQL, pgSQL, javascript',
+  //       'new' => 'pgSQL, newbie',
+  //     ),
+  //
+  // There are two methods you can use to indicate multiple changes of a field.
+  // The first is that for 'old' and 'new' you pass strings separated by some
+  // character, customarily a comma.  This method is used in
+  // the example above.  When using this method, the default display of the changes
+  // will be to show all old values followed by all new values.  In the example
+  // above, this would be displayed like:
+  // Vocabulary 10:  MySQL, pgSQL, javascript >> pgSQL, newbie
+  //
+  // The other method you can use when constructing 'old' and 'new' is to make
+  // both of these arrays, with each element of the array one change.  If you
+  // use this method, all elements in the 'old' array are typically interpreted
+  // as being removed, and all elements in the 'new' array are typically interpreted
+  // as being added.  An example of this type of structure is as follows:
+  //    'taxonomy_vid_10' => array(
+  //       'label' => 'Vocabulary 10',
+  //       'old' => array('MySQL', 'javascript'),
+  //       'new' => array('newbie'),
+  //     ),
+  // In this situation, the default display of these changes in a project issue
+  // metadata table would be as follows:
+  // Vocabulary 10:  -MySQL, -javascript    +newbie
+  foreach (module_implements('project_issue_metadata') as $module) {
+    $function = $module .'_project_issue_metadata';
+    $function($node, $changes, $old_data, $new_data);
+  }
+  return $changes;
 }

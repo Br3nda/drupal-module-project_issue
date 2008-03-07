@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.301 2008-03-06 21:22:36 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.302 2008-03-07 04:25:14 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -706,7 +706,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
     $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
-  
+
     // Setup the array of choices for who the issue is assigned to.
     $assigned = array();
     foreach (module_implements('project_issue_assignees') as $module) {
@@ -914,6 +914,34 @@ function project_issue_view($node, $teaser = false, $page = false) {
     $rows[] = array(t('Priority:'), project_issue_priority($node->priority));
     $rows[] = array(t('Assigned:'), $assigned);
     $rows[] = array(t('Status:'), project_issue_state($node->sid));
+
+    // Allow modules to alter the metadata displayed in the table on the actual
+    // issue node itself (at the very top of the issue).
+    // Modules should accept the $rows parameter by reference and add additional
+    // elements to the $rows array for additional lines in the table.
+    //
+    // NOTE:  Modules implementing this hook are responsible for making sure
+    // that all content printed in additional rows created by said module have
+    // properly escaped and/or filtered text.  In most cases this means passing
+    // any output through either the check_plain() or filter_xss() function.
+    //
+    // This hook is only necessary for display of metadata on the project issue
+    // node.  For display of initial metadata values in the original e-mail
+    // sent after an issue is created, your module should implement
+    // hook_project_issue_metadata_diff() and watch for the case where
+    // $old_data is empty, which means that $new_data represents
+    // the original values of the metadata fields for the issue.
+    //
+    // Modules implementing this hook should take the following parameters:
+    // @param $node
+    //  The project_issue node object.
+    // @param $rows
+    //  An array of rows in the project issue metadata table that will be displayed.
+    //  This parameter should be passed by reference.
+    foreach (module_implements('project_issue_issue_table_alter') as $module) {
+      $function = $module .'_project_issue_issue_table_alter';
+      $function($node, $rows);
+    }
 
     $node->content['project_issue_summary'] = array(
       '#value' => theme('project_issue_summary', $rows, project_issue_internal_links($node)),
@@ -2123,7 +2151,7 @@ function project_issue_change_summary($field, $value) {
       return t('<none>');
     case 'assigned':
       $user = user_load(array('uid' => $value));
-      return $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
+      return (int) $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
     case 'sid':
       return $value ? project_issue_state($value) : t('<none>');
     default:

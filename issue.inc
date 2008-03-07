@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.303 2008/03/07 04:41:56 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.304 2008/03/07 21:30:23 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -706,7 +706,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
     $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
-  
+
     // Setup the array of choices for who the issue is assigned to.
     $assigned = array();
     foreach (module_implements('project_issue_assignees') as $module) {
@@ -904,19 +904,74 @@ function project_issue_view($node, $teaser = false, $page = false) {
     }
     $assigned = ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned'));
 
-    $rows = array();
-    $rows[] = array('Project:', check_plain($project->title));
+    $current_data = array();
+    $current_data['pid'] = array(
+      'label' => t('Project'),
+      'current' => $project->title,
+    );
     if ($release->version) {
-      $rows[] = array('Version:', check_plain($release->version));
+      $current_data['rid'] = array(
+        'label' => t('Version'),
+        'current' => $release->version,
+      );
     }
-    $rows[] = array(t('Component:'),  check_plain($node->component));
-    $rows[] = array(t('Category:'), project_issue_category($node->category, 0));
-    $rows[] = array(t('Priority:'), project_issue_priority($node->priority));
-    $rows[] = array(t('Assigned:'), $assigned);
-    $rows[] = array(t('Status:'), project_issue_state($node->sid));
+    $current_data['component'] = array(
+      'label' => t('Component'),
+      'current' => $node->component,
+    );
+    $current_data['category'] = array(
+      'label' => t('Category'),
+      'current' => project_issue_category($node->category, 0),
+    );
+    $current_data['priority'] = array(
+      'label' => t('Priority'),
+      'current' => project_issue_priority($node->priority),
+    );
+    $current_data['assigned'] = array(
+      'label' => t('Assigned'),
+      'current' => $assigned,
+    );
+    $current_data['sid'] = array(
+      'label' => t('Status'),
+      'current' => project_issue_state($node->sid),
+    );
+
+    // Allow modules to alter the metadata displayed in the table on the actual
+    // issue node itself (at the very top of the issue). Modules should accept
+    // the $current_data parameter by reference and add additional
+    // elements for additional lines in the table.
+    //
+    // NOTE:  Modules implementing this hook are responsible for making sure
+    // that all content printed in additional rows created by said module have
+    // properly escaped and/or filtered text.  In most cases this means passing
+    // any output through either the check_plain() or filter_xss() function.
+    //
+    // This hook is only necessary for display of metadata on the project issue
+    // node.  For display of initial metadata values in the original e-mail
+    // sent after an issue is created, your module should implement
+    // hook_project_issue_metadata() and watch for the case where
+    // $old_data is empty, which means that $new_data represents
+    // the original values of the metadata fields for the issue.
+    //
+    // Modules implementing this hook should take the following parameters:
+    // @param $view
+    //  A string representing the metadata view being generated.  For the issue
+    //  node main table, this will be 'current'.
+    // @param $node
+    //  The project_issue node object.
+    // @param $current_data
+    //  An associative array of rows in the project issue metadata table that
+    //  will be displayed, with the following key/value pairs:
+    //    'label' => The metadata label.
+    //    'current' => The current metadata value.
+    //  This parameter should be accepted by reference.
+    foreach (module_implements('project_issue_metadata') as $module) {
+      $function = $module .'_project_issue_metadata';
+      $function('current', $node, $current_data);
+    }
 
     $node->content['project_issue_summary'] = array(
-      '#value' => theme('project_issue_summary', $rows, project_issue_internal_links($node)),
+      '#value' => theme('project_issue_summary', $current_data, project_issue_internal_links($node)),
       '#weight' => -5,
     );
 
@@ -960,16 +1015,22 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
 /**
  * Themes the metadata table and internal page links for issue nodes.
  *
- * @param $summary_table_rows
- *   An array of row data for the metadata table.
+ * @param $current_data
+ *   An array of current issue data for the metadata table.
  * @param $summary_links
  *   An array of internal page links.
  * @return
  *   An HTML string of the summary section.
  */
-function theme_project_issue_summary($summary_table_rows, $summary_links) {
+function theme_project_issue_summary($current_data, $summary_links) {
+  $allowed_tags = array('a', 'em', 'strong');
+  $rows = array();
+  foreach ($current_data as $name => $values) {
+    $rows[] = array(filter_xss($values['label'], $allowed_tags) .':', filter_xss($values['current'], $allowed_tags));
+  }
+
   $output = '<div id="project-summary-container" class="clear-block">';
-  $output .= '<div id="project-issue-summary-table" class="summary">'. theme('table', array(), $summary_table_rows) .'</div>';
+  $output .= '<div id="project-issue-summary-table" class="summary">'. theme('table', array(), $rows) .'</div>';
   $output .= '<div id="project-issue-summary-links">'. theme('item_list', $summary_links, t('Jump to:'), 'ul', array('class' => 'internal-links')) .'</div>';
   $output .= '</div>';
 
@@ -2123,7 +2184,7 @@ function project_issue_change_summary($field, $value) {
       return t('<none>');
     case 'assigned':
       $user = user_load(array('uid' => $value));
-      return $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
+      return (int) $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
     case 'sid':
       return $value ? project_issue_state($value) : t('<none>');
     default:

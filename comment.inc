@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.127 2008/03/07 04:25:14 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.128 2008/03/07 04:41:56 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -128,8 +128,8 @@ function project_issue_comment(&$arg, $op) {
         $test->component = $arg->project_info['component'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
         $test->rid = $arg->project_info['rid'] ? $arg->project_info['rid'] : 0;
-        $comment_changes = project_issue_metadata_diff($node, $original_node, $test, project_issue_field_labels('web'));
-        $project_issue_table = theme('project_issue_comment_table', $comment_changes);
+        $comment_changes = project_issue_comment_changes($node, $original_node, $test, project_issue_field_labels('web'));
+        $project_issue_table = _project_issue_comment_table($comment_changes);
       }
       if ($project_issue_table) {
         $arg->comment = '<div class="project-issue"><div class="summary">'. $project_issue_table .'</div></div>' . $arg->comment;
@@ -201,7 +201,7 @@ function project_issue_comment(&$arg, $op) {
         $comment->component = $arg['project_info']['component'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
         $comment->rid = $arg['project_info']['rid'] ? $arg['project_info']['rid'] : 0;
-        $comment_changes = project_issue_metadata_diff($node, $original_node, $comment, project_issue_field_labels('web'));
+        $comment_changes = project_issue_comment_changes($node, $original_node, $comment, project_issue_field_labels('web'));
         $has_change = FALSE;
         foreach ($comment_changes as $field => $changes) {
           if (isset($changes['new'])) {
@@ -218,85 +218,24 @@ function project_issue_comment(&$arg, $op) {
 }
 
 /**
- * Theme a project issue metadata table.
+ * Create a project issue metadata table.
  *
  * @param $comment_changes
  *  Array containing metadata differences between comments
- *  as returned by project_issue_metadata_diff().
- * @return
- *  The themed metadata table.
+ *  as returned by project_issue_comment_changes().
  */
-function theme_project_issue_comment_table($comment_changes) {
+function _project_issue_comment_table($comment_changes) {
   $rows = array();
   foreach ($comment_changes as $field => $change) {
     if (!empty($change['label']) && isset($change['old']) && isset($change['new'])) {
-      $rows[] = theme('project_issue_comment_table_row', $field, $change);
+      $rows[] = array(
+        check_plain($change['label']) .':',
+        check_plain(project_issue_change_summary($field, $change['old'])),
+        '&raquo; '. check_plain(project_issue_change_summary($field, $change['new'])),
+      );
     }
   }
   return theme('table', array(), $rows);
-}
-
-/**
- * Theme a single row of the project issue metadata changes table.
- *
- * @param $field
- *   The name of the field to theme.
- * @param $change
- *   A nested array containing changes to project issue metadata
- *   for the given issue or comment.
- * @return
- *  An array representing one row of the table.
- *
- * NOTE:  If you override this theme function, you *must* make sure
- * that you sanitize all output from this function that is displayed
- * to the user.  No further escaping/filtering of the data in this
- * table will take place after this function.  In most cases
- * this means that you need to run the $change['label'], $change['old'],
- * and $change['new'] values through either the check_plain() or
- * filter_xss() function to prevent XSS and other types
- * of problems due to any malicious input in these
- * field values.
- */
-function theme_project_issue_comment_table_row($field, $change) {
-  // Allow anchor, emphasis, and strong tags in metadata tables.
-  $allowed_tags = array('a', 'em', 'strong');
-
-  if (is_array($change['old']) || is_array($change['new'])) {
-    $removed = array();
-    if (is_array($change['old'])){
-      foreach ($change['old'] as $item) {
-        $removed[] = '-'. $item .' ';
-      }
-    }
-    elseif (!empty($change['old'])) {
-      $removed[] = '-'. $change['old'] .' ';
-    }
-
-    $added = array();
-    if (is_array($change['new'])) {
-      foreach ($change['new'] as $item) {
-        $added[] = '+'. $item .' ';
-      }
-    }
-    elseif (!empty($change['new'])) {
-      $added[] = '+'. $change['new'] .' ';
-    }
-
-    $row = array(
-      filter_xss(($change['label']), $allowed_tags) .':',
-      filter_xss(check_plain(implode(', ', $removed)), $allowed_tags),
-      filter_xss((implode(', ', $added)), $allowed_tags),
-    );
-    return $row;
-  }
-  else {
-    $row = array(
-      filter_xss(($change['label']), $allowed_tags) .':',
-      filter_xss((project_issue_change_summary($field, $change['old'])), $allowed_tags),
-      '&raquo; '. filter_xss((project_issue_change_summary($field, $change['new'])), $allowed_tags),
-    );
-    return $row;
-  }
 }
 
 /**
@@ -321,11 +260,92 @@ function project_issue_comment_view(&$node, $comment = NULL) {
     $labels = project_issue_field_labels('web');
     $result = db_query('SELECT p.cid, p.title, p.pid, p.rid, p.component, p.category, p.priority, p.assigned, p.sid FROM {project_issue_comments} p INNER JOIN {comments} c ON p.cid = c.cid WHERE p.nid = %d AND c.status = %d ORDER BY p.timestamp ASC', $node->nid, COMMENT_PUBLISHED);
     while ($followup = db_fetch_object($result)) {
-      $followup_changes = project_issue_metadata_diff($node, $old, $followup, project_issue_field_labels('web'));
-      $project_issue_tables[$followup->cid] = theme('project_issue_comment_table', $followup_changes);
+      $followup_changes = project_issue_comment_changes($node, $old, $followup, project_issue_field_labels('web'));
+      $project_issue_tables[$followup->cid] = _project_issue_comment_table($followup_changes);
       $old = $followup;
     }
   }
+}
+
+/**
+ * Calculate the differences in project_issue comment metadata
+ * between the original issue and a comment or between two
+ * comments.
+ *
+ * @param $node
+ *  The issue node.
+ * @param $old_data
+ *  Object containing old metadata.
+ * @param $new_data
+ *  Object containing new metadata.
+ * @param $field_labels
+ *  An associative array of field_name=>display_name pairs.
+ *  In most cases, this will be the array returned by project_issue_change_summary().
+ *
+ * @return
+ *  An associative array containing information about changes between
+ *  the two objects.
+ *  For example:
+ *  array(
+ *    'component' => array(
+ *      'label' => t('Component'),
+ *      'old' => 'Code',
+ *      'new' => 'User interface',
+ *    ),
+ *    'sid' => array(
+ *      'label' => t('Status'),
+ *      'old' => 8,
+ *      'new' => 13,
+ *    ),
+ *  )
+ */
+function project_issue_comment_changes($node, $old_data, $new_data, $field_labels = array()) {
+  $changes = array();
+  foreach ($field_labels as $property => $name) {
+    if ($property == 'rid' && empty($old_data->rid) && empty($new_data->rid)) {
+      // Special case for version -- if both are empty, leave it out entirely,
+      // since maybe this project doesn't have (and/or disabled) releases.
+      continue;
+    }
+    if (isset($old_data->$property) || isset($new_data->$property)) {
+      $changes[$property] = array('label' => $name);
+    }
+    if (isset($old_data->$property) && isset($new_data->$property)) {
+      if ($old_data->$property != $new_data->$property) {
+        $changes[$property]['old'] = $old_data->$property;
+        $changes[$property]['new'] = $new_data->$property;
+      }
+    }
+    elseif (isset($old_data->$property)) {
+      $changes[$property]['old'] = $old_data->$property;
+    }
+    else {
+      $changes[$property]['new'] = $new_data->$property;
+    }
+  }
+
+  // Allow other modules to implement hook_followup_metadata_changes() so that they
+  // can find changes in additional metadata.  In most cases other modules will
+  // be responsible for storing this metadata in their own tables.  Developers
+  // of modules that implement this hook should keep in mind the following:
+  // 1.  Implementations of hook_followup_metadata_changes() must take the
+  //     $project_issue_comment_changes array by reference.
+  // 2.  Differences in properties will only be processed later on for
+  //     elements of the array which have the 'label', 'old', and 'new' properties
+  //     defined.
+  // In other words, for each line in the differences table (or field in the email)
+  // that is displayed, your hook should add something like the following as a
+  // new element of the $changes:
+  //    'taxonomy_vid_10' => array(
+  //       'label' => 'Vocabulary 10',
+  //       'old' => 'MySQL,PGSQL',
+  //       'new' => 'PGSQL',
+  //     ),
+  foreach (module_implements('followup_metadata_changes') as $module) {
+    $function = $module .'_followup_metadata_changes';
+    $function($node, $changes, $old_data, $new_data);
+  }
+  return $changes;
 }
 
 /**

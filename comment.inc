@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.130 2008/03/08 17:23:15 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.129.2.1 2008/03/08 17:27:27 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88 2008/03/07 21:30:23 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.89 2008/03/09 04:53:13 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -122,6 +122,17 @@ function project_issue_form_alter($form_id, &$form) {
       $type = db_result(db_query("SELECT type FROM {node} WHERE nid = %d", $comment->nid));
       if (!empty($type) && $type == 'project_issue') {
         $form['description']['#value'] = t('This action cannot be undone.');
+      }
+      break;
+
+    case 'update_script_selection_form':
+      $schema_num = db_result(db_query("SELECT schema_version FROM {system} WHERE name = 'project_issue'"));
+      if ($schema_num >= 5200 && $schema_num < 5204) {
+        // The only time the schema number will be inside this range is if
+        // 5200 was aborted due to missing module dependencies. Since core is
+        // evil and always increments the schema number, yet we want to force
+        // them to start over at 5200, we can just set the default we want.
+        $form['start']['project_issue']['#default_value'] = 5200;
       }
       break;
 

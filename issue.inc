@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.1 2008/03/15 20:19:39 dww Exp $
+// $Id: issue.inc,v 1.304.2.2 2008/03/24 01:28:27 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1019,7 +1019,9 @@ function theme_project_issue_summary($current_data, $summary_links) {
 
   $output = '<div id="project-summary-container" class="clear-block">';
   $output .= '<div id="project-issue-summary-table" class="summary">'. theme('table', array(), $rows) .'</div>';
-  $output .= '<div id="project-issue-summary-links">'. theme('item_list', $summary_links, t('Jump to:'), 'ul', array('class' => 'internal-links')) .'</div>';
+  if (!empty($summary_links)) {
+    $output .= '<div id="project-issue-summary-links">'. theme('item_list', $summary_links, t('Jump to:'), 'ul', array('class' => 'internal-links')) .'</div>';
+  }
   $output .= '</div>';
 
   return $output;
@@ -1036,27 +1038,28 @@ function theme_project_issue_summary($current_data, $summary_links) {
 function project_issue_internal_links($node) {
   $links = array();
 
-  // Link to the first unread, or most recent comment.
-  if (comment_num_new($node->nid)) {
-    // There are unread replies; link to first unread comment.
-    $links[] = l(t('First unread comment'), "node/$node->nid", array(), NULL, 'new');
-  }
-  else {
-    // No unread replies; link to most recent comment.
-    $comment_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.cid DESC", $node->nid, 0, 1));
-    if ($comment_cid) {
-      $links[] = l(t('Most recent comment'), "node/$node->nid", array(), NULL, "comment-$comment_cid");
+  if ($node->comment != COMMENT_NODE_DISABLED) {
+    // Link to the first unread, or most recent comment.
+    if (comment_num_new($node->nid)) {
+      // There are unread replies; link to first unread comment.
+      $links[] = l(t('First unread comment'), "node/$node->nid", array(), NULL, 'new');
+    }
+    else {
+      // No unread replies; link to most recent comment.
+      $comment_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.cid DESC", $node->nid, 0, 1));
+      if ($comment_cid) {
+        $links[] = l(t('Most recent comment'), "node/$node->nid", array(), NULL, "comment-$comment_cid");
+      }
+    }
+    // Link for most recent patch.
+    $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
+    if ($file_cid) {
+      $links[] = l(t('Most recent attachment'), "node/$node->nid", array(), NULL, "comment-$file_cid");
     }
   }
 
-  // Link for most recent patch.
-  $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
-  if ($file_cid) {
-    $links[] = l(t('Most recent attachment'), "node/$node->nid", array(), NULL, "comment-$file_cid");
-  }
-
   // Link straight to comment form.
-  if (user_access('post comments') || user_access('post comments without approval')) {
+  if ($node->comment == COMMENT_NODE_READ_WRITE && (user_access('post comments') || user_access('post comments without approval'))) {
     // TODO: This conditional needs to be ripped out in D6.
     $comment_form_location = isset($node->comment_form_location) ? $node->comment_form_location : variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
 

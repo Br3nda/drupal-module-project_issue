@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.306 2008-03-24 01:26:26 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.307 2008-03-28 18:42:28 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -626,6 +626,13 @@ function project_issue_pick_project_form_submit($form_id, $form_values) {
  */
 function project_issue_form($node, $include_metadata_fields = FALSE) {
   global $user;
+
+  // If this function is being called as a result of CCK building the form
+  // in content_admin_field_overview_form(), just return an empty array, since
+  // CCK only grabs the top level fields and this form has none of those anyway.
+  if (!empty($node->cck_dummy_node_form)) {
+    return array();
+  }
 
   if (arg(0) == 'node' && arg(1) == 'add') {
     $breadcrumb = array();

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.3 2008/03/28 18:42:33 dww Exp $
+// $Id: issue.inc,v 1.304.2.4 2008/04/13 20:02:45 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -2020,7 +2020,9 @@ function project_issue_query_sql($query) {
         break;
       case 'text':
         $comments = 1;
-        $sql[] = '('. project_issue_query_sql_field('n.title', $value, 1) .' OR '. project_issue_query_sql_field('r.body', $value, 1) .' OR '. project_issue_query_sql_field('c.comment', $value, 1) .')';
+        foreach (preg_split('/\s+/', $value[0]) as $word) {
+          $sql[] = '('. project_issue_query_sql_field('n.title', $word, 1) .' OR '. project_issue_query_sql_field('r.body', $word, 1) .' OR '. project_issue_query_sql_field('c.comment', $word, 1) .')';
+        }
         break;
       case 'attachment':
         $comments = 1;

@@ -1,4 +1,4 @@
-# $Id: project_issue_generate.pot,v 1.2 2008/01/31 00:23:49 dww Exp $
+# $Id: project_issue_generate.pot,v 1.2.2.2 2008/04/13 19:38:22 thehunmonkgroup Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>

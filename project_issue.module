@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.89 2008/03/09 04:53:13 dww Exp $
+// $Id: project_issue.module,v 1.90 2008/04/13 20:15:38 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -1019,7 +1019,7 @@ function project_issue_project_insert($node) {
   // they'd use the "issues" subtab of the project edit tab (since none
   // of these fields are present on the initial project add form).
   $node->issues = 1;
-  $node->components = serialize(array('Code', 'Documentation', 'Miscellaneous', 'User interface'));
+  $node->components = serialize(array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface')));
   db_query("INSERT INTO {project_issue_projects} (nid, issues, components) VALUES (%d, %d, '%s')", $node->nid, $node->issues, $node->components);
 }
 

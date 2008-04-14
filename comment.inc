@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.130 2008-03-08 17:23:15 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.131 2008-04-14 00:28:43 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_comment(&$arg, $op) {
@@ -151,7 +151,7 @@ function project_issue_comment(&$arg, $op) {
         form_set_value(array('#parents' => array('pid')), 0);
 
         // Validate version.
-        if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0))) {
+        if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0, 'version', 'all', array($arg['project_info']['rid'])))) {
           $rid = $arg['project_info']['rid'];
           if ($rid && !in_array($rid, array_keys($releases))) {
             $rid = 0;

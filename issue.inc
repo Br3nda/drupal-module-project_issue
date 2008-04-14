@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.4 2008/04/13 20:02:45 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.304.2.5 2008/04/14 00:26:24 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -695,7 +695,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
 
   if ($allow_metadata_changes) {
     if (module_exists('project_release') &&
-        $releases = project_release_get_releases($project, 0)) {
+        $releases = project_release_get_releases($project, 0, 'version', 'all', array($node->rid))) {
       $releases = array(t('<none>')) + $releases;
     }
     // Remove releases marked as invalid release nodes for user selection.

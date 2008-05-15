@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.92 2008-05-15 23:38:27 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.93 2008-05-15 23:45:14 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -573,7 +573,7 @@ function project_issue_menu($may_cache) {
 
     $project_issue_path = drupal_get_path('module', 'project_issue');
     if (module_exists('views')) {
-      require_once './'. $project_issue_path .'/project_issue_views.inc';
+      require_once './'. $project_issue_path .'/project_issue.views.inc';
     }
     drupal_add_css($project_issue_path .'/project_issue.css');
   }
@@ -1102,7 +1102,7 @@ function project_issue_link_alter(&$node, &$links) {
  * @see _project_issue_views_tables
  */
 function project_issue_views_tables() {
-  require_once(drupal_get_path('module', 'project_issue') .'/project_issue_views.inc');
+  require_once(drupal_get_path('module', 'project_issue') .'/project_issue.views.inc');
   return _project_issue_views_tables();
 }
 
@@ -1112,7 +1112,7 @@ function project_issue_views_tables() {
  * @see _project_issue_views_default_views
  */
 function project_issue_views_default_views() {
-  require_once(drupal_get_path('module', 'project_issue') .'/project_issue_views.inc');
+  require_once(drupal_get_path('module', 'project_issue') .'/project_issue.views.inc');
   return _project_issue_views_default_views();
 }
 

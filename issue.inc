@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.311 2008-05-15 02:28:22 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.312 2008-05-15 02:48:21 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1008,11 +1008,11 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
 
   if (user_access('assign and be assigned project issues')) {
     // All users are included if either anon or auth user has the perm.
-    if (db_result(db_query("SELECT rid FROM {permission} WHERE perm LIKE '%%assign and be assigned project issues%%' AND rid IN(%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
+    if (db_result(db_query("SELECT rid FROM {permission} WHERE perm LIKE '%%%s%%' AND rid IN(%d, %d)", 'assign and be assigned project issues', DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
       $result = db_query("SELECT uid, name FROM {users}");
     }
     else {
-      $result = db_query("SELECT u.uid, u.name FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid INNER JOIN {role} r ON ur.rid = r.rid INNER JOIN {permission} p ON p.rid = r.rid WHERE p.perm LIKE '%%assign and be assigned project issues%%'");
+      $result = db_query("SELECT u.uid, u.name FROM {users} u INNER JOIN {users_roles} ur ON u.uid = ur.uid INNER JOIN {role} r ON ur.rid = r.rid INNER JOIN {permission} p ON p.rid = r.rid WHERE p.perm LIKE '%%%s%%'", 'assign and be assigned project issues');
     }
 
     while ($assignee = db_fetch_object($result)) {

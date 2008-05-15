@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.20 2008-01-26 06:41:51 dww Exp $ */
+/* $Id: project_issue.css,v 1.21 2008-05-15 23:38:27 thehunmonkgroup Exp $ */
 /* $Name:  $ */
 
 /* Summary content */
@@ -99,6 +99,19 @@ table.projects .project-project-links a {
 .project-issue .quick-search #edit-states {
   width: 150px;
 }
+
+/* Views based issue query bar UI */
+.view-project-issues-project .form-item #edit-filter1,
+.view-project-issues-project-search .form-item #edit-filter1, #edit-filter2{
+  width:150px;
+}
+
+/* Views based issue advanced search filters */
+.view-project-issues-project-search #views-filters {
+  width: 100%;
+  overflow: auto;
+}
+
 .project-issue .quick-search tr td .form-item,
 .project-issue .quick-search tr td input {
   margin: 0;

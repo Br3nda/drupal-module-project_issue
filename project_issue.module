@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88.2.3 2008/05/15 02:27:03 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.88.2.4 2008/05/15 23:36:17 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -571,7 +571,11 @@ function project_issue_menu($may_cache) {
       );
     }
 
-    drupal_add_css(drupal_get_path('module', 'project_issue') .'/project_issue.css');
+    $project_issue_path = drupal_get_path('module', 'project_issue');
+    if (module_exists('views')) {
+      require_once './'. $project_issue_path .'/project_issue_views.inc';
+    }
+    drupal_add_css($project_issue_path .'/project_issue.css');
   }
   return $items;
 }
@@ -1086,6 +1090,30 @@ function project_issue_link_alter(&$node, &$links) {
   if ($node->type == 'project_issue' && arg(0) == 'node' && is_numeric(arg(1))) {
     unset($links['comment_add']);
   }
+}
+
+/**
+ * @defgroup project_issue_views Views-integration hooks
+ */
+
+/**
+ * Implementation of hook_views_tables.
+ * @ingroup project_issue_views
+ * @see _project_issue_views_tables
+ */
+function project_issue_views_tables() {
+  require_once(drupal_get_path('module', 'project_issue') .'/project_issue_views.inc');
+  return _project_issue_views_tables();
+}
+
+/**
+ * Implementation of hook_views_default_views.
+ * @ingroup project_issue_views
+ * @see _project_issue_views_default_views
+ */
+function project_issue_views_default_views() {
+  require_once(drupal_get_path('module', 'project_issue') .'/project_issue_views.inc');
+  return _project_issue_views_default_views();
 }
 
 

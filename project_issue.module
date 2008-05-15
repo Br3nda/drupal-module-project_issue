@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.90 2008-04-13 20:15:38 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.91 2008-05-15 02:28:22 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -154,7 +154,8 @@ function project_issue_perm() {
     'create project issues',
     'access project issues',
     'edit own project issues',
-    'access own project issues'
+    'access own project issues',
+    'assign and be assigned project issues',
   );
   $states = project_issue_state();
   foreach($states as $key => $value) {

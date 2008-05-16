@@ -720,6 +720,7 @@ function theme_project_issues_table_view($view, $nodes, $type) {
  */
 function _project_issue_views_default_views() {
   $view = new stdClass();
+  $view->disabled = TRUE;
   $view->name = 'project_issues_project';
   $view->description = 'View issues of all projects or a particular project.';
   $view->access = array ();
@@ -905,6 +906,7 @@ function _project_issue_views_default_views() {
   $views[$view->name] = $view;
 
   $view = new stdClass();
+  $view->disabled = TRUE;
   $view->name = 'project_issues_project_search';
   $view->description = 'Search for issues by many fields.';
   $view->access = array ();

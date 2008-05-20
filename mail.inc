@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.105 2008/03/07 21:30:23 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.105.2.1 2008/05/20 19:26:26 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -201,7 +201,10 @@ function project_mail_notify($nid) {
 
   // Record users that are connected to this issue.
   $uids = array();
-  if ($node->assigned) {
+  if (!empty($node->uid)) {
+    $uids[$node->uid] = $node->uid;
+  }
+  if (!empty($node->assigned)) {
     $uids[$node->assigned] = $node->assigned;
   }
 

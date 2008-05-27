@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.8 2008/05/15 02:47:26 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.304.2.9 2008/05/27 20:23:26 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1819,7 +1819,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     }
     $query = project_issue_query_pager($query);
 
-    $rss = theme('feed_icon', url('project/issues/rss', project_issue_query_url($query)));
+    drupal_add_feed(url('project/issues/rss', project_issue_query_url($query)), t('Issues'));
     $link = l(t('#'), 'project/issues', array('title' => t('Permalink to search query.')), project_issue_query_url($query));
     if ($pager = theme('pager', NULL, $issues_per_page, 0)) {
       $rows[] = array(array('data' => $pager, 'colspan' => count($header)));
@@ -1835,7 +1835,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
 
   $output .= '</div>';
   $output .= theme('table', $header, $rows);
-  $output .= "$rss $link";
+  $output .= $link;
 
   $output .= '</div>';
   return $output;

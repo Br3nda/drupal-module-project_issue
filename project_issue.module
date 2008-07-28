@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88.2.5 2008/05/15 23:44:52 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.88.2.6 2008/07/28 20:54:55 dww Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -529,6 +529,7 @@ function project_issue_menu($may_cache) {
       'path' => 'node/add/project-issue',
       'title' => $types['project_issue']->name,
       'callback' => 'project_issue_pick_project_page',
+      'access' => $access_create,
       'type' => MENU_NORMAL_ITEM,
     );
 

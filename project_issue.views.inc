@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.4 2008-07-10 16:54:52 dww Exp $
+// $Id: project_issue.views.inc,v 1.5 2008-08-09 01:38:29 dww Exp $
 
 /**
  * @file
@@ -495,6 +495,41 @@ function views_handler_filter_project_issue_status_filter($op, $filter, $filteri
   $filter['value'] = array_unique($include);
   return views_handler_filter_default($op, $filter, $filterinfo, $query);
 }
+
+/**
+ * Implementation of hook_views_arguments().
+ */
+function _project_issue_views_arguments() {
+  $arguments['project_shortname'] = array(
+    'name' => t('Project issue: Project: short name'),
+    'handler' => 'views_handler_arg_project_shortname',
+    'help' => t('Filter issues by the project they belong to.'),
+  );
+  return $arguments;
+}
+
+function views_handler_arg_project_shortname($op, &$query, $argtype, $arg = '') {
+  switch ($op) {
+    case 'summary':
+      $query->add_table('project_issue_project_projects', TRUE);
+      $query->add_field('uri', 'project_issue_project_projects');
+      $fieldinfo['field'] = 'project_issue_project_projects.uri';
+      return $fieldinfo;
+      break;
+    case 'sort':
+      $query->add_orderby('project_issue_project_projects', 'uri', $argtype);
+      break;
+    case 'filter':
+      $query->ensure_table('project_issue_project_projects');
+      $query->add_where("project_issue_project_projects.uri = '%s'", $arg);
+      break;
+    case 'link':
+      return l($query->uri, "$arg/" . $query->uri);
+    case 'title':
+      return check_plain($query);
+  }
+}
+
 
 /**
  * Implementation of hook_views_pre_view().

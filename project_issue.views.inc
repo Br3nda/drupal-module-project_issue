@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.5 2008/08/09 01:38:29 dww Exp $
+// $Id: project_issue.views.inc,v 1.6 2008/08/09 02:17:23 dww Exp $
 
 /**
  * @file
@@ -505,6 +505,11 @@ function _project_issue_views_arguments() {
     'handler' => 'views_handler_arg_project_shortname',
     'help' => t('Filter issues by the project they belong to.'),
   );
+  $arguments['project_issue_category'] = array(
+    'name' => t('Project issue: Category'),
+    'handler' => 'views_handler_arg_project_issue_category',
+    'help' => t('Filter issues by their category (bug, feature, etc).'),
+  );
   return $arguments;
 }
 
@@ -530,6 +535,28 @@ function views_handler_arg_project_shortname($op, &$query, $argtype, $arg = '') 
   }
 }
 
+
+function views_handler_arg_project_issue_category($op, &$query, $argtype, $arg = '') {
+  switch ($op) {
+    case 'summary':
+      $query->add_table('project_issues', TRUE);
+      $query->add_field('category', 'project_issues');
+      $fieldinfo['field'] = 'project_issues.category';
+      return $fieldinfo;
+      break;
+    case 'sort':
+      $query->add_orderby('project_issues', 'category', $argtype);
+      break;
+    case 'filter':
+      $query->ensure_table('project_issues');
+      $query->add_where("project_issues.category = '%s'", $arg);
+      break;
+    case 'link':
+      return l(project_issue_category($query->category), "$arg/" . $query->category);
+    case 'title':
+      return project_issue_category($query);
+  }
+}
 
 /**
  * Implementation of hook_views_pre_view().

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.9 2008/05/27 20:23:26 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.304.2.10 2008/08/15 23:26:03 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -1032,7 +1032,7 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
  *   An HTML string of the summary section.
  */
 function theme_project_issue_summary($current_data, $summary_links) {
-  $allowed_tags = array('a', 'em', 'strong');
+  $allowed_tags = array('a', 'em', 'strong', 'div', 'span');
   $rows = array();
   foreach ($current_data as $name => $values) {
     $rows[] = array(filter_xss($values['label'], $allowed_tags) .':', filter_xss($values['current'], $allowed_tags));

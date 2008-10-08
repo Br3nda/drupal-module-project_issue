@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.49 2008-04-13 21:13:18 thehunmonkgroup Exp $
+// $Id: project_issue.install,v 1.50 2008-10-08 16:47:13 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_install() {
@@ -208,6 +208,7 @@ function project_issue_uninstall() {
     'project_issue_show_comment_signatures',
     'project_issue_site_help',
     'project_issue_invalid_releases',
+    'project_issue_followup_user',
   );
   foreach ($variables as $variable) {
     variable_del($variable);
@@ -770,6 +771,23 @@ function project_issue_update_5207() {
     }
   }
 
+  return $ret;
+}
+
+/**
+ * Replace project_issue_followup_user in {variable}.
+ */
+function project_issue_update_5208() {
+  $ret = array();
+  $uid = variable_get('project_issue_auto_close_user', NULL);
+  if (isset($uid)) {
+    // Convert anon user back to a uid.
+    if ($uid == 'anon') {
+      $uid = 0;
+    }
+    variable_set('project_issue_followup_user', $uid);
+    variable_del('project_issue_auto_close_user');
+  }
   return $ret;
 }
 

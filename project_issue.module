@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.95 2008/08/09 01:38:29 dww Exp $
+// $Id: project_issue.module,v 1.96 2008/10/08 16:47:13 thehunmonkgroup Exp $
 // $Name:  $
 
 // issue nodes      -> project_issues
@@ -7,6 +7,12 @@
 
 /// How many issues should be displayed per page by default.
 define('PROJECT_ISSUES_PER_PAGE', 20);
+/// Default age in days of issues to auto close.
+define('PROJECT_ISSUE_AUTO_CLOSE_DAYS', 14);
+/// Project issue state = fixed.
+define('PROJECT_ISSUE_STATE_FIXED', 2);
+/// Project issue state = closed.
+define('PROJECT_ISSUE_STATE_CLOSED', 7);
 
 if (function_exists('drupal_get_path')) {
   $path = drupal_get_path('module', 'project_issue');
@@ -203,27 +209,30 @@ function project_issue_settings_form() {
     '#description' => t('All issue e-mails sent via subscriptions will appear from this e-mail address. You can use %project as a placeholder which will be replaced with the %short_project_name setting for the issue\'s current project.', array('%project' => '%project', '%short_project_name' => t('Short project name'))),
   );
 
-  // Determine the auto-close username from the auto-close setting.
-  $auto_close_username = '';
-  $uid = variable_get('project_issue_auto_close_user', 'anon');
+  // Determine the auto followup username from the auto followup setting.
+  $followup_username = '';
   $anon = variable_get('anonymous', t('Anonymous'));
-  if ($uid) {
-    if ($uid == 'anon') {
-      $auto_close_username = $anon;
-    }
-    elseif ($account = user_load(array('uid' => $uid))) {
-      $auto_close_username = $account->name;
-    }
+  if ($followup_user_object = _project_issue_followup_get_user()) {
+    $followup_username = $followup_user_object->name;
   }
 
-  $form['project_issue_auto_close_user'] = array(
-    '#title' => t('Auto-close user'),
+  $form['project_issue_followup_user'] = array(
+    '#title' => t('Auto-followup user'),
     '#type' => 'textfield',
-    '#default_value' => $auto_close_username,
+    '#default_value' => $followup_username,
     '#maxlength' => 60,
-    '#description' => t('Enter the user which will auto-close fixed issues -- leave empty to disable auto-closing or set to %anon to use the anonymous user.', array('%anon' => $anon)),
-    '#validate' => array('project_issue_validate_auto_close_user' => array()),
+    '#description' => t('Enter the name of the user which will create automatic followups to issues -- leave empty to disable auto-followup or set to %anon to use the anonymous user.', array('%anon' => $anon)),
+    '#validate' => array('project_issue_validate_followup_user' => array()),
     '#autocomplete_path' => 'user/autocomplete',
+  );
+
+  $form['project_issue_auto_close_days'] = array(
+    '#title' => t('Auto-close days'),
+    '#type' => 'textfield',
+    '#default_value' => (int) variable_get('project_issue_auto_close_days', PROJECT_ISSUE_AUTO_CLOSE_DAYS),
+    '#size' => 4,
+    '#maxlength' => 10,
+    '#description' => t('Issues being in "fixed" state for the specified number of days will be closed by the followup user specified above. For example, if this is 14, and an issue is set to fixed on January 1, then it will be closed on January 15.'),
   );
 
   if (module_exists('mailhandler')) {
@@ -261,23 +270,24 @@ function project_issue_validate_issues_per_page($form) {
 }
 
 /**
- * Validates that the auto-close user exists, and has sufficient permissions
- * to auto-close issues.
+ * Validates that the followup user exists, and has sufficient permissions
+ * to follow up on issues.
  */
-function project_issue_validate_auto_close_user($form) {
+function project_issue_validate_followup_user($form) {
   $name = $form['#value'];
-  if ($name) {
+  if ($name !== '') {
+    $anon = variable_get('anonymous', t('Anonymous'));
     // Make this check case-insensitive to allow the admin some data entry leeway.
-    $is_anon = drupal_strtolower($name) == drupal_strtolower(variable_get('anonymous', t('Anonymous')));
+    $is_anon = drupal_strtolower($name) == drupal_strtolower($anon);
     // Load the user. (don't see a constant for uid 0... )
     $account = $is_anon ? user_load(array('uid' => 0)) : user_load(array('name' => $name));
     if ($account) {
       if (user_access('access project issues', $account)) {
         // Transform the username into the more stable user ID.
-        form_set_value($form, $is_anon ? 'anon' : $account->uid);
+        form_set_value($form, $account->uid);
       }
       else {
-        form_error($form, t('%name does not have sufficient permissions to auto-close issues.', array('%name' => $is_anon ? variable_get('anonymous', t('Anonymous')) : $name)));
+        form_error($form, t('%name does not have sufficient permissions to follow up on issues.', array('%name' => $is_anon ? $anon : $name)));
       }
     }
     else {
@@ -302,92 +312,123 @@ function project_issue_cron() {
 }
 
 /**
- * Automatically closes issues marked as fixed after two weeks.
+ * Automatically close issues marked as fixed for a specified number of days
+ * and add a comment to each documenting the change.
  */
 function project_issue_auto_close() {
+  // Set query parameters.
+  $seconds = 24 * 60 * 60 * variable_get('project_issue_auto_close_days', PROJECT_ISSUE_AUTO_CLOSE_DAYS);
+
+  $comment = theme('project_issue_auto_close_message');
+  $result = db_query('SELECT pi.nid FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE pi.sid = %d AND n.changed < %d', PROJECT_ISSUE_STATE_FIXED, time() - $seconds);
+  while ($issue = db_fetch_object($result)) {
+    project_issue_add_followup(array(
+      'nid' => $issue->nid,
+      'sid' => PROJECT_ISSUE_STATE_CLOSED,
+      'comment' => $comment,
+    ));
+  }
+}
+
+/**
+ * Comment left when cron auto-closes an issue.
+ */
+function theme_project_issue_auto_close_message() {
+  return t('Automatically closed -- issue fixed for two weeks with no activity.');
+}
+
+/**
+ * Add a followup to a project issue.
+ *
+ * @param $changes
+ *   An associative array specifying what should change in the issue. Every key
+ *   corresponds to a database field and the value is what it should be changed
+ *   to. nid is a required key and it specifies the issue being changed.
+ *   'comment' is also a required key and it contains the text of the followup
+ *   changing the issue.
+ *   You can specify the following fields of the comment table: uid, subject,
+ *   hostname, timestamp, score, status, format, thread, users, name, mail,
+ *   homepage. You can also specify the following fields from project_issues
+ *   table: category, priority, assigned, sid, title. There is a special,
+ *   optional key called 'project_info', its value is another associative
+ *   array with the following fields from project_issues: pid, rid, component.
+ *   Example: To change the issue status and set the comment text for the
+ *   issue with nid = 100, this array might look like:
+ *     array(
+ *      'nid' => 100,
+ *      'sid' => 4,
+ *      'comment' => t('This issue was automatically closed after 2 weeks of no activity.'),
+ *     );
+ */
+function project_issue_add_followup($changes) {
   global $user;
 
-  if ($uid = variable_get('project_issue_auto_close_user', 'anon')) {
-    // If a user exists for auto-closing comments, load them into
+  if ($auto_user = _project_issue_followup_get_user()) {
+    // If a user exists for followups, load them into
     // the global user object temporarily. We use session_save_session()
     // to provide safe user impersonation.
-    $auto_close = TRUE;
     $original_user = $user;
     session_save_session(FALSE);
-    $is_anon = $uid == 'anon';
-    $user = $is_anon ? user_load(array('uid' => 0)) : user_load(array('uid' => $uid));
-    // Safety check -- we have to have a valid user here.
-    if(!$user) {
-      watchdog('project_issue', t('Auto-close user failed to load.'), WATCHDOG_ERROR);
-      $auto_close = FALSE;
-    }
-    // Safety check -- selected user must still have the correct permissions to auto-close issues.
-    if (!user_access('access project issues')) {
-      watchdog('project_issue', t('%name does not have sufficient permissions to auto-close issues.', array('%name' => $is_anon ? variable_get('anonymous', t('Anonymous')) : $user->name)), WATCHDOG_ERROR);
-      $auto_close = FALSE;
-    }
+    $user = $auto_user;
 
-    if ($auto_close) {
-      $result = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.rid, p.assigned, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1 AND p.sid = 2 AND n.changed < %d', time() - 14 * 24 * 60 * 60);
+    $result = db_query('SELECT pi.nid, pi.rid, pi.component, pi.category, pi.priority, pi.assigned, pi.sid, pi.pid, n.title FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE n.nid = %d', $changes['nid']);
 
-      // Set up the persistent {comments} data.
-      $comment['pid'] = 0;
-      $comment['uid'] = $user->uid;
-      // The correct subject number is supplied during the save cycle.
-      $comment['subject'] = 'temp';
-      $comment['comment'] = theme('project_issue_auto_close_message');
-      $comment['format'] = FILTER_FORMAT_DEFAULT;
-      $comment['status'] = COMMENT_PUBLISHED;
-      $comment['name'] = $user->name;
-      $comment['mail'] = '';
-      $comment['homepage'] = '';
-
+    if ($issue = db_fetch_object($result)) {
+      // Code from comment_save.
       $roles = variable_get('comment_roles', array());
       $score = 0;
       foreach (array_intersect(array_keys($roles), array_keys($user->roles)) as $rid) {
         $score = max($roles[$rid], $score);
       }
       $users = serialize(array(0 => $score));
+      // Build vancode
+      $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $changes['nid']));
+      // Strip the "/" from the end of the thread.
+      $max = rtrim($max, '/');
+      // Finally, build the thread field for this new comment.
+      $thread = int2vancode(vancode2int($max) + 1) .'/';
 
-      // Set up the persistent {project_issue_comments} data.
-      // TODO: It's evil to hard-code the status here.
-      $comment['sid'] = 7;
+      // These two are not allowed to be set in changes.
+      unset($changes['cid'], $changes['pid']);
+      $comment = $changes + array(
+        'cid' => db_next_id('{comments}_cid'),
+        'pid' => 0,
+        'uid' => $user->uid,
+        // The correct subject (#number) is supplied during the save cycle.
+        'subject' => '--project followup subject--',
+        'hostname' => $_SERVER['REMOTE_ADDR'],
+        'timestamp' => time(),
+        'score' => $score,
+        'status' => COMMENT_PUBLISHED,
+        'format' => FILTER_FORMAT_DEFAULT,
+        'thread' => $thread,
+        'users' => $users,
+        'name' => $user->name,
+        'mail' => '',
+        'homepage' => '',
+        'category' => $issue->category,
+        'priority' => $issue->priority,
+        'assigned' => $issue->assigned,
+        'sid' => $issue->sid,
+        'title' => $issue->title,
+      );
 
-      $clear_cache = FALSE;
-
-      while ($issue = db_fetch_object($result)) {
-        $clear_cache = TRUE;
-
-        $comment['cid'] = db_next_id('{comments}_cid');
-        $comment['timestamp'] = time();
-        $comment['nid'] = $issue->nid;
-        $comment['category'] = $issue->category;
-        $comment['priority'] = $issue->priority;
-        $comment['assigned'] = $issue->assigned;
-        $comment['title'] = $issue->title;
-        $comment['project_info']['pid'] = $issue->pid;
-        $comment['project_info']['rid'] = $issue->rid;
-        $comment['project_info']['component'] = $issue->component;
-
-        // Build vancode
-        $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $comment['nid']));
-        // Strip the "/" from the end of the thread.
-        $max = rtrim($max, '/');
-        // Finally, build the thread field for this new comment.
-        $thread = int2vancode(vancode2int($max) + 1) .'/';
-
-        db_query("INSERT INTO {comments} (cid, nid, pid, uid, subject, comment, format, hostname, timestamp, status, score, users, thread, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', %d, '%s', %d, %d, %d, '%s', '%s', '%s', '%s', '%s')", $comment['cid'], $comment['nid'], $comment['pid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['format'], $_SERVER['REMOTE_ADDR'], $comment['timestamp'], $comment['status'], $score, $users, $thread, $comment['name'], $comment['mail'], $comment['homepage']);
-
-        _comment_update_node_statistics($comment['nid']);
-
-        // Tell the other modules a new comment has been submitted.
-        comment_invoke_comment($comment, 'insert');
+      if (!isset($comment['project_info'])) {
+        $comment['project_info'] = array();
       }
+      $comment['project_info'] += array(
+        'pid' => $issue->pid,
+        'rid' => $issue->rid,
+        'component' => $issue->component,
+      );
 
-      if ($clear_cache) {
-        // Clear cache so anonymous users can see the new post.
-        cache_clear_all();
-      }
+      db_query("INSERT INTO {comments} (cid, pid, nid, uid, subject, comment, hostname, timestamp, score, status, format, thread, users, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s', '%s')", $comment['cid'], $comment['pid'], $comment['nid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['hostname'], $comment['timestamp'], $comment['score'], $comment['status'], $comment['format'], $comment['thread'], $comment['users'], $comment['name'], $comment['mail'], $comment['homepage']);
+
+      _comment_update_node_statistics($comment['nid']);
+
+      // Tell the other modules a new comment has been submitted.
+      comment_invoke_comment($comment, 'insert');
+      cache_clear_all();
     }
 
     // Load the original user back in.
@@ -397,10 +438,30 @@ function project_issue_auto_close() {
 }
 
 /**
- * Comment left when cron auto-closes an issue.
+ * Load and verify the followup user.
+ *
+ * @return $account
+ *   The account of the followup user (or FALSE if not found).
  */
-function theme_project_issue_auto_close_message() {
-  return t('Automatically closed -- issue fixed for two weeks with no activity.');
+function _project_issue_followup_get_user() {
+  $uid = variable_get('project_issue_followup_user', '');
+  if ($uid === '') {
+    return FALSE;
+  }
+  $account = user_load(array('uid' => $uid));
+  // Safety check -- we have to have a valid user here.
+  if (!$account) {
+    watchdog('project_issue', t('Auto-change user failed to load.'), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  $anon = variable_get('anonymous', t('Anonymous'));
+  $account->name = $uid ? $account->name : $anon;
+  // Safety check -- selected user must still have the correct permissions to follow up on issues.
+  if (!user_access('access project issues', $account)) {
+    watchdog('project_issue', t('%name does not have sufficient permissions to follow up on issues.', array('%name' => $account->name)), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  return $account;
 }
 
 function project_issue_menu($may_cache) {
@@ -871,7 +932,7 @@ function project_issue_user_page($arg = 0) {
     array('data' => t('Issue links'), 'class' => 'project-issue-links'),
   );
   $default_states = implode(',', project_issue_default_states());
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} p ON n.nid = p.pid AND p.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = p.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $user->uid);
+  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} pi ON n.nid = pi.pid AND pi.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = pi.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $user->uid);
 
   if (!db_num_rows($result)) {
     return ($current_user ? t('You have no projects.') : t('This user has no projects.'));

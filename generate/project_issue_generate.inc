@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.6 2008/01/26 02:53:46 dww Exp $
+// $Id: project_issue_generate.inc,v 1.6.2.1 2008/10/12 20:32:19 aclight Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -24,7 +24,9 @@ function project_issue_generate_issues($number) {
   srand((double) microtime() * 1000000);
   for ($i = 0; $i < $number; $i++) {
     $project = $projects[array_rand($projects)];
+    $project_node = node_load($project->nid);
     $components = unserialize($project->components);
+    $releases = project_release_get_releases($project_node, FALSE);
     $issue = array();
     $issue['pid'] = $project->nid;
     $issue['category'] = $categories[array_rand($categories)];
@@ -32,6 +34,7 @@ function project_issue_generate_issues($number) {
     $issue['priority'] = array_rand($priorities);
     $issue['title'] = devel_create_greeking(rand(2, 15), true);
     $issue['body'] = devel_create_content();
+    $issue['rid'] = array_rand($releases);
 
     // The user must be chosen before status (sid) so that we can make sure
     // that the status is set such that the user would have permission to
@@ -66,7 +69,6 @@ function project_issue_generate_issue_comments($number) {
   $categories = _project_issue_generate_get_field('categories');
   $priorities = _project_issue_generate_get_field('priorities');
   $users = _project_issue_generate_get_field('users');
-
   srand((double) microtime() * 1000000);
 
   for ($i = 0; $i < $number; $i++) {
@@ -80,8 +82,16 @@ function project_issue_generate_issue_comments($number) {
     $project = $projects[array_rand($projects)];
     if (rand(0, 1)) {
       $issues[$k]->pid = $project->nid;
+      // If the project changes, the version must also change.
+      $project_node = node_load($issues[$k]->pid, NULL, TRUE);
+      $releases = project_release_get_releases($project_node, FALSE);
+      $issues[$k]->rid = array_rand($releases);
+
+      // And so must the component.
+      $components = $project_node->components;
+      $issues[$k]->component = $components[array_rand($components)];
     }
-    if (rand(0, 1)) {
+    elseif (rand(0, 1)) {
       $components = unserialize($project->components);
       $issues[$k]->component = $components[array_rand($components)];
     }
@@ -101,10 +111,15 @@ function project_issue_generate_issue_comments($number) {
         continue;
       }
     }
+    if (rand(0, 1)) {
+      $project_node = node_load($issues[$k]->pid, NULL, TRUE);
+      $releases = project_release_get_releases($project_node, FALSE);
+      $issues[$k]->rid = array_rand($releases);
+    }
     // Construct a comment to put the issue into the state we just decided.
     $comment = array();
     $comment['uid'] = $account->uid;
-    $comment['project_info'] = array('pid' => $issues[$k]->pid, 'component' => $issues[$k]->component);
+    $comment['project_info'] = array('pid' => $issues[$k]->pid, 'component' => $issues[$k]->component, 'rid' => $issues[$k]->rid);
     $comment['category'] = $issues[$k]->category;
     $comment['priority'] = $issues[$k]->priority;
     $comment['title'] = $issues[$k]->title;
@@ -135,7 +150,7 @@ function _project_issue_generate_get_field($field, $pool_size = 100) {
   switch ($field) {
     case 'issues':
       $issues = array();
-      $results = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.sid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid');
+      $results = db_query('SELECT p.nid, p.pid, p.category, p.component, p.priority, p.sid, p.rid, n.title FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid');
       while ($result = db_fetch_object($results)) {
         $issues[] = $result;
       }

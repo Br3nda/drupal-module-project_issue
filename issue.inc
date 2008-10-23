@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.314 2008/08/15 23:25:31 dww Exp $
+// $Id: issue.inc,v 1.315 2008/10/23 00:35:06 dww Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -82,7 +82,7 @@ function project_issue_page() {
 function project_issue_update_project($pid, $cid = NULL, $rid = NULL) {
 
   // Prevent a malicious user from snooping this callback directly.
-  $error = array('error' => t('Malicious attempt to access unauthorized information detected.'));
+  $error = array('error' => t('An error was detected. Please try again.'));
   $node = node_load($pid);
   if ($node) {
     if (!node_access('view', $node)) {

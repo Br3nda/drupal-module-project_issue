@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.107 2008-08-11 17:59:29 dww Exp $
+// $Id: mail.inc,v 1.108 2008-10-23 00:40:43 dww Exp $
 // $Name:  $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
@@ -44,7 +44,7 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
           $node->$text = trim($node->$text);
           switch ($var) {
             case 'pid':
-              $project = node_load($node->text);
+              $project = node_load($node->$text);
               if ($project->nid) {
                 $entry->pid = $project->nid;
               }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.11 2008/10/23 00:35:08 dww Exp $
+// $Id: issue.inc,v 1.304.2.12 2008/10/26 18:36:58 thehunmonkgroup Exp $
 // $Name:  $
 
 function project_issue_page() {
@@ -76,14 +76,25 @@ function project_issue_page() {
 }
 
 /**
- * JS callback method to return updated elements on the issue form
- * when someone changes the "Project" selector. See project_issue.js.
+ * JS callback method to return updated elements on the issue form.
+ * This function is called when someone changes the "Project" selector.
+ * See project_issue.js.
+ *
+ * @param $pid
+ *   The nid of the project we're updating to.
+ * @param $issue_nid
+ *   The issue nid.
+ * @param $cid
+ *   The component from the previously selected project.
+ * @param $rid
+ *   The version from the previously selected project.
+ * @param $assigned_uid
+ *   The uid of the assigned user from the previously selected project.
  */
-function project_issue_update_project($pid, $cid = NULL, $rid = NULL) {
-
+function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL, $assigned_uid = NULL) {
   // Prevent a malicious user from snooping this callback directly.
   $error = array('error' => t('An error was detected. Please try again.'));
-  $node = node_load($pid);
+  $node = node_load(array('nid' => $pid, 'type' => 'project_project'));
   if ($node) {
     if (!node_access('view', $node)) {
       print drupal_to_js($error);
@@ -127,6 +138,31 @@ function project_issue_update_project($pid, $cid = NULL, $rid = NULL) {
       $return['rid'] .= drupal_render($form);
     }
   }
+
+  // Assigned.
+  if (is_numeric($issue_nid)) {
+    $issue = node_load(array('nid' => $issue_nid, 'type' => 'project_issue'));
+  }
+  else {
+    // @TODO:  This case should not ever be hit until
+    // http://drupal.org/node/197281 lands.
+    $issue = new stdClass;
+  }
+  $issue->pid = $pid;
+  $return['assigned'] = '';
+  $assigned_choices = project_issue_assigned_choices($issue);
+
+  $form = array();
+  $form['issue_info']['assigned'] = array(
+    '#type' => 'select',
+    '#title' => t('Assigned'),
+    '#default_value' => $assigned_uid,
+    '#options' => $assigned_choices,
+  );
+
+  // Build the HTML output for the assigned select.
+  $form = form_builder('assigned', $form);
+  $return['assigned'] .= drupal_render($form);
 
   // Components.
   $return['component'] = '';
@@ -687,7 +723,11 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
   // Load Javascript (unless the issue is being edited).
   if ($allow_metadata_changes) {
     drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
-    drupal_add_js(array('projectUrl' => url('project/issues/update_project')), 'setting');
+    drupal_add_js(
+      array(
+        'projectUrl' => url('project/issues/update_project'),
+        'issueNid' => $node->nid,
+      ), 'setting');
   }
 
   // Load the project and initialize some support arrays.
@@ -713,15 +753,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
     $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
-
-    // Setup the array of choices for who the issue is assigned to.
-    $assigned = array();
-    foreach (module_implements('project_issue_assignees') as $module) {
-      $function = "{$module}_project_issue_assignees";
-      $function($assigned, $node);
-    }
-    natcasesort($assigned);
-    $assigned = array(0 => empty($node->assigned) ? t('Unassigned') : t('Unassign')) + $assigned;
+    $assigned = project_issue_assigned_choices($node);
   }
 
   // Display the site-wide and/or per-project help text.
@@ -856,6 +888,27 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     drupal_set_message($msg, 'error');
   }
   return $form;
+}
+
+/**
+ * Build an array of users to whom an issue may be assigned.
+ *
+ * @param $issue
+ *   The issue object.
+ * @return
+ *   A keyed array in the form uid => name containing users
+ *   to whom an issue may be assigned.
+ */
+function project_issue_assigned_choices($issue) {
+  // Setup the array of choices for who the issue is assigned to.
+  $assigned = array();
+  foreach (module_implements('project_issue_assignees') as $module) {
+    $function = "{$module}_project_issue_assignees";
+    $function($assigned, $issue);
+  }
+  natcasesort($assigned);
+  $assigned = array(0 => empty($issue->assigned) ? t('Unassigned') : t('Unassign')) + $assigned;
+  return $assigned;
 }
 
 /**

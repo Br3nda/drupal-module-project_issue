@@ -1,6 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88.2.8 2008/10/08 16:44:32 thehunmonkgroup Exp $
-// $Name:  $
+// $Id: project_issue.module,v 1.88.2.9 2008/10/29 00:20:24 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments

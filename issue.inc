@@ -1,6 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.12 2008/10/26 18:36:58 thehunmonkgroup Exp $
-// $Name:  $
+// $Id: issue.inc,v 1.304.2.13 2008/10/29 00:20:24 dww Exp $
 
 function project_issue_page() {
   global $user;

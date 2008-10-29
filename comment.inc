@@ -1,6 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.131 2008/04/14 00:28:43 thehunmonkgroup Exp $
-// $Name:  $
+// $Id: comment.inc,v 1.132 2008/10/29 00:20:08 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.

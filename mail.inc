@@ -1,6 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.108 2008/10/23 00:40:43 dww Exp $
-// $Name:  $
+// $Id: mail.inc,v 1.109 2008/10/29 00:20:08 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {

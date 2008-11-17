@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.14 2008/11/17 23:10:19 dww Exp $
+// $Id: issue.inc,v 1.304.2.15 2008/11/17 23:36:26 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -1726,31 +1726,31 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     $query->projects = $project->nid;
     $links = array();
     if (node_access('create', 'project_issue')) {
-      $links[] = array(
+      $links['create'] = array(
         'title' => t('Create'),
         'href' => "node/add/project-issue/$project->uri",
         'attributes' => array('title' => t('Create a new issue for @project.', array('@project' => $project->uri))),
       );
     }
     else {
-      $links[] = array(
+      $links['create'] = array(
         'title' => theme('project_issue_create_forbidden', $project->uri),
         'html'  => TRUE,
       );
     }
-    $links[] = array(
+    $links['statistics'] = array(
       'title' => t('Statistics'),
       'href' => "project/issues/statistics/$project->uri",
       'attributes' => array('title' => t('See statistics about @project issues.', array('@project' => $project->uri))),
     );
     if ($user->uid) {
-      $links[] = array(
+      $links['subscribe'] = array(
         'title' => t('Subscribe'),
         'href' => "project/issues/subscribe-mail/$project->uri",
         'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $project->uri))),
       );
     }
-    $links[] = array(
+    $links['search'] = array(
       'title' => t('Advanced search'),
       'href' => "project/issues/search/$project->uri",
       'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $project->uri))),
@@ -1764,31 +1764,31 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     }
     $links = array();
     if (node_access('create', 'project_issue')) {
-      $links[] = array(
+      $links['create'] = array(
         'title' => t('Create'),
         'href' => "node/add/project-issue",
         'attributes' => array('title' => t('Create a new issue.')),
       );
     }
     else {
-      $links[] = array(
+      $links['create'] = array(
         'title' => theme('project_issue_create_forbidden', $project->uri),
         'html'  => TRUE,
       );
     }
-    $links[] = array(
+    $links['statistics'] = array(
       'title' => t('Statistics'),
       'href' => "project/issues/statistics",
       'attributes' => array('title' => t('See statistics about issues.')),
     );
     if ($user->uid) {
-      $links[] = array(
+      $links['subscribe'] = array(
         'title' => t('Subscribe'),
         'href' => "project/issues/subscribe-mail",
         'attributes' => array('title' => t('Receive email updates about issues.')),
       );
     }
-    $links[] = array(
+    $links['search'] = array(
       'title' => t('Advanced search'),
       'href' => "project/issues/search/",
       'attributes' => array('title' => t('Use the advanced search page for finding issues.')),
@@ -1817,7 +1817,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
   $search = '';
   if ($show_search) {
     // Action links:
-    $search .= theme('links', $links);
+    $search .= theme('project_issue_query_result_links', $links);
     $search .= drupal_get_form('project_issue_query_result_quick_search', $query, $projects, $states, $priorities);
   }
 
@@ -1977,6 +1977,19 @@ function project_issue_query_result_quick_search($query, $projects, $states, $pr
     '#value' => t('Search'),
   );
   return $form;
+}
+
+/**
+ * Return the HTML to use for the links at the top of issue query pages.
+ *
+ * @param $links
+ *   Array of links, indexed by the action ('create', 'search', etc).
+ *
+ * @see project_issue_query_result()
+ * @see theme_links()
+ */
+function theme_project_issue_query_result_links($links) {
+  return theme('links', $links);
 }
 
 function theme_project_issue_query_result_quick_search($form) {

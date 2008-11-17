@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.132 2008-10-29 00:20:08 dww Exp $
+// $Id: comment.inc,v 1.133 2008-11-17 23:10:14 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -41,6 +41,20 @@ function project_issue_comment(&$arg, $op) {
       // We need this otherwise pid collides with comment.
       $form['project_info']['#tree'] = TRUE;
       $form['project_info']['#weight'] = -2;
+
+      // Remove the form item that displays the current project, and
+      // replace the static single project value with a select list
+      // of all projects to make swapping simpler.
+      unset($form['project_info']['project_display']);
+      $uris = NULL;
+      $projects = array(t('<none>')) + project_projects_select_options($uris);
+      $form['project_info']['pid'] = array(
+        '#type' => 'select',
+        '#title' => t('Project'),
+        '#default_value' => $node->pid,
+        '#options' => $projects,
+        '#required' => TRUE,
+      );
 
       $form['issue_info']['#weight'] = -1;
       $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';

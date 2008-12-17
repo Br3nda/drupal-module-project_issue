@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.15 2008/11/17 23:36:26 dww Exp $
+// $Id: issue.inc,v 1.304.2.16 2008/12/17 08:07:33 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -1087,9 +1087,20 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
  */
 function theme_project_issue_summary($current_data, $summary_links) {
   $allowed_tags = array('a', 'em', 'strong', 'div', 'span');
+  // Fields that should be rendered as plain text, not filtered HTML.
+  $plain_fields = array('title', 'pid', 'rid');
+
   $rows = array();
   foreach ($current_data as $name => $values) {
-    $rows[] = array(filter_xss($values['label'], $allowed_tags) .':', filter_xss($values['current'], $allowed_tags));
+    $row = array();
+    $row[] = filter_xss($values['label'], $allowed_tags) .':';
+    if (in_array($name, $plain_fields)) {
+      $row[] = check_plain($values['current']);
+    }
+    else {
+      $row[] = filter_xss($values['current'], $allowed_tags);
+    }
+    $rows[] = $row;
   }
 
   $output = '<div id="project-summary-container" class="clear-block">';

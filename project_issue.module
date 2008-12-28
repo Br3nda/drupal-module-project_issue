@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.97 2008/10/29 00:20:09 dww Exp $
+// $Id: project_issue.module,v 1.98 2008/12/28 23:32:43 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -295,37 +295,20 @@ function project_issue_validate_followup_user($form) {
   }
 }
 
-function project_issue_cron() {
-  if (time() - variable_get('project_issue_digest_last', 0) > variable_get('project_issue_digest_interval', 7 * 24 * 60 * 60)) {
-    variable_set('project_issue_digest_last', time());
-    project_mail_digest();
-  }
-
-  if (time() - variable_get('project_issue_reminder_last', 0) > variable_get('project_issue_reminder_interval', 28 * 7 * 24 * 60 * 60)) {
-    variable_set('project_issue_reminder_last', time());
-    project_mail_reminder();
-  }
-
-  // Auto-close fixed issues;
-  project_issue_auto_close();
-}
-
 /**
- * Automatically close issues marked as fixed for a specified number of days
- * and add a comment to each documenting the change.
+ * Implementation of hook_cron().
+ *
+ * There is a variable (no admin UI, just via settings.php) that controls if
+ * the admin has setup a separate cron job on their system to invoke this code
+ * instead of relying on cron.php and hook_cron(). If this variable, called
+ * 'project_issue_hook_cron', is set to FALSE, then there's nothing to do
+ * in here. Otherwise, we include the cron.inc file and invoke that code
+ * ourselves.
  */
-function project_issue_auto_close() {
-  // Set query parameters.
-  $seconds = 24 * 60 * 60 * variable_get('project_issue_auto_close_days', PROJECT_ISSUE_AUTO_CLOSE_DAYS);
-
-  $comment = theme('project_issue_auto_close_message');
-  $result = db_query('SELECT pi.nid FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE pi.sid = %d AND n.changed < %d', PROJECT_ISSUE_STATE_FIXED, time() - $seconds);
-  while ($issue = db_fetch_object($result)) {
-    project_issue_add_followup(array(
-      'nid' => $issue->nid,
-      'sid' => PROJECT_ISSUE_STATE_CLOSED,
-      'comment' => $comment,
-    ));
+function project_issue_cron() {
+  if (variable_get('project_issue_hook_cron', TRUE)) {
+    require_once drupal_get_path('module', 'project_issue') .'/includes/cron.inc';
+    _project_issue_cron();
   }
 }
 

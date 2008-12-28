@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.51 2008/10/29 00:20:08 dww Exp $
+// $Id: project_issue.install,v 1.52 2008/12/28 23:32:43 dww Exp $
 
 function project_issue_install() {
   // We need to check this before we try to create the table, so that
@@ -208,6 +208,7 @@ function project_issue_uninstall() {
     'project_issue_site_help',
     'project_issue_invalid_releases',
     'project_issue_followup_user',
+    'project_issue_hook_cron',
   );
   foreach ($variables as $variable) {
     variable_del($variable);

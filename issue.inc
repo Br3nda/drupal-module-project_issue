@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.320 2008-12-17 08:07:14 dww Exp $
+// $Id: issue.inc,v 1.321 2009-01-07 20:48:27 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -369,7 +369,7 @@ function project_issue_statistics($project = 0) {
   $total = db_result(db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s', 'p'), $filter));
   $result = db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total, p.sid FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s GROUP BY p.sid', 'p'), $filter);
   while ($stat = db_fetch_object($result)) {
-    $rows[$stat->sid][0] = project_issue_state($stat->sid);
+    $rows[$stat->sid][0] = check_plain(project_issue_state($stat->sid));
     $rows[$stat->sid][1] = array('data' => $stat->total, 'class' => 'project-issue-numeric');
     $rows[$stat->sid][2] = array('data' => number_format($stat->total / $total * 100) .'%', 'class' => 'project-issue-numeric-light');
     $rows[$stat->sid][3] = array('data' => '0', 'class' => 'project-issue-numeric');
@@ -390,7 +390,7 @@ function project_issue_statistics($project = 0) {
     $header = array();
     $header['project'] = array('data' => t('Project'), 'field' => 'title');
     foreach ($states as $key => $value) {
-      $header[$key] = array('data' => $value, 'field' => $key);
+      $header[$key] = array('data' => check_plain($value), 'field' => $key);
     }
     $header['total'] = array('data' => t('Total'), 'field' => 'total');
     // Force sorting arrow to appear on active first.
@@ -846,7 +846,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
       $form['issue_info']['status'] = array(
         '#type' => 'item',
         '#title' => t('Status'),
-        '#value' => project_issue_state($default_state),
+        '#value' => check_plain(project_issue_state($default_state)),
       );
     }
   }
@@ -1258,6 +1258,8 @@ function project_issue_access($op, $node) {
  * @return
  *   An array of states (sid as key, name as value) that match the
  *   given filters, or the name of the requested state.
+ *   NOTE: The state name returned is raw text, and should be filtered via
+ *   check_plain() or filter_xss() before being printed as HTML output.
  */
 function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false, $account = NULL) {
   static $options;
@@ -1869,7 +1871,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
         $title = l($node->title, "node/$node->nid");
       }
       $row[] = $title . theme('mark', node_mark($node->nid, $node->changed));
-      $row[] = $states[$node->sid];
+      $row[] = check_plain($states[$node->sid]);
       $row[] = $priorities[$node->priority];
       $row[] = project_issue_category($node->category, 0);
       if (count($releases)) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.6 2008/08/09 02:17:23 dww Exp $
+// $Id: project_issue.views.inc,v 1.7 2009/01/07 20:48:27 dww Exp $
 
 /**
  * @file
@@ -297,14 +297,14 @@ function _project_issue_views_tables() {
  * Displays a field indicating the status of an issue.
  */
 function views_handler_field_project_issue_status($fieldinfo, $fielddata, $value, $data) {
-  return project_issue_state($value);
+  return check_plain(project_issue_state($value));
 }
 
 /**
  * Displays a field indicating the priority of an issue.
  */
 function views_handler_field_project_issue_priority($fieldinfo, $fielddata, $value, $data) {
-  return project_issue_priority($value);
+  return check_plain(project_issue_priority($value));
 }
 
 function views_query_handler_project_issue_all_files($field, $fieldinfo, &$query) {

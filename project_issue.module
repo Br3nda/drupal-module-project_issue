@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.98 2008/12/28 23:32:43 dww Exp $
+// $Id: project_issue.module,v 1.99 2009/01/07 20:48:27 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -722,7 +722,7 @@ function project_issue_project_edit_form($node) {
   foreach ($options as $key => $choice) {
     $form['email']['mail_copy_filter_state'][$key] = array(
       '#type' => 'checkbox',
-      '#title' => $choice,
+      '#title' => check_plain($choice),
       '#return_value' => $key,
       '#default_value' => isset($node->mail_copy_filter_state[$key]) ? $node->mail_copy_filter_state[$key] : NULL,
     );

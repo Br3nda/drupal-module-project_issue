@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.105.2.5 2008/12/28 23:33:26 dww Exp $
+// $Id: mail.inc,v 1.105.2.6 2009/01/07 20:48:32 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -276,19 +276,52 @@ function project_mail_notify($nid) {
   // is NOT the case.
   $check_file_perms = !db_num_rows(db_query("SELECT rid FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
 
+  // We need to determine if node_access() checks are necessary.  The
+  // check will be needed if any of the following is true:
+  //   1. The node is not published.
+  //   2. There is at least on node access control module enabled.
+  //   3. Both the anonymous and authenticated user do not have
+  //      the 'access project issues' permission.
+  $allowed_roles = user_roles(FALSE, 'access project issues');
+  if (isset($allowed_roles[DRUPAL_ANONYMOUS_RID]) || isset($allowed_roles[DRUPAL_AUTHENTICATED_RID])) {
+    $anon_auth_access = TRUE;
+  }
+  $grants = module_implements('node_grants');
+  $check_node_access = $node->status != 1 || !$anon_auth_access || !empty($grants);
+
   project_mail_output($node->title, 0);
   $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->uri, '!category' => $node->category, '!title' => $node->title));
 
   while ($recipient = db_fetch_object($result)) {
-    if ($check_file_perms) {
+    // To save work, only go through a user_load if we need it.
+    if ($check_file_perms || $check_node_access) {
       $account = user_load(array('uid' => $recipient->uid));
-      $display_files = user_access('view uploaded files', $account);
+    }
+    if ($check_node_access) {
+      // Load the user that's to receive the mail into
+      // the global user object temporarily. We use session_save_session()
+      // to provide safe user impersonation.
+      $original_user = $user;
+      session_save_session(FALSE);
+      $user = $account;
+      $can_access = node_access('view', $node);
+      // Load the original user back in.
+      $user = $original_user;
+      session_save_session(TRUE);
     }
     else {
-      $display_files = TRUE;
+      $can_access = TRUE;
     }
-    $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, $display_files);
-    drupal_mail('project_issue_update', $recipient->mail, $subject, $body, $from, $header);
+    if ($can_access) {
+      if ($check_file_perms) {
+        $display_files = user_access('view uploaded files', $account);
+      }
+      else {
+        $display_files = TRUE;
+      }
+      $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, $display_files);
+      drupal_mail('project_issue_update', $recipient->mail, $subject, $body, $from, $header);
+    }
   }
 
   if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {

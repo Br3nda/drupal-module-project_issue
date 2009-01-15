@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.111 2009/01/07 20:48:27 dww Exp $
+// $Id: mail.inc,v 1.112 2009/01/15 00:29:36 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -39,44 +39,44 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
 
       foreach ($fields as $var => $text) {
         $text = strtolower(str_replace(' ', '_', $text));
-        if (isset($node->$text)) {
-          $node->$text = trim($node->$text);
+        if (isset($node->project_issue[$text])) {
+          $node->project_issue[$text] = trim($node->project_issue[$text]);
           switch ($var) {
             case 'pid':
-              $project = node_load($node->$text);
+              $project = node_load($node->project_issue[$text]);
               if ($project->nid) {
-                $entry->pid = $project->nid;
+                $entry->project_issue['pid'] = $project->nid;
               }
               break;
             case 'category':
-              if (($category = array_search($node->$text, project_issue_category(0, 0)))) {
-                $entry->category = $category;
+              if (($category = array_search($node->project_issue[$text], project_issue_category(0, 0)))) {
+                $entry->project_issue['category'] = $category;
               }
               break;
             case 'priority':
-              if (($priority = array_search($node->$text, project_issue_priority()))) {
-                $entry->priority = $priority;
+              if (($priority = array_search($node->project_issue[$text], project_issue_priority()))) {
+                $entry->project_issue['priority'] = $priority;
               }
               break;
             case 'rid':
-              if ($entry->pid && ($nid = db_result(db_query("SELECT nid FROM {project_release_nodes} WHERE pid = %d AND version = '%s'", $entry->pid, $node->$text), 0))) {
-                $entry->rid = $nid;
+              if ($entry->project_issue['pid'] && ($nid = db_result(db_query("SELECT nid FROM {project_release_nodes} WHERE pid = %d AND version = '%s'", $entry->project_issue['pid'], $node->project_issue[$text]), 0))) {
+                $entry->project_issue['rid'] = $nid;
               }
               break;
             case 'assigned':
-              if ($user = user_load(array('name' => $node->$text))) {
-                $entry->assigned = $user->uid;
+              if ($user = user_load(array('name' => $node->project_issue[$text]))) {
+                $entry->project_issue['assigned'] = $user->uid;
               }
               break;
             case 'sid':
-              if (($state = array_search($node->$text, project_issue_state()))) {
-                $entry->sid = $state;
+              if (($state = array_search($node->project_issue[$text], project_issue_state()))) {
+                $entry->project_issue['sid'] = $state;
               }
               break;
             case 'component':
-              if ($project->pid || ($entry->pid && ($project = node_load(array('nid' => $entry->pid, 'type' => 'project_project'))))) {
-                if ($project && in_array($node->$text, $project->components)) {
-                  $entry->component = $node->$text;
+              if ($entry->project_issue['pid'] && ($project = node_load(array('nid' => $entry->project_issue['pid'], 'type' => 'project_project')))) {
+                if ($project && in_array($node->project_issue[$text], $project->project_issue['components'])) {
+                  $entry->project_issue['component'] = $node->project_issue[$text];
                 }
               }
               break;
@@ -181,7 +181,7 @@ function project_mail_notify($nid) {
 
   // There could be stale data in the cached node, so reset the cache.
   $node = node_load($nid, NULL, TRUE);
-  $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
+  $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   $fields = project_issue_field_labels('email');
 
@@ -191,10 +191,10 @@ function project_mail_notify($nid) {
 
   // Load in the original issue data here, since we want a running
   // reverse history.
-  $original_issue_data = unserialize($node->original_issue_data);
+  $original_issue_data = unserialize($node->project_issue['original_issue_data']);
   foreach ($fields as $field => $label) {
     if ($field != 'name' && $field != 'updator') {
-      $issue->$field = $original_issue_data->$field;
+      $issue->project_issue[$field] = $original_issue_data->$field;
     }
   }
 
@@ -203,8 +203,8 @@ function project_mail_notify($nid) {
   if (!empty($node->uid)) {
     $uids[$node->uid] = $node->uid;
   }
-  if (!empty($node->assigned)) {
-    $uids[$node->assigned] = $node->assigned;
+  if (!empty($node->project_issue['assigned'])) {
+    $uids[$node->project_issue['assigned']] = $node->project_issue['assigned'];
   }
 
   // Create complete history of the bug report.
@@ -228,7 +228,7 @@ function project_mail_notify($nid) {
 
   // Create mail header
   $sender->name = mime_header_encode(t('!name (!site)', array('!name' => $user->name, '!site' => variable_get('site_name', 'Drupal'))));
-  $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->uri));
+  $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->project['uri']));
 
   // The sender name is enclosed by double quotes below
   // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
@@ -240,10 +240,10 @@ function project_mail_notify($nid) {
     'Return-Path' => "<$sender->mail>",
     'Date' => date('r'),
     'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
-    'List-Id' => "$project->title <$project->uri-issues-$domain>",
-    'List-Archive' => '<'. url("project/issues/$project->uri", NULL, NULL, 1) .'>',
-    'List-Subscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>',
-    'List-Unsubscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>'
+    'List-Id' => "$project->title <". $project->project['uri'] ."-issues-$domain>",
+    'List-Archive' => '<'. url("project/issues/". $project->project['uri'], NULL, NULL, 1) .'>',
+    'List-Subscribe' => '<'. url("node/". $project->project['uri'], NULL, NULL, 1) .'>',
+    'List-Unsubscribe' => '<'. url("node/". $project->project['uri'], NULL, NULL, 1) .'>'
   );
 
   // Comments exist, set headers accordingly.
@@ -259,11 +259,11 @@ function project_mail_notify($nid) {
 
   if (count($uids)) {
     $placeholders = implode(',', array_fill(0, count($uids), '%d'));
-    array_unshift($uids, $node->pid);
+    array_unshift($uids, $node->project_issue['pid']);
     $result = db_query("SELECT p.*, u.uid, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND (p.level = 2 OR (p.level = 1 AND u.uid IN ($placeholders)))", $uids);
   }
   else {
-    $result = db_query('SELECT p.*, u.uid, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->pid);
+    $result = db_query('SELECT p.*, u.uid, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->project_issue['pid']);
   }
 
   // Create link to related node
@@ -290,7 +290,7 @@ function project_mail_notify($nid) {
   $check_node_access = $node->status != 1 || !$anon_auth_access || !empty($grants);
 
   project_mail_output($node->title, 0);
-  $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->uri, '!category' => $node->category, '!title' => $node->title));
+  $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->project['uri'], '!category' => $node->project_issue['category'], '!title' => $node->title));
 
   while ($recipient = db_fetch_object($result)) {
     // To save work, only go through a user_load if we need it.
@@ -324,17 +324,17 @@ function project_mail_notify($nid) {
     }
   }
 
-  if (is_array($project->mail_copy_filter) && count(array_filter($project->mail_copy_filter)) && !$project->mail_copy_filter[$node->category]) {
+  if (is_array($project->project_issue['mail_copy_filter']) && count(array_filter($project->project_issue['mail_copy_filter'])) && !$project->project_issue['mail_copy_filter'][$node->project_issue['category']]) {
     return;
   }
 
-  if (is_array($project->mail_copy_filter_state) && count(array_filter($project->mail_copy_filter_state)) && !$project->mail_copy_filter_state[$node->sid]) {
+  if (is_array($project->project_issue['mail_copy_filter_state']) && count(array_filter($project->project_issue['mail_copy_filter_state'])) && !$project->project_issue['mail_copy_filter_state'][$node->project_issue['sid']]) {
     return;
   }
 
-  if ($project->mail_copy) {
+  if ($project->project_issue['mail_copy']) {
     $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, TRUE);
-    drupal_mail('project_issue_update', $project->mail_copy, $subject, $body, $from, $header);
+    drupal_mail('project_issue_update', $project->project_issue['mail_copy'], $subject, $body, $from, $header);
   }
 }
 
@@ -370,7 +370,7 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
 
   // Get most recent update.
   $entry = array_pop($history);
-  $node->updator = $entry->name ? $entry->name : $user->name;
+  $node->project_issue['updator'] = $entry->name ? $entry->name : $user->name;
 
   // Check if the latest entry is actually the initial issue.
   if (empty($history)) {
@@ -383,13 +383,15 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
 
   $comment_changes = project_issue_metadata_changes($node, $previous, $entry, $fields);
 
-  // Since $node->name will always be the original issue author, and since $node->updator
-  // isn't a property of either $previous or #entry, these two properties
-  // will never show up as being different when project_issue_metadata_changes() is called,
-  // and therefore neither of these will ever be elements of the $comment_changes array.
-  // Since we do want them to be printed in issue emails, we just need to add their labels
-  // back into the $comment_changes array here, so that theme_project_issue_mail_summary_field()
-  // will know to print the data for these two fields.
+  // Since $node->name will always be the original issue author, and since
+  // $node->project_issue['updator'] isn't a property of either $previous or
+  // $entry, these two properties will never show up as being different when
+  // project_issue_metadata_changes() is called, and therefore neither of
+  // these will ever be elements of the $comment_changes array.  Since we do
+  // want them to be printed in issue emails, we just need to add their labels
+  // back into the $comment_changes array here, so that
+  // theme_project_issue_mail_summary_field() will know to print the data for
+  // these two fields.
   $comment_changes['name'] = array(
     'label' => $fields['name'],
   );
@@ -524,8 +526,9 @@ function theme_project_issue_mail_summary_field($node, $field_name, $change) {
       // which haven't changed but should be printed anyway get processed.
       // For example, the project, category, etc. are printed in each email
       // whether or not they have changed.
-      if (isset($node->$field_name)) {
-        $summary_row .= " $text". project_issue_change_summary($field_name, $node->$field_name) ."\n";
+      // @TODO: Should we really assume the field in is $node->project_issue[]?
+      if (isset($node->project_issue[$field_name])) {
+        $summary_row .= " $text". project_issue_change_summary($field_name, $node->project_issue[$field_name]) ."\n";
       }
     }
   }

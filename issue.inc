@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.321 2009/01/07 20:48:27 dww Exp $
+// $Id: issue.inc,v 1.322 2009/01/15 00:29:36 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -21,7 +21,7 @@ function project_issue_page() {
       $project = project_project_retrieve(arg(3));
       // We assume that a user may create issues for projects that he may view.
       if ($project->nid && node_access('view', $project)) {
-        drupal_goto("node/add/project-issue/$project->uri");
+        drupal_goto("node/add/project-issue/". $project->project['uri']);
       }
       else {
         drupal_goto("node/add/project-issue");
@@ -147,7 +147,7 @@ function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL
     // http://drupal.org/node/197281 lands.
     $issue = new stdClass;
   }
-  $issue->pid = $pid;
+  $issue->project_issue['pid'] = $pid;
   $return['assigned'] = '';
   $assigned_choices = project_issue_assigned_choices($issue);
 
@@ -260,7 +260,7 @@ function project_issue_quick_search($url_arg, $filters) {
       drupal_not_found();
       exit;
     }
-    $destination = 'project/issues/'. $project->uri;
+    $destination = 'project/issues/'. $project->project['uri'];
   }
 
   // if 'q' is the only thing in $_GET, and it == destination, don't redirect
@@ -311,7 +311,7 @@ function project_issue_advanced_search($url_arg, $filters) {
       drupal_not_found();
       exit;
     }
-    $destination = 'project/issues/'. $project->uri;
+    $destination = 'project/issues/'. $project->project['uri'];
     drupal_goto($destination, drupal_query_string_encode($issue_filters));
   }
 
@@ -643,7 +643,7 @@ function project_issue_pick_project_form_validate($form_id, $form_values) {
 
 function project_issue_pick_project_form_submit($form_id, $form_values) {
   $project = node_load($form_values['pid']);
-  return 'node/add/project-issue/'. $project->uri;
+  return 'node/add/project-issue/'. $project->project['uri'];
 }
 
 /**
@@ -690,18 +690,18 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     return;
   }
 
-  if (empty($node->pid)) {
+  if (empty($node->project_issue['pid'])) {
     $pid = arg(3);
     if (!empty($pid)) {
       if (is_numeric($pid)) {
-        $node->pid = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
+        $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
       }
       else {
-        $node->pid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid), 0);
+        $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid), 0);
       }
     }
   }
-  $pid = $node->pid;
+  $pid = $node->project_issue['pid'];
 
   if (empty($pid)) {
     drupal_set_message(t('Invalid project selected.'), 'error');
@@ -731,10 +731,9 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
 
   // Load the project and initialize some support arrays.
   $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
-
   if ($allow_metadata_changes) {
     if (module_exists('project_release') &&
-        $releases = project_release_get_releases($project, 0, 'version', 'all', array($node->rid))) {
+        $releases = project_release_get_releases($project, 0, 'version', 'all', array($node->project_issue['rid']))) {
       $releases = array(t('<none>')) + $releases;
     }
     // Remove releases marked as invalid release nodes for user selection.
@@ -742,16 +741,16 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
       unset($releases[$rid]);
     }
     $components = array();
-    if ($project->components) {
+    if ($project->project_issue['components']) {
       $components = array(t('<none>'));
-      foreach ($project->components as $component) {
+      foreach ($project->project_issue['components'] as $component) {
         $component = check_plain($component);
         $components[$component] = $component;
       }
     }
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
-    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->sid);
+    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->project_issue['sid']);
     $assigned = project_issue_assigned_choices($node);
   }
 
@@ -764,7 +763,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
       '#suffix' => '</div>',
     );
   }
-  $project_help = trim($project->help);
+  $project_help = trim($project->project_issue['help']);
   if (!empty($project_help)) {
     $form['project_help']['project'] = array(
       '#prefix' => '<div class="messages status project">',
@@ -787,13 +786,13 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     );
     $form['project_info']['pid'] = array(
       '#type' => 'value',
-      '#value' => $node->pid,
+      '#value' => $node->project_issue['pid'],
     );
     if ($releases) {
       $form['project_info']['rid'] = array(
         '#type' => 'select',
         '#title' => t('Version'),
-        '#default_value' => $node->rid,
+        '#default_value' => $node->project_issue['rid'],
         '#options' => $releases,
         '#required' => TRUE,
       );
@@ -801,7 +800,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     $form['project_info']['component'] = array(
       '#type' => 'select',
       '#title' => t('Component'),
-      '#default_value' => $node->component,
+      '#default_value' => $node->project_issue['component'],
       '#options' => $components,
       '#required' => TRUE,
     );
@@ -814,27 +813,27 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     $form['issue_info']['category'] = array(
       '#type' => 'select',
       '#title' => t('Category'),
-      '#default_value' => $node->category ? $node->category : arg(4),
+      '#default_value' => $node->project_issue['category'] ? $node->project_issue['category'] : arg(4),
       '#options' => $categories,
       '#required' => TRUE,
     );
     $form['issue_info']['priority'] = array(
       '#type' => 'select',
       '#title' => t('Priority'),
-      '#default_value' => $node->priority ? $node->priority : 2,
+      '#default_value' => $node->project_issue['priority'] ? $node->project_issue['priority'] : 2,
       '#options' => $priorities,
     );
     $form['issue_info']['assigned'] = array(
       '#type' => 'select',
       '#title' => t('Assigned'),
-      '#default_value' => $node->assigned,
+      '#default_value' => $node->project_issue['assigned'],
       '#options' => $assigned,
     );
     if (count($states) > 1) {
       $form['issue_info']['sid'] = array(
         '#type' => 'select',
         '#title' => t('Status'),
-        '#default_value' => $node->sid ? $node->sid : $default_state,
+        '#default_value' => $node->project_issue['sid'] ? $node->project_issue['sid'] : $default_state,
         '#options' => $states,
       );
     }
@@ -895,7 +894,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
  * Build an array of users to whom an issue may be assigned.
  *
  * @param $issue
- *   The issue object.
+ *   The fully loaded issue node object.
  * @return
  *   A keyed array in the form uid => name containing users
  *   to whom an issue may be assigned.
@@ -908,7 +907,7 @@ function project_issue_assigned_choices($issue) {
     $function($assigned, $issue);
   }
   natcasesort($assigned);
-  $assigned = array(0 => empty($issue->assigned) ? t('Unassigned') : t('Unassign')) + $assigned;
+  $assigned = array(0 => empty($issue->project_issue['assigned']) ? t('Unassigned') : t('Unassign')) + $assigned;
   return $assigned;
 }
 
@@ -920,6 +919,11 @@ function project_issue_assigned_choices($issue) {
  * project_issue_node_form_validate() since if we did, node_form_validate()
  * itself would not be invoked, which would lead to all kinds of problems,
  * including hook_nodeapi('validate') never being invoked.
+ *
+ * @param $node 
+ *   An object of form values from the project_issue node form, not a fully
+ *   loaded issue node object.  Therefore, the fields are not in the usual
+ *   $node->project_issue array.
  */
 function project_issue_validate(&$node) {
   // If $node->nid is set, that means that the node was being
@@ -937,7 +941,7 @@ function project_issue_validate(&$node) {
           form_set_error('rid', t('You have to specify a valid version.'));
         }
       }
-      if (isset($node->component) && !in_array($node->component, $project->components)) {
+      if (isset($node->component) && !in_array($node->component, $project->project_issue['components'])) {
         $node->component = 0;
       }
       if (empty($node->component)) {
@@ -958,35 +962,35 @@ function project_issue_view($node, $teaser = false, $page = false) {
     $node->content['#prefix'] = '<div class="project-issue">';
     $node->content['#suffix'] = '</div>';
 
-    $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
-    $release->nid = $node->rid;
+    $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
+    $release->nid = $node->project_issue['rid'];
     if (module_exists('project_release')) {
       $release = project_release_load($release);
     }
-    $assigned = ($node->assigned && ($account = user_load(array('uid' => $node->assigned))) ? $account->name : t('Unassigned'));
+    $assigned = ($node->project_issue['assigned'] && ($account = user_load(array('uid' => $node->project_issue['assigned']))) ? $account->name : t('Unassigned'));
 
     $current_data = array();
     $current_data['pid'] = array(
       'label' => t('Project'),
       'current' => $project->title,
     );
-    if ($release->version) {
+    if ($release->project_release['version']) {
       $current_data['rid'] = array(
         'label' => t('Version'),
-        'current' => $release->version,
+        'current' => $release->project_release['version'],
       );
     }
     $current_data['component'] = array(
       'label' => t('Component'),
-      'current' => $node->component,
+      'current' => $node->project_issue['component'],
     );
     $current_data['category'] = array(
       'label' => t('Category'),
-      'current' => project_issue_category($node->category, 0),
+      'current' => project_issue_category($node->project_issue['category'], 0),
     );
     $current_data['priority'] = array(
       'label' => t('Priority'),
-      'current' => project_issue_priority($node->priority),
+      'current' => project_issue_priority($node->project_issue['priority']),
     );
     $current_data['assigned'] = array(
       'label' => t('Assigned'),
@@ -994,7 +998,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
     );
     $current_data['sid'] = array(
       'label' => t('Status'),
-      'current' => project_issue_state($node->sid),
+      'current' => project_issue_state($node->project_issue['sid']),
     );
 
     // Allow modules to alter the metadata displayed in the table on the actual
@@ -1051,10 +1055,10 @@ function project_issue_view($node, $teaser = false, $page = false) {
 function project_issue_project_issue_assignees(&$assigned, $node) {
   global $user;
   if ($user->uid) {
-    if (isset($node->assigned) && $user->uid != $node->assigned) {
+    if (isset($node->project_issue['assigned']) && $user->uid != $node->project_issue['assigned']) {
       // Assigned to someone else, add the currently assigned user.
-      $account = user_load(array('uid' => $node->assigned));
-      $assigned[$node->assigned] = $account->name;
+      $account = user_load(array('uid' => $node->project_issue['assigned']));
+      $assigned[$node->project_issue['assigned']] = $account->name;
     }
     // Always let the person replying assign it to themselves.
     $assigned[$user->uid] = $user->name;
@@ -1147,7 +1151,7 @@ function project_issue_internal_links($node) {
   // Link straight to comment form.
   if ($node->comment == COMMENT_NODE_READ_WRITE && (user_access('post comments') || user_access('post comments without approval'))) {
     // TODO: This conditional needs to be ripped out in D6.
-    $comment_form_location = isset($node->comment_form_location) ? $node->comment_form_location : variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
+    $comment_form_location = isset($node->project_issue['comment_form_location']) ? $node->project_issue['comment_form_location'] : variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
 
     // Comment form isn't on the page, link to the comment reply page.
     if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
@@ -1163,21 +1167,30 @@ function project_issue_internal_links($node) {
 }
 
 function project_issue_load($node) {
-  $project = db_fetch_object(db_query(db_rewrite_sql('SELECT pi.* FROM {project_issues} pi WHERE pi.nid = %d', 'pi'), $node->nid));
+  $additions = db_fetch_array(db_query(db_rewrite_sql('SELECT pi.* FROM {project_issues} pi WHERE pi.nid = %d', 'pi'), $node->nid));
 
   // TODO: This need to be ripped out in D6.
-  $project->comment_form_location = variable_get('project_issue_comment_form_location', NULL);
-
-  return $project;
+  $additions['comment_form_location'] = variable_get('project_issue_comment_form_location', NULL);
+  $issue = new stdClass;
+  $issue->project_issue = $additions;
+  return $issue;
 }
 
+/**
+ * Implementation of hook_insert().
+ *
+ * @param $node
+ *   Object containing form values from the project_issue node form.  This is
+ *   NOT a fully loaded $node object, so the issue-related values are directly
+ *   in $node, not in the $node->project_issue array.
+ */
 function project_issue_insert($node) {
-
-  // Permanently store the original issue states in a serialized array. This is a bit
-  // yucky, but we need them for proper handling of states workflow.  The current states
-  // need to be stored in {project_issues} as well for query efficiency in issue queue
-  // searches, and it seems too messy to add a bunch of new columns to the {project_issues}
-  // table for the original states.
+  // Permanently store the original issue states in a serialized array. This
+  // is a bit yucky, but we need them for proper handling of states workflow.
+  // The current states need to be stored in {project_issues} as well for
+  // query efficiency in issue queue searches, and it seems too messy to add a
+  // bunch of new columns to the {project_issues} table for the original
+  // states.
   $original_issue_data = new stdClass();
   $fields = array(
     'pid' => 0,
@@ -1352,7 +1365,7 @@ function project_issue_query($project = 0, $query = NULL) {
   if (!empty($project->nid)) {
     drupal_set_title(t('Search issues for %name', array('%name' => $project->title)));
     project_project_set_breadcrumb($project, TRUE);
-    foreach ($project->components as $component) {
+    foreach ($project->project_issue['components'] as $component) {
       $component = check_plain($component);
       $components[$component] = $component;
     }
@@ -1383,7 +1396,7 @@ function project_issue_query($project = 0, $query = NULL) {
   $states = project_issue_state();
   $priorities = project_issue_priority();
 
-  $form['#action'] = url(isset($project->uri) ? "project/issues/$project->uri" : 'project/issues');
+  $form['#action'] = url(isset($project->project['uri']) ? 'project/issues/'. $project->project['uri'] : 'project/issues');
   $form['text'] = array(
     '#type' => 'textfield',
     '#title' => t('Search for'),
@@ -1741,32 +1754,32 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     if (node_access('create', 'project_issue')) {
       $links['create'] = array(
         'title' => t('Create'),
-        'href' => "node/add/project-issue/$project->uri",
-        'attributes' => array('title' => t('Create a new issue for @project.', array('@project' => $project->uri))),
+        'href' => 'node/add/project-issue/'. $project->project['uri'],
+        'attributes' => array('title' => t('Create a new issue for @project.', array('@project' => $project->project['uri']))),
       );
     }
     else {
       $links['create'] = array(
-        'title' => theme('project_issue_create_forbidden', $project->uri),
+        'title' => theme('project_issue_create_forbidden', $project->project['uri']),
         'html'  => TRUE,
       );
     }
     $links['statistics'] = array(
       'title' => t('Statistics'),
-      'href' => "project/issues/statistics/$project->uri",
-      'attributes' => array('title' => t('See statistics about @project issues.', array('@project' => $project->uri))),
+      'href' => 'project/issues/statistics/'. $project->project['uri'],
+      'attributes' => array('title' => t('See statistics about @project issues.', array('@project' => $project->project['uri']))),
     );
     if ($user->uid) {
       $links['subscribe'] = array(
         'title' => t('Subscribe'),
-        'href' => "project/issues/subscribe-mail/$project->uri",
-        'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $project->uri))),
+        'href' => 'project/issues/subscribe-mail/'. $project->project['uri'],
+        'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $project->project['uri']))),
       );
     }
     $links['search'] = array(
       'title' => t('Advanced search'),
-      'href' => "project/issues/search/$project->uri",
-      'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $project->uri))),
+      'href' => 'project/issues/search/'. $project->project['uri'],
+      'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $project->project['uri']))),
     );
   }
   else {
@@ -1785,7 +1798,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     }
     else {
       $links['create'] = array(
-        'title' => theme('project_issue_create_forbidden', $project->uri),
+        'title' => theme('project_issue_create_forbidden', $project->project['uri']),
         'html'  => TRUE,
       );
     }
@@ -1860,9 +1873,9 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     while ($node = db_fetch_object($result)) {
       $node = node_load($node->nid);
       $row = array();
-      $class = "state-$node->sid";
+      $class = "state-". $node->project_issue['sid'];
       if (!$project->nid) {
-        $row[] = l($projects[$node->pid], "project/issues/$node->pid");
+        $row[] = l($projects[$node->project_issue['pid']], "project/issues/". $node->project_issue['pid']);
       }
       if (strlen($node->title) > 50) {
         $title = l(drupal_substr($node->title, 0, 50), "node/$node->nid", array('title' => $node->title));
@@ -1871,14 +1884,14 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
         $title = l($node->title, "node/$node->nid");
       }
       $row[] = $title . theme('mark', node_mark($node->nid, $node->changed));
-      $row[] = check_plain($states[$node->sid]);
-      $row[] = $priorities[$node->priority];
-      $row[] = project_issue_category($node->category, 0);
+      $row[] = check_plain($states[$node->project_issue['sid']]);
+      $row[] = $priorities[$node->project_issue['priority']];
+      $row[] = project_issue_category($node->project_issue['category'], 0);
       if (count($releases)) {
-        $row[] = $releases[$node->rid];
+        $row[] = $releases[$node->project_issue['rid']];
       }
       $row[] = array('data' => format_interval(time() - $node->changed, 2), 'align' => 'right');
-      $row[] = ($node->assigned) ? theme('username', user_load(array('uid' => $node->assigned))) : '';
+      $row[] = ($node->project_issue['assigned']) ? theme('username', user_load(array('uid' => $node->project_issue['assigned']))) : '';
 
       $row = array('data' => $row, 'class' => $class);
 
@@ -2271,9 +2284,9 @@ function project_issue_change_summary($field, $value) {
           $release = project_release_load($release);
         }
         else {
-          $release->version = t('Unknown');
+          $release->project_release['version'] = t('Unknown');
         }
-        return $release->version;
+        return $release->project_release['version'];
       }
       return t('<none>');
     case 'assigned':

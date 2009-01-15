@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.99 2009/01/07 20:48:27 dww Exp $
+// $Id: project_issue.module,v 1.100 2009/01/15 00:29:36 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -632,8 +632,8 @@ function project_issue_project_edit_issues() {
   project_project_set_breadcrumb($node);
   drupal_set_title(check_plain($node->title));
 
-  if (isset($node->components) && is_array($node->components)) {
-    $node->components = implode("\n", $node->components);
+  if (isset($node->project_issue['components']) && is_array($node->project_issue['components'])) {
+    $node->project_issue['components'] = implode("\n", $node->project_issue['components']);
   }
   return drupal_get_form('project_issue_project_edit_form', $node);
 }
@@ -656,20 +656,20 @@ function project_issue_project_edit_form($node) {
     '#type' => 'checkbox',
     '#title' => t('Enable issue tracker'),
     '#return_value' => 1,
-    '#default_value' => isset($node->issues) ? $node->issues : 1,
+    '#default_value' => isset($node->project_issue['issues']) ? $node->project_issue['issues'] : 1,
     '#description' => t('Let users submit bug requests, patches, feature requests, support requests, etc.'),
   );
   $form['issue']['components'] = array(
     '#type' => 'textarea',
     '#title' => t('Components'),
-    '#default_value' => isset($node->components) ? $node->components : NULL,
+    '#default_value' => isset($node->project_issue['components']) ? $node->project_issue['components'] : NULL,
     '#cols' => 20,
     '#rows' => 5,
   );
   $form['issue']['help'] = array(
     '#type' => 'textarea',
     '#title' => t('Submission guidelines'),
-    '#default_value' => isset($node->help) ? $node->help : NULL,
+    '#default_value' => isset($node->project_issue['help']) ? $node->project_issue['help'] : NULL,
     '#cols' => 20,
     '#rows' => 5,
   );
@@ -683,7 +683,7 @@ function project_issue_project_edit_form($node) {
   $form['email']['mail_digest'] = array(
     '#type' => 'textfield',
     '#title' => t('Weekly critical issues report'),
-    '#default_value' => isset($node->mail_digest) ? $node->mail_digest : NULL,
+    '#default_value' => isset($node->project_issue['mail_digest']) ? $node->project_issue['mail_digest'] : NULL,
     '#size' => 20,
     '#maxlength' => 255,
     '#description' => t('To get a weekly digest of critical issues specify an e-mail address.'),
@@ -691,7 +691,7 @@ function project_issue_project_edit_form($node) {
   $form['email']['mail_copy'] = array(
     '#type' => 'textfield',
     '#title' => t('Issues e-mail address'),
-    '#default_value' => isset($node->mail_copy) ? $node->mail_copy : NULL,
+    '#default_value' => isset($node->project_issue['mail_copy']) ? $node->project_issue['mail_copy'] : NULL,
     '#size' => 20,
     '#maxlength' => 255,
     '#description' => t('If you wish to receive a copy of all the issues to a central location specify an address here. <em>Note: the copy will contain links to file attachments.</em>'),
@@ -709,7 +709,7 @@ function project_issue_project_edit_form($node) {
       '#type' => 'checkbox',
       '#title' => $choice,
       '#return_value' => $key,
-      '#default_value' => isset($node->mail_copy_filter[$key]) ? $node->mail_copy_filter[$key] : NULL,
+      '#default_value' => isset($node->project_issue['mail_copy_filter'][$key]) ? $node->project_issue['mail_copy_filter'][$key] : NULL,
     );
   }
   $options = project_issue_state();
@@ -724,7 +724,7 @@ function project_issue_project_edit_form($node) {
       '#type' => 'checkbox',
       '#title' => check_plain($choice),
       '#return_value' => $key,
-      '#default_value' => isset($node->mail_copy_filter_state[$key]) ? $node->mail_copy_filter_state[$key] : NULL,
+      '#default_value' => isset($node->project_issue['mail_copy_filter_state'][$key]) ? $node->project_issue['mail_copy_filter_state'][$key] : NULL,
     );
   }
 
@@ -737,7 +737,7 @@ function project_issue_project_edit_form($node) {
       '#type' => 'checkbox',
       '#title' => t('Send monthly reminders to users'),
       '#return_value' => 1,
-      '#default_value' => isset($node->mail_reminder) ? $node->mail_reminder : NULL,
+      '#default_value' => isset($node->project_issue['mail_reminder']) ? $node->project_issue['mail_reminder'] : NULL,
       '#description' => t('Enabling this will send a monthly reminder to users that have open issues registered.'),
     );
   }
@@ -925,8 +925,8 @@ function project_issue_user_page($arg = 0) {
   while ($node = db_fetch_object($result)) {
     $node_obj = node_load($node->nid);
     $node->is_admin = node_access('update', $node_obj);
-    $node->issues = $node_obj->issues;
-    $node->releases = isset($node_obj->releases) ? $node_obj->releases : 0;
+    $node->project_issue['issues'] = $node_obj->issues;
+    $node->project_release['releases'] = isset($node_obj->project_release['releases']) ? $node_obj->project_release['releases'] : 0;
     if ($node->is_admin) {
       $any_admin = TRUE;
     }
@@ -1051,12 +1051,12 @@ function project_issue_project_load(&$node, $arg) {
   if (!$project) {
     return $node;
   }
-  //assert($project);
-  $node->components = unserialize($project->components);
-  $node->mail_copy_filter = unserialize($project->mail_copy_filter);
-  $node->mail_copy_filter_state = unserialize($project->mail_copy_filter_state);
+  $node->project_issue = array();
+  $node->project_issue['components'] = unserialize($project->components);
+  $node->project_issue['mail_copy_filter'] = unserialize($project->mail_copy_filter);
+  $node->project_issue['mail_copy_filter_state'] = unserialize($project->mail_copy_filter_state);
   foreach (array('issues', 'help', 'mail_digest', 'mail_copy', 'mail_reminder') as $field) {
-    $node->$field = $project->$field;
+    $node->project_issue[$field] = $project->$field;
   }
   return $node;
 }
@@ -1067,9 +1067,9 @@ function project_issue_project_insert($node) {
   // other issue-related project settings, like the email notifications)
   // they'd use the "issues" subtab of the project edit tab (since none
   // of these fields are present on the initial project add form).
-  $node->issues = 1;
-  $node->components = serialize(array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface')));
-  db_query("INSERT INTO {project_issue_projects} (nid, issues, components) VALUES (%d, %d, '%s')", $node->nid, $node->issues, $node->components);
+  $node->project_issue['issues'] = 1;
+  $node->project_issue['components'] = serialize(array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface')));
+  db_query("INSERT INTO {project_issue_projects} (nid, issues, components) VALUES (%d, %d, '%s')", $node->nid, $node->project_issue['issues'], $node->project_issue['components']);
 }
 
 function project_issue_project_delete($node) {
@@ -1118,7 +1118,7 @@ function project_issue_comment_mass_update($form_id, $form_values) {
 function project_issue_set_breadcrumb($node, $project) {
   $extra = array();
   $extra[] = l($project->title, 'node/'. $project->nid);
-  $extra[] = l(t('Issues'), 'project/issues/'. $project->uri);
+  $extra[] = l(t('Issues'), 'project/issues/'. $project->project['uri']);
   // Add the issue title if we're on a comment reply page.
   if (project_issue_is_comment_reply()) {
     $extra[] = l($node->title, 'node/'. $node->nid);
@@ -1187,7 +1187,7 @@ function project_issue_views_arguments() {
  */
 function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_number = NULL) {
   $path = "node/$node->nid";
-  $attributes = array('title' => project_issue_state($node->sid));
+  $attributes = array('title' => project_issue_state($node->project_issue['sid']));
   if ($comment_id) {
     $title = "#$node->nid-$comment_number: $node->title";
     $link = l($title, $path, $attributes, NULL, "comment-$comment_id");
@@ -1196,7 +1196,7 @@ function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_numb
     $title = "#$node->nid: $node->title";
     $link = l($title, $path, $attributes);
   }
-  $output = "<span class=\"project-issue-status-$node->sid\">$link</span>";
+  $output = "<span class=\"project-issue-status-". $node->project_issue['sid'] ."\">$link</span>";
   return $output;
 }
 

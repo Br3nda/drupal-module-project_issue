@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.100 2009/01/15 00:29:36 dww Exp $
+// $Id: project_issue.module,v 1.101 2009/01/15 19:32:10 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -314,9 +314,16 @@ function project_issue_cron() {
 
 /**
  * Comment left when cron auto-closes an issue.
+ *
+ * @param $auto_close_days
+ *   The (minimum) number of days without activity before automatically closing
+ *   a fixed issue.
+ * @return
+ *   Message to be added as a comment to an issue when auto-closing that issue. 
  */
-function theme_project_issue_auto_close_message() {
-  return t('Automatically closed -- issue fixed for two weeks with no activity.');
+function theme_project_issue_auto_close_message($auto_close_days) {
+  $auto_close_interval = format_interval($auto_close_days * 24 * 60 * 60, 2);
+  return t('Automatically closed -- issue fixed for !interval with no activity.', array('!interval' => $auto_close_interval));
 }
 
 /**

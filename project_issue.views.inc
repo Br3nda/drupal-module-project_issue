@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.1.2.6 2009/01/07 20:48:32 dww Exp $
+// $Id: project_issue.views.inc,v 1.1.2.7 2009/01/15 00:48:11 dww Exp $
 
 /**
  * @file
@@ -731,15 +731,20 @@ function project_issue_views_post_view(&$view) {
   // Create a permalink to this view so it can be bookmarked easily.
   // This code was taken and modified slightly from
   // views_rss_views_feed_argument() in views_rss.module.
-  $args = array();
-  $url = views_get_url($view, $args);
-  $title = views_get_title($view, 'page', $args);
+  // Should only run for views related to project issues
+  switch ($view->name) {
+    case 'project_issues_project':
+    case 'project_issues_project_search':
+      $args = array();
+      $url = views_get_url($view, $args);
+      $title = views_get_title($view, 'page', $args);
 
-  if ($view->used_filters) {
-    $filters = drupal_query_string_encode($view->used_filters);
+      if ($view->used_filters) {
+        $filters = drupal_query_string_encode($view->used_filters);
+      }
+      return l(t('@project_issue_view_permalink', array('@project_issue_view_permalink' => '#')), $url, array('title' => t('Permalink to: !title', array('!title' => strip_tags($title)))), $filters, NULL, TRUE);
+
   }
-  $permalink = l(t('@project_issue_view_permalink', array('@project_issue_view_permalink' => '#')), $url, array('title' => t('Permalink to: !title', array('!title' => strip_tags($title)))), $filters, NULL, TRUE);
-  return $permalink;
 }
 
 /**

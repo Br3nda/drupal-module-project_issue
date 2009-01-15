@@ -1,5 +1,5 @@
 <?php
-// $Id: cron.inc,v 1.1 2008-12-28 23:32:43 dww Exp $
+// $Id: cron.inc,v 1.2 2009-01-15 19:32:11 dww Exp $
 
 
 /**
@@ -41,9 +41,10 @@ function _project_issue_cron() {
  */
 function project_issue_auto_close() {
   // Set query parameters.
-  $seconds = 24 * 60 * 60 * variable_get('project_issue_auto_close_days', PROJECT_ISSUE_AUTO_CLOSE_DAYS);
+  $auto_close_days = variable_get('project_issue_auto_close_days', PROJECT_ISSUE_AUTO_CLOSE_DAYS);
+  $seconds = 24 * 60 * 60 * $auto_close_days;
 
-  $comment = theme('project_issue_auto_close_message');
+  $comment = theme('project_issue_auto_close_message', $auto_close_days);
   $result = db_query('SELECT pi.nid FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE pi.sid = %d AND n.changed < %d', PROJECT_ISSUE_STATE_FIXED, time() - $seconds);
   while ($issue = db_fetch_object($result)) {
     project_issue_add_followup(array(

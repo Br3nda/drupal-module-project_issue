@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.134 2008-12-17 08:07:14 dww Exp $
+// $Id: comment.inc,v 1.135 2009-01-15 00:29:36 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -22,9 +22,9 @@ function project_issue_comment(&$arg, $op) {
   // This is ugly, but the form workflow doesn't really offer a better
   // choice for this scenario.
   if (isset($_POST['project_info']['pid'])) {
-    $node->pid = $_POST['project_info']['pid'];
+    $node->project_issue['pid'] = $_POST['project_info']['pid'];
   }
-  $project = node_load(array('nid' => $node->pid, 'type' => 'project_project'));
+  $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   switch ($op) {
     case 'form':
@@ -51,7 +51,7 @@ function project_issue_comment(&$arg, $op) {
       $form['project_info']['pid'] = array(
         '#type' => 'select',
         '#title' => t('Project'),
-        '#default_value' => $node->pid,
+        '#default_value' => $node->project_issue['pid'],
         '#options' => $projects,
         '#required' => TRUE,
       );
@@ -173,9 +173,9 @@ function project_issue_comment(&$arg, $op) {
           // release node for user selection.
           $invalid_rids = variable_get('project_issue_invalid_releases', array());
           if (!empty($invalid_rids) &&
-              ((empty($rid) && in_array($node->rid, $invalid_rids))
+              ((empty($rid) && in_array($node->project_issue['rid'], $invalid_rids))
                || in_array($rid, $invalid_rids))) {
-            form_set_error('project_info][rid', t('%version is not a valid version, please select a different value.', array('%version' => $releases[$node->rid])));
+            form_set_error('project_info][rid', t('%version is not a valid version, please select a different value.', array('%version' => $releases[$node->project_issue['rid']])));
           }
           elseif (empty($rid)) {
             form_set_error('project_info][rid', t('You have to specify a valid version.'));
@@ -183,7 +183,7 @@ function project_issue_comment(&$arg, $op) {
         }
         // Validate component.
         $component = $arg['project_info']['component'];
-        if ($component && !in_array($component, $project->components)) {
+        if ($component && !in_array($component, $project->project_issue['components'])) {
           $component = 0;
         }
         empty($component) && form_set_error('project_info][component', t('You have to specify a valid component.'));

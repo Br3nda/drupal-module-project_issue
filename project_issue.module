@@ -1,11 +1,9 @@
 <?php
-// $Id: project_issue.module,v 1.101 2009-01-15 19:32:10 dww Exp $
+// $Id: project_issue.module,v 1.102 2009-01-16 01:37:47 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
 
-/// How many issues should be displayed per page by default.
-define('PROJECT_ISSUES_PER_PAGE', 20);
 /// Default age in days of issues to auto close.
 define('PROJECT_ISSUE_AUTO_CLOSE_DAYS', 14);
 /// Project issue state = fixed.
@@ -13,12 +11,13 @@ define('PROJECT_ISSUE_STATE_FIXED', 2);
 /// Project issue state = closed.
 define('PROJECT_ISSUE_STATE_CLOSED', 7);
 
-if (function_exists('drupal_get_path')) {
+/**
+ * Implementation of hook_init().
+ */
+function project_issue_init() {
   $path = drupal_get_path('module', 'project_issue');
-  if (file_exists("$path/issue.inc")) {
-    require_once "$path/issue.inc";
-    require_once "$path/comment.inc";
-    require_once "$path/mail.inc";
+  foreach (array('issue', 'comment', 'mail') as $file) {
+    require_once "$path/$file.inc";
   }
 }
 
@@ -173,17 +172,6 @@ function project_issue_perm() {
  * Callback for the main settings page.
  */
 function project_issue_settings_form() {
-
-  $form['project_issues_per_page'] = array(
-    '#title' => t('Issues per page'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('project_issues_per_page', PROJECT_ISSUES_PER_PAGE),
-    '#size' => 4,
-    '#maxlength' => 10,
-    '#description' => t('Number of issues to display on a single page when viewing the issue queues.'),
-    '#validate' => array('project_issue_validate_issues_per_page' => array()),
-  );
-
   $form['project_directory_issues']  = array(
     '#type' => 'textfield',
     '#title' => t('Issue directory'),
@@ -468,14 +456,6 @@ function project_issue_menu($may_cache) {
 
     // Issues
     $items[] = array(
-      'path' => 'project/issues',
-      'title' => t('Issues'),
-      'callback' => 'project_issue_page',
-      'access' => $access,
-      'type' => MENU_NORMAL_ITEM,
-      'weight' => -50,
-    );
-    $items[] = array(
       'path' => 'project/issues/add',
       'title' => t('Create'),
       'callback' => 'project_issue_page',
@@ -528,14 +508,6 @@ function project_issue_menu($may_cache) {
       'access' => $user->uid && $access,
       'type' => MENU_NORMAL_ITEM,
       'weight' => -49,
-    );
-
-    $items[] = array(
-      'path' => 'project/issues/user',
-      'title' => t('My issues'),
-      'callback' => 'project_issue_page',
-      'access' => $user->uid && $access,
-      'type' => MENU_NORMAL_ITEM,
     );
 
     // Administrative pages
@@ -1026,7 +998,7 @@ function project_issue_user_page($arg = 0) {
   $output = theme('table', $header, $rows, array('class' => 'projects'));
   $output .= l('#', "project/user/$user->name");
 
-  $output .= theme('box', t('Issues'), project_issue_query_result($query, 'html', false, false));
+  /// @todo Embed a view here.
 
   return $output;
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.323 2009-01-16 01:37:47 dww Exp $
+// $Id: issue.inc,v 1.324 2009-01-16 03:38:11 dww Exp $
 
 
 /**
@@ -1408,23 +1408,6 @@ function project_issue_change_summary($field, $value) {
       return $value ? project_issue_state($value) : t('<none>');
     default:
       return $value;
-  }
-}
-
-function theme_project_issue_follow_up_forbidden($nid) {
-  global $user;
-  if ($user->uid) {
-    return '';
-  }
-
-  // We cannot use drupal_get_destination() because these links sometimes appear on /node and taxo listing pages.
-  $destination = "destination=". drupal_urlencode("project/comments/add/$nid");
-
-  if (variable_get('user_register', 1)) {
-    return t('<a href="@login">Login</a> or <a href="@register">register</a> to follow up', array('@login' => url('user/login', $destination), '@register' => url('user/register', $destination)));
-  }
-  else {
-    return t('<a href="@login">Login</a> to follow up', array('@login' => url('user/login', $destination)));
   }
 }
 

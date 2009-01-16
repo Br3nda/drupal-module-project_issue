@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.102 2009/01/16 01:37:47 dww Exp $
+// $Id: project_issue.module,v 1.103 2009/01/16 01:41:15 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -49,6 +49,16 @@ function project_issue_help($section) {
         '<dd>'. t('The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status. The default issue status cannot be deleted. If you wish to delete this status, first set a different status to default.') .'</dd>'.
         '</dl>';
   }
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function project_issue_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'project_issue') .'/views',
+  );
 }
 
 /**
@@ -1115,39 +1125,6 @@ function project_issue_link_alter(&$node, &$links) {
   }
 }
 
-/**
- * @defgroup project_issue_views Views-integration hooks
- */
-
-/**
- * Implementation of hook_views_tables.
- * @ingroup project_issue_views
- * @see _project_issue_views_tables
- */
-function project_issue_views_tables() {
-  require_once(drupal_get_path('module', 'project_issue') .'/project_issue.views.inc');
-  return _project_issue_views_tables();
-}
-
-/**
- * Implementation of hook_views_default_views.
- * @ingroup project_issue_views
- * @see _project_issue_views_default_views
- */
-function project_issue_views_default_views() {
-  require_once(drupal_get_path('module', 'project_issue') .'/project_issue.views.inc');
-  return _project_issue_views_default_views();
-}
-
-/**
- * Implementation of hook_views_arguments.
- * @ingroup project_issue_views
- * @see _project_issue_views_arguments()
- */
-function project_issue_views_arguments() {
-  require_once(drupal_get_path('module', 'project_issue') .'/project_issue.views.inc');
-  return _project_issue_views_arguments();
-}
 
 /**
  * @defgroup project_issue_filter Project Issue number to link filter.

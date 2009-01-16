@@ -1,7 +1,8 @@
-; $Id: project_issue.info,v 1.6 2009/01/15 01:33:11 dww Exp $
+; $Id: project_issue.info,v 1.7 2009/01/16 01:41:15 dww Exp $
 name = Project issue tracking
 description = Provides issue tracking for the project.module.
 dependencies[] = project
+dependencies[] = views
 dependencies[] = comment
 dependencies[] = comment_upload
 dependencies[] = upload

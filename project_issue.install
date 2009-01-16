@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.53 2009/01/08 01:23:48 dww Exp $
+// $Id: project_issue.install,v 1.54 2009/01/16 01:37:47 dww Exp $
 
 function project_issue_install() {
   // We need to check this before we try to create the table, so that
@@ -789,6 +789,13 @@ function project_issue_update_5208() {
     variable_del('project_issue_auto_close_user');
   }
   return $ret;
+}
+
+/**
+ * Remove stale setting that's now provided by views.
+ */
+function project_issue_update_6000() {
+  variable_del('project_issues_per_page');
 }
 
 /**

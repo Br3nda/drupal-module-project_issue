@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.135 2009-01-15 00:29:36 dww Exp $
+// $Id: comment.inc,v 1.136 2009-01-20 18:38:03 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -37,7 +37,8 @@ function project_issue_comment(&$arg, $op) {
 
       // We need to ask for almost the same metadata as project issue itself
       // so let's reuse the form.
-      $form = drupal_retrieve_form('project_issue_form', $node, TRUE);
+      $form_state = array();
+      $form = drupal_retrieve_form('project_issue_form', $form_state, $node, TRUE);
       // We need this otherwise pid collides with comment.
       $form['project_info']['#tree'] = TRUE;
       $form['project_info']['#weight'] = -2;
@@ -113,7 +114,7 @@ function project_issue_comment(&$arg, $op) {
       }
       else {
         drupal_set_message(t('There was an error submitting your comment -- please try again. If the problem persists, contact the system administrator.'), 'error');
-        watchdog('project_issue', t('Error obtaining lock for project issue %nid', array('%nid' => $arg['nid'])), WATCHDOG_ERROR, 'node/'. $arg['nid']);
+        watchdog('project_issue', 'Error obtaining lock for project issue %nid', array('%nid' => $arg['nid']), WATCHDOG_ERROR, 'node/'. $arg['nid']);
         // This is a bit extreme, but we have to clean up the failed comment,
         // or it will appear on the issue.
         _comment_delete_thread((object) $arg);
@@ -161,7 +162,7 @@ function project_issue_comment(&$arg, $op) {
       if ($project) {
         // Force all comments to be a child of the main issue, to match the
         // flat display, and also to prevent accidentally deleting a thread.
-        form_set_value(array('#parents' => array('pid')), 0);
+        form_set_value(array('#parents' => array('pid')), 0, $form_state);
 
         // Validate version.
         if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0, 'version', 'all', array($arg['project_info']['rid'])))) {
@@ -409,7 +410,7 @@ function project_issue_change_comment_upload_path(&$comment) {
         // Since changes to the comment aren't carried to submit, we have
         // to adjust $form_values here.
         $filename = $issue_dir .'/'. $comment['files'][$key]['filename'];
-        form_set_value(array('#parents' => array('files', $key, 'filename')), $filename);
+        form_set_value(array('#parents' => array('files', $key, 'filename')), $filename, $form_state);
       }
     }
   }

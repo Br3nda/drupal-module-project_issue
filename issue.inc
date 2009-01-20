@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.18 2009/01/16 03:38:14 dww Exp $
+// $Id: issue.inc,v 1.304.2.19 2009/01/20 18:44:50 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -1860,7 +1860,7 @@ function project_issue_query_result($query = NULL, $format = 'html', $show_searc
     while ($node = db_fetch_object($result)) {
       $node = node_load($node->nid);
       $row = array();
-      $class = "state-$node->sid";
+      $class = "state-$node->sid priority-$node->priority";
       if (!$project->nid) {
         $row[] = l($projects[$node->pid], "project/issues/$node->pid");
       }

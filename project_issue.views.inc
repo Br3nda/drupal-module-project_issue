@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.1.2.7 2009/01/15 00:48:11 dww Exp $
+// $Id: project_issue.views.inc,v 1.1.2.8 2009/01/20 18:44:50 dww Exp $
 
 /**
  * @file
@@ -765,7 +765,7 @@ function project_issue_views_style_plugins() {
 function theme_project_issues_table_view($view, $nodes, $type) {
   $fields = _views_get_fields();
   foreach ($nodes as $node) {
-    $class = "state-$node->project_issues_sid";
+    $class = "state-$node->project_issues_sid priority-$node->priority";
     $row_data = array();
     foreach ($view->field as $field) {
       if ($fields[$field['id']]['visible'] !== FALSE) {

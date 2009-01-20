@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.19 2009/01/20 18:44:50 dww Exp $
+// $Id: issue.inc,v 1.304.2.20 2009/01/20 18:55:33 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -528,7 +528,7 @@ function project_issue_subscribe($project = 0) {
     $result = db_query(db_rewrite_sql("SELECT s.nid, n.title, s.level, p.uri FROM {project_subscriptions} s INNER JOIN {node} n ON n.nid = s.nid INNER JOIN {project_projects} p ON n.nid = p.nid WHERE n.type = 'project_project' AND n.status = 1 AND s.uid = %d ORDER BY n.title", 's'), $user->uid);
     while ($project = db_fetch_object($result)) {
       $form['project'][$project->nid]['title'] = array(
-        '#value' => l($project->title, "project/$project->uri"),
+        '#value' => l($project->title, "node/$project->nid"),
       );
       foreach ($levels as $key => $level) {
         if ($project->level == $key) {
@@ -548,7 +548,7 @@ function project_issue_subscribe($project = 0) {
     $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.uri FROM {node} n INNER JOIN {project_projects} p ON n.nid = p.nid WHERE n.type = 'project_project' AND n.status = 1". ($nids ?  $placeholders : "") ." ORDER BY n.title"), $nids);
     while ($project = db_fetch_object($result)) {
       $form['project'][$project->nid]['title'] = array(
-        '#value' => l($project->title, "project/$project->uri"),
+        '#value' => l($project->title, "node/$project->nid"),
       );
       $nids[] = $project->nid;
     }

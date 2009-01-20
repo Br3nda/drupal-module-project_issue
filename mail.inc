@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.105.2.6 2009/01/07 20:48:32 dww Exp $
+// $Id: mail.inc,v 1.105.2.7 2009/01/20 21:14:57 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -242,8 +242,8 @@ function project_mail_notify($nid) {
     'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
     'List-Id' => "$project->title <$project->uri-issues-$domain>",
     'List-Archive' => '<'. url("project/issues/$project->uri", NULL, NULL, 1) .'>',
-    'List-Subscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>',
-    'List-Unsubscribe' => '<'. url("node/$project->uri", NULL, NULL, 1) .'>'
+    'List-Subscribe' => '<'. url("project/issues/subscribe-mail/$project->uri", NULL, NULL, 1) .'>',
+    'List-Unsubscribe' => '<'. url("project/issues/subscribe-mail/$project->uri", NULL, NULL, 1) .'>'
   );
 
   // Comments exist, set headers accordingly.

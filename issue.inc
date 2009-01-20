@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.324 2009/01/16 03:38:11 dww Exp $
+// $Id: issue.inc,v 1.325 2009/01/20 18:38:03 dww Exp $
 
 
 /**
@@ -61,7 +61,8 @@ function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL
       );
 
       // Build the HTML output for the rid select.
-      $form = form_builder('rid', $form);
+      $form_state = array();
+      $form = form_builder('rid', $form, $form_state);
       $return['rid'] .= drupal_render($form);
     }
   }
@@ -88,7 +89,8 @@ function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL
   );
 
   // Build the HTML output for the assigned select.
-  $form = form_builder('assigned', $form);
+  $form_state = array();
+  $form = form_builder('assigned', $form, $form_state);
   $return['assigned'] .= drupal_render($form);
 
   // Components.
@@ -115,7 +117,8 @@ function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL
   );
 
   // Build the HTML output for the component select.
-  $form = form_builder('component', $form);
+  $form_state = array();
+  $form = form_builder('component', $form, $form_state);
   $return['component'] .= drupal_render($form);
 
   // Set proper content type header for the AJAX call.
@@ -253,7 +256,7 @@ function project_issue_statistics($project = 0) {
   return $output;
 }
 
-function project_issue_subscribe_submit($form_id, $form_values) {
+function project_issue_subscribe_submit($form, &$form_state) {
 
   global $user;
   $all = $_POST['all'];
@@ -261,7 +264,7 @@ function project_issue_subscribe_submit($form_id, $form_values) {
   $levels = array(0 => t('None'), 1 => t('Own issues'), 2 => t('All issues'));
 
     // Remove previous subscriptions for user.
-    if ($nid = $form_values['single']) {
+    if ($nid = $form_state['values']['single']) {
       db_query('DELETE FROM {project_subscriptions} WHERE nid = %d AND uid = %d', $nid, $user->uid);
     }
     else {
@@ -272,14 +275,14 @@ function project_issue_subscribe_submit($form_id, $form_values) {
       $_level = array_search($all, $levels);
     }
 
-    foreach ($form_values['options'] as $nid => $level) {
+    foreach ($form_state['values']['options'] as $nid => $level) {
       if ($_level !== 0 && $level !== 0) {
         db_query('INSERT INTO {project_subscriptions} (nid, uid, level) VALUES (%d, %d, %d)', $nid, $user->uid, $_level ? $_level : $level);
       }
     }
     drupal_set_message(t('Subscription settings saved.'));
 
-    return 'project/issues/subscribe-mail';
+    $form_state['redirect'] = 'project/issues/subscribe-mail';
 }
 
 
@@ -396,8 +399,7 @@ function theme_project_issue_subscribe($form) {
 }
 
 function project_issue_pick_project_page() {
-  $types = node_get_types();
-  drupal_set_title(t('Submit @name', array('@name' => $types['project_issue']->name)));
+  drupal_set_title(t('Submit @name', array('@name' => node_get_types('name', 'project_issue'))));
   return drupal_get_form('project_issue_pick_project_form');
 }
 
@@ -405,7 +407,7 @@ function project_issue_pick_project_page() {
  * Form builder for a simple form to select a project when creating a new
  * issue (as the first "page", but this is not really a multi-page form).
  */
-function project_issue_pick_project_form() {
+function project_issue_pick_project_form(&$form_state) {
   $form = array();
 
   // Fetch a list of all projects.
@@ -428,19 +430,19 @@ function project_issue_pick_project_form() {
   return $form;
 }
 
-function project_issue_pick_project_form_validate($form_id, $form_values) {
-  if (empty($form_values['pid'])) {
+function project_issue_pick_project_form_validate($form, &$form_state) {
+  if (empty($form_state['values']['pid'])) {
     form_set_error('pid', t('You must select a project.'));
   }
-  $node = node_load($form_values['pid']);
+  $node = node_load($form_state['values']['pid']);
   if (empty($node) || $node->type != 'project_project') {
     form_set_error('pid', t('Invalid project selected.'));
   }
 }
 
-function project_issue_pick_project_form_submit($form_id, $form_values) {
-  $project = node_load($form_values['pid']);
-  return 'node/add/project-issue/'. $project->project['uri'];
+function project_issue_pick_project_form_submit($form, &$form_state) {
+  $project = node_load($form_state['values']['pid']);
+  $form_state['redirect'] = 'node/add/project-issue/'. $project->project['uri'];
 }
 
 /**
@@ -491,10 +493,10 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
     $pid = arg(3);
     if (!empty($pid)) {
       if (is_numeric($pid)) {
-        $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid), 0);
+        $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql('SELECT p.nid FROM {project_projects} p WHERE p.nid = %d', 'p'), $pid));
       }
       else {
-        $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid), 0);
+        $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid));
       }
     }
   }
@@ -722,7 +724,7 @@ function project_issue_assigned_choices($issue) {
  *   loaded issue node object.  Therefore, the fields are not in the usual
  *   $node->project_issue array.
  */
-function project_issue_validate(&$node) {
+function project_issue_validate($node) {
   // If $node->nid is set, that means that the node was being
   // edited and not created.  If that's the case, the user was
   // not presented with any of the metadata fields, so there's no
@@ -929,26 +931,26 @@ function project_issue_internal_links($node) {
     // Link to the first unread, or most recent comment.
     if (comment_num_new($node->nid)) {
       // There are unread replies; link to first unread comment.
-      $links[] = l(t('First unread comment'), "node/$node->nid", array(), NULL, 'new');
+      $links[] = l(t('First unread comment'), "node/$node->nid", array('fragment' => 'new'));
     }
     else {
       // No unread replies; link to most recent comment.
       $comment_cid = db_result(db_query_range("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {node} n on pic.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY pic.cid DESC", $node->nid, 0, 1));
       if ($comment_cid) {
-        $links[] = l(t('Most recent comment'), "node/$node->nid", array(), NULL, "comment-$comment_cid");
+        $links[] = l(t('Most recent comment'), "node/$node->nid", array('fragment' => "comment-$comment_cid"));
       }
     }
     // Link for most recent patch.
     $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
     if ($file_cid) {
-      $links[] = l(t('Most recent attachment'), "node/$node->nid", array(), NULL, "comment-$file_cid");
+      $links[] = l(t('Most recent attachment'), "node/$node->nid", array('fragment' => "comment-$file_cid"));
     }
   }
 
   // Link straight to comment form.
   if ($node->comment == COMMENT_NODE_READ_WRITE && (user_access('post comments') || user_access('post comments without approval'))) {
     // TODO: This conditional needs to be ripped out in D6.
-    $comment_form_location = isset($node->project_issue['comment_form_location']) ? $node->project_issue['comment_form_location'] : variable_get('comment_form_location', COMMENT_FORM_SEPARATE_PAGE);
+    $comment_form_location = isset($node->project_issue['comment_form_location']) ? $node->project_issue['comment_form_location'] : variable_get('comment_form_location_' . $node->type, COMMENT_FORM_SEPARATE_PAGE);
 
     // Comment form isn't on the page, link to the comment reply page.
     if ($comment_form_location == COMMENT_FORM_SEPARATE_PAGE) {
@@ -956,7 +958,7 @@ function project_issue_internal_links($node) {
     }
     // Comment form is on the page, generate an internal page link for it.
     else {
-      $links[] = l(t('Add new comment'), "node/$node->nid", array(), NULL, "comment-form");
+      $links[] = l(t('Add new comment'), "node/$node->nid", array('fragment' => "comment-form"));
     }
   }
 
@@ -1015,24 +1017,24 @@ function project_issue_delete($node) {
   db_query('DELETE FROM {project_issue_comments} WHERE nid = %d', $node->nid);
 }
 
-function project_issue_access($op, $node) {
-  global $user;
-  if (user_access('administer projects')) {
+function project_issue_access($op, $node, $account) {
+
+  if (user_access('administer projects', $account)) {
     return TRUE;
   }
   switch ($op) {
     case 'view':
-      if (user_access('access own project issues') && $node->uid == $user->uid) {
+      if (user_access('access own project issues', $account) && $node->uid == $account->uid) {
         return TRUE;
       }
-      if (!user_access('access project issues')) {
+      if (!user_access('access project issues', $account)) {
         return FALSE;
       }
       break;
     case 'create':
-      return user_access('create project issues');
+      return user_access('create project issues', $account);
     case 'update':
-      if (user_access('edit own project issues') && $node->uid == $user->uid) {
+      if (user_access('edit own project issues', $account) && $node->uid == $account->uid) {
         return TRUE;
       }
       break;
@@ -1247,14 +1249,14 @@ function project_issue_admin_states_form() {
 /**
  * Submit handler for project_issue_admin_states_form.
  */
-function project_issue_admin_states_form_submit($form_id, $form_values) {
+function project_issue_admin_states_form_submit($form, &$form_state) {
   // Check for and apply changes or additions to project issue status options.
-  if (isset($form_values['default_state'])) {
-    variable_set('project_issue_default_state', $form_values['default_state']);
+  if (isset($form_state['values']['default_state'])) {
+    variable_set('project_issue_default_state', $form_state['values']['default_state']);
   }
   // Update existing status options.
-  if($form_values['status']) {
-    foreach ($form_values['status'] as $sid => $value) {
+  if($form_state['values']['status']) {
+    foreach ($form_state['values']['status'] as $sid => $value) {
       $state = db_fetch_object(db_query('SELECT name, weight, author_has, default_query FROM {project_issue_state} WHERE sid = %d', $sid));
       // Check to see whether the record needs updating.
       if (($state->name != $value['name']) || ($state->weight != $value['weight']) || ($state->author_has != $value['author_has']) || ($state->default_query != $value['default_query'])) {
@@ -1263,14 +1265,14 @@ function project_issue_admin_states_form_submit($form_id, $form_values) {
     }
   }
   // Add any new status options.
-  if (isset($form_values['status_add']) && !empty($form_values['status_add']['name'])) {
+  if (isset($form_state['values']['status_add']) && !empty($form_state['values']['status_add']['name'])) {
     // Check to see whether the state already exists:
-    $query = db_query("SELECT name FROM {project_issue_state} WHERE name = '%s'", $form_values['status_add']['name']);
-    if (!db_num_rows($query)) {
-      db_query("INSERT INTO {project_issue_state} (name, weight, author_has, default_query) VALUES ('%s', %d, %d, %d)", $form_values['status_add']['name'], $form_values['status_add']['weight'], $form_values['status_add']['author_has'], $form_values['status_add']['default_query']);
+    $issue_state = db_result(db_query("SELECT COUNT(*) FROM {project_issue_state} WHERE name = '%s'", $form_state['values']['status_add']['name']));
+    if (empty($issue_state)) {
+      db_query("INSERT INTO {project_issue_state} (name, weight, author_has, default_query) VALUES ('%s', %d, %d, %d)", $form_state['values']['status_add']['name'], $form_state['values']['status_add']['weight'], $form_state['values']['status_add']['author_has'], $form_state['values']['status_add']['default_query']);
     }
     else {
-      drupal_set_message(t('Status %status already exists.', array ('%status' => $form_values['status_add']['name'])));
+      drupal_set_message(t('Status %status already exists.', array ('%status' => $form_state['values']['status_add']['name'])));
     }
   }
 }
@@ -1307,16 +1309,16 @@ function project_issue_delete_state_confirm($sid) {
   );
 }
 
-function project_issue_delete_state_confirm_submit($form_id, $form_values) {
-  if($form_values['new_sid'] == $form_values['sid']) {
-      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_values['name'])));
+function project_issue_delete_state_confirm_submit($form, &$form_state) {
+  if($form_state['values']['new_sid'] == $form_state['values']['sid']) {
+      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_state['values']['name'])));
   } else {
-    if ($form_values['new_sid']) {
-      db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_values['new_sid'], $form_values['sid']);
+    if ($form_state['values']['new_sid']) {
+      db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_state['values']['new_sid'], $form_state['values']['sid']);
     }
-    db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_values['sid']);
-    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_values['name'])));
-    drupal_goto('admin/project/project-issue-status');
+    db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_state['values']['sid']);
+    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_state['values']['name'])));
+    $form_state['redirect'] ='admin/project/project-issue-status';
   }
 }
 
@@ -1421,9 +1423,9 @@ function theme_project_issue_create_forbidden($uri) {
   $destination = "destination=". drupal_urlencode("node/add/project-issue/$uri");
 
   if (variable_get('user_register', 1)) {
-    return t('<a href="@login">Login</a> or <a href="@register">register</a> to create an issue', array('@login' => url('user/login', $destination), '@register' => url('user/register', $destination)));
+    return t('<a href="@login">Login</a> or <a href="@register">register</a> to create an issue', array('@login' => url('user/login', array('query' => $destination)), '@register' => url('user/register', array('query' => $destination))));
   }
   else {
-    return t('<a href="@login">Login</a> to create an issue', array('@login' => url('user/login', $destination)));
+    return t('<a href="@login">Login</a> to create an issue', array('@login' => url('user/login', array('query' => $destination))));
   }
 }

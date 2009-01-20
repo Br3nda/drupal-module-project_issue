@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.112 2009/01/15 00:29:36 dww Exp $
+// $Id: mail.inc,v 1.113 2009/01/20 18:38:03 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -135,7 +135,7 @@ function project_mail_urls($url = 0) {
     if (substr($url, 0, 1) == '/') {
       $url = substr($url, 1);
     }
-    $urls[] = strpos($url, '://') ? $url : url($url, NULL, NULL, TRUE);
+    $urls[] = strpos($url, '://') ? $url : url($url, array('absolute' => TRUE));
     return count($urls);
   }
   return $urls;
@@ -241,9 +241,9 @@ function project_mail_notify($nid) {
     'Date' => date('r'),
     'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
     'List-Id' => "$project->title <". $project->project['uri'] ."-issues-$domain>",
-    'List-Archive' => '<'. url("project/issues/". $project->project['uri'], NULL, NULL, 1) .'>',
-    'List-Subscribe' => '<'. url("node/". $project->project['uri'], NULL, NULL, 1) .'>',
-    'List-Unsubscribe' => '<'. url("node/". $project->project['uri'], NULL, NULL, 1) .'>'
+    'List-Archive' => '<'. url("project/issues/". $project->project['uri'], array('absolute' => TRUE)) .'>',
+    'List-Subscribe' => '<'. url("node/". $project->project['uri'], array('absolute' => TRUE)) .'>',
+    'List-Unsubscribe' => '<'. url("node/". $project->project['uri'], array('absolute' => TRUE)) .'>'
   );
 
   // Comments exist, set headers accordingly.
@@ -267,14 +267,14 @@ function project_mail_notify($nid) {
   }
 
   // Create link to related node
-  $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", NULL, NULL, 1))) ."\n";
-  $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", NULL, 'comment-form', 1))) ."\n";
+  $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", array('absolute' => TRUE)))) ."\n";
+  $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", array('fragment' => 'comment-form', 'absolute' => TRUE)))) ."\n";
 
   // To save workload, check here if either the anonymous role or the
   // authenticated role has the 'view uploaded files' permission, since
   // we only need to process each user's file access permission if this
   // is NOT the case.
-  $check_file_perms = !db_num_rows(db_query("SELECT rid FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+  $check_file_perms = !db_result(db_query("SELECT COUNT (*) FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
 
   // We need to determine if node_access() checks are necessary.  The
   // check will be needed if any of the following is true:
@@ -585,7 +585,7 @@ function project_mail_format_entry($entry, $display_files, $is_original = FALSE)
   $output .= format_date($timestamp, 'large') ." : $entry->name\n";
 
   if (!$is_original) {
-    $output .= url("node/$entry->nid", NULL, "comment-$entry->cid", TRUE) ."\n";
+    $output .= url("node/$entry->nid", array('fragment' => "comment-$entry->cid", 'absolute' => TRUE)) ."\n";
   }
 
   $output .= project_mail_format_attachments($entry, $display_files);

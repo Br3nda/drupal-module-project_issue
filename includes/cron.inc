@@ -1,5 +1,5 @@
 <?php
-// $Id: cron.inc,v 1.2 2009/01/15 19:32:11 dww Exp $
+// $Id: cron.inc,v 1.3 2009/01/20 18:38:04 dww Exp $
 
 
 /**
@@ -83,7 +83,7 @@ function project_mail_reminder() {
           'From' => "$sender->name <$sender->mail>",
           'X-Mailer' => 'Drupal Project Issues module (http://drupal.org/project/project_issue)',
           'List-Id' => "$sender->name <project-reminder-". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url) .'>',
-          'List-Archive' => '<'. url('project', NULL, NULL, 1) .'>',
+          'List-Archive' => '<'. url('project', array('absolute' => TRUE)) .'>',
         );
 
         drupal_mail('project_issue_reminder', $mail, t('Your submitted bugs for !date', array('!date' => date('F d, Y', time()))), $body, NULL, $header);
@@ -105,7 +105,7 @@ function project_mail_reminder() {
         }
         $body .= '  state: '. project_issue_state($node->sid) ."\n";
         $body .= '  age: '. format_interval(time() - $node->created) ."\n";
-        $body .= '  url: '. url("node/$node->nid", NULL, NULL, 1) ."\n";
+        $body .= '  url: '. url("node/$node->nid", array('absolute' => TRUE)) ."\n";
         $body .= "\n";
       }
     }
@@ -124,7 +124,7 @@ function project_mail_digest() {
     'Date' => date('r'),
     'X-Mailer' => 'Drupal Project Issues module (http://drupal.org/project/project_issue)',
     'List-Id' => "$project->title <". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url) .'-project-issues-digest>',
-    'List-Archive' => '<'. url('project/issues?priorities=1', NULL, NULL, 1) .'>',
+    'List-Archive' => '<'. url('project/issues?priorities=1', array('absolute' => TRUE)) .'>',
   );
 
   $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.* FROM {node} n INNER JOIN {project_issue_projects} p ON n.nid = p.nid WHERE n.status = 1 AND p.mail_digest <> '' ORDER BY n.title, p.mail_digest"));
@@ -142,7 +142,7 @@ function project_mail_digest() {
         $body[$project->mail_digest] .= '  assigned: '. $assigned->name ."\n";
       }
       $body[$project->mail_digest] .= '  age: '. format_interval(time() - $node->created) ."\n";
-      $body[$project->mail_digest] .= '  url: '. url("node/$node->nid", NULL, NULL, 1) ."\n";
+      $body[$project->mail_digest] .= '  url: '. url("node/$node->nid", array('absolute' => TRUE)) ."\n";
       $body[$project->mail_digest] .= "\n";
     }
   }

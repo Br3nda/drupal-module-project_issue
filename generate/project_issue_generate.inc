@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.8 2008/10/24 02:35:30 aclight Exp $
+// $Id: project_issue_generate.inc,v 1.9 2009/01/20 18:38:03 dww Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -13,7 +13,7 @@ if (!ini_get('safe_mode')) {
  *  Number of issues to generate.
  */
 function project_issue_generate_issues($number) {
-  require_once(drupal_get_path('module', 'devel') .'/devel_generate.inc');
+  module_load_include('inc', 'devel', 'devel_generate');
 
   $empty_variables = array();
   // After retrieving the possible values for each of these variables, we
@@ -175,7 +175,7 @@ function project_issue_generate_issue_comments($number) {
 }
 
 function _project_issue_generate_get_field($field, $pool_size = 100) {
-  require_once(drupal_get_path('module', 'project_issue') .'/issue.inc');
+  module_load_include('inc', 'project_issue', 'issue');
 
   switch ($field) {
     case 'issues':
@@ -246,3 +246,4 @@ function _project_issue_generate_get_permitted_sids($user) {
   }
   return array();
 }
+

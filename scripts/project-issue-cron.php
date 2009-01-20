@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-// $Id: project-issue-cron.php,v 1.2 2009/01/16 02:51:05 dww Exp $
+// $Id: project-issue-cron.php,v 1.3 2009/01/20 18:38:04 dww Exp $
 
 
 /**
@@ -76,7 +76,7 @@ drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
 // Real work begins.
 if (module_exists('project_issue') && variable_get('project_issue_hook_cron', TRUE) == FALSE) {
-  require_once drupal_get_path('module', 'project_issue') .'/includes/cron.inc';
+  module_load_include('inc', 'project_issue', 'includes/cron');
   _project_issue_cron();
 }
 

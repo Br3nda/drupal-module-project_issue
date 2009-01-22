@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.115 2009-01-22 05:16:01 dww Exp $
+// $Id: mail.inc,v 1.116 2009-01-22 05:42:26 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -216,7 +216,7 @@ function project_mail_notify($nid) {
 
   while ($comment = db_fetch_object($result)) {
     $comment->comment = db_decode_blob($comment->comment);
-    $comment->files = _comment_upload_load_files($comment->cid);
+    $comment->files = comment_upload_load_files($comment->cid);
     $history[] = $comment;
     // Record users that are connected to this issue.
     if ($comment->uid) {

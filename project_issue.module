@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.105 2009-01-20 18:38:03 dww Exp $
+// $Id: project_issue.module,v 1.106 2009-01-22 06:19:51 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -815,7 +815,7 @@ function project_issue_project_edit_form(&$form_state, $node) {
   $form['nid'] = array('#type' => 'value', '#value' => $node->nid);
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit'),
+    '#value' => t('Save'),
     '#weight' => 45,
   );
 

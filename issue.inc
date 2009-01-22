@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.327 2009-01-22 05:32:39 dww Exp $
+// $Id: issue.inc,v 1.328 2009-01-22 06:01:41 dww Exp $
 
 
 /**
@@ -941,7 +941,7 @@ function project_issue_internal_links($node) {
       }
     }
     // Link for most recent patch.
-    $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload_files} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
+    $file_cid = db_result(db_query_range("SELECT cu.cid FROM {comment_upload} cu INNER JOIN {node} n on cu.nid = n.nid WHERE n.status = 1 AND n.nid = %d ORDER BY cu.fid DESC", $node->nid, 0, 1));
     if ($file_cid) {
       $links[] = l(t('Most recent attachment'), "node/$node->nid", array('fragment' => "comment-$file_cid"));
     }

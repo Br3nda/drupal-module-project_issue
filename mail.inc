@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.114 2009/01/20 21:14:54 dww Exp $
+// $Id: mail.inc,v 1.115 2009/01/22 05:16:01 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -174,6 +174,9 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
 
 function project_mail_notify($nid) {
   global $base_url, $user;
+
+  /// @TODO: re-enable this once http://drupal.org/node/361651 is done.
+  return;
 
   if (defined('PROJECT_NOMAIL')) {
     return;

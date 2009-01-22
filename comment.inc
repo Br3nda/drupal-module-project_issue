@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.136 2009/01/20 18:38:03 dww Exp $
+// $Id: comment.inc,v 1.137 2009/01/22 05:32:39 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -27,67 +27,6 @@ function project_issue_comment(&$arg, $op) {
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   switch ($op) {
-    case 'form':
-      // Only allow metadata changes on new followups.
-      if (isset($arg['cid']['#value'])) {
-        return array();
-      }
-
-      project_issue_set_breadcrumb($node, $project);
-
-      // We need to ask for almost the same metadata as project issue itself
-      // so let's reuse the form.
-      $form_state = array();
-      $form = drupal_retrieve_form('project_issue_form', $form_state, $node, TRUE);
-      // We need this otherwise pid collides with comment.
-      $form['project_info']['#tree'] = TRUE;
-      $form['project_info']['#weight'] = -2;
-
-      // Remove the form item that displays the current project, and
-      // replace the static single project value with a select list
-      // of all projects to make swapping simpler.
-      unset($form['project_info']['project_display']);
-      $uris = NULL;
-      $projects = array(t('<none>')) + project_projects_select_options($uris);
-      $form['project_info']['pid'] = array(
-        '#type' => 'select',
-        '#title' => t('Project'),
-        '#default_value' => $node->project_issue['pid'],
-        '#options' => $projects,
-        '#required' => TRUE,
-      );
-
-      $form['issue_info']['#weight'] = -1;
-      $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
-      $form['#suffix'] = '</div></div></div>';
-
-      $form['original_issue'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Edit issue settings'),
-        '#description' => t('Note: changing any of these items will update the issue\'s overall values.'),
-        '#collapsible' => TRUE,
-        '#weight' => -10,
-      );
-
-      $form['original_issue']['title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Issue title'),
-        '#maxlength' => 128,
-        '#default_value' => $node->title,
-        '#weight' => -30,
-        '#required' => TRUE,
-      );
-
-      // Remove the 'Project information' and 'Issue information' fieldsets,
-      // they're ugly after we move things inside the 'Edit issue settings' fieldset.
-      unset($form['project_info']['#type'], $form['project_info']['#title'], $form['issue_info']['#type'], $form['issue_info']['#title']);
-
-      // Restructure the UI to de-emphasize the original project form inputs.
-      $form['original_issue']['project_info'] = $form['project_info'];
-      $form['original_issue']['issue_info'] = $form['issue_info'];
-      unset($form['project_info'], $form['issue_info']);
-      unset($form['issue_details'], $form['project_help']);
-      return $form;
     case 'insert':
       // Get a lock on the issue in order to generate the next comment ID.
       $tries = 20;
@@ -229,6 +168,82 @@ function project_issue_comment(&$arg, $op) {
       }
       break;
   }
+}
+
+/**
+ * Adds project issue fieldset to the comment form
+ * 
+ * @param $form
+ *   Reference to form structure
+ * @param $form_state
+ *   Current form state
+ */
+function project_issue_form_comment_form_alter(&$form, &$form_state) {
+  $nid = $form['nid']['#value'];
+  $node = node_load($nid);
+  $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
+
+  // Only allow metadata changes on new followups.
+  if (isset($form['cid']['#value'])) {
+    return;
+  }
+
+  project_issue_set_breadcrumb($node, $project);
+
+  // We need to ask for almost the same metadata as project issue itself
+  // so let's reuse the form.
+  $project_issue_form_state = array();
+  $form += drupal_retrieve_form('project_issue_form', $node, $project_issue_form_state, TRUE);
+
+  // We need this otherwise pid collides with comment.
+  $form['project_info']['#tree'] = TRUE;
+  $form['project_info']['#weight'] = -2;
+
+  // Remove the form item that displays the current project, and
+  // replace the static single project value with a select list
+  // of all projects to make swapping simpler.
+  unset($form['project_info']['project_display']);
+  $uris = NULL;
+  $projects = array(t('<none>')) + project_projects_select_options($uris);
+  $form['project_info']['pid'] = array(
+    '#type' => 'select',
+    '#title' => t('Project'),
+    '#default_value' => $node->project_issue['pid'],
+    '#options' => $projects,
+    '#required' => TRUE,
+  );
+
+  $form['issue_info']['#weight'] = -1;
+  $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
+  $form['#suffix'] = '</div></div></div>';
+
+  $form['original_issue'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Edit issue settings'),
+    '#description' => t('Note: changing any of these items will update the issue\'s overall values.'),
+    '#collapsible' => TRUE,
+    '#weight' => -10,
+  );
+
+  $form['original_issue']['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Issue title'),
+    '#maxlength' => 128,
+    '#default_value' => $node->title,
+    '#weight' => -30,
+    '#required' => TRUE,
+  );
+
+  // Remove the 'Project information' and 'Issue information' fieldsets,
+  // they're ugly after we move things inside the 'Edit issue settings' fieldset.
+  unset($form['project_info']['#type'], $form['project_info']['#title'], $form['issue_info']['#type'], $form['issue_info']['#title']);
+
+  // Restructure the UI to de-emphasize the original project form inputs.
+  $form['original_issue']['project_info'] = $form['project_info'];
+  $form['original_issue']['issue_info'] = $form['issue_info'];
+  unset($form['project_info'], $form['issue_info']);
+  unset($form['issue_details'], $form['project_help']);
+  return $form;
 }
 
 /**
@@ -454,8 +469,7 @@ function project_issue_is_comment_reply() {
 /**
  * Appends the comment thread to the comment reply form.
  */
-function project_issue_comment_pre_render($form_id, &$form) {
-
+function project_issue_comment_pre_render($form) {
   // Force the correct formatting.
   $_GET['mode'] = COMMENT_MODE_FLAT_EXPANDED;
   $_GET['sort'] = COMMENT_ORDER_OLDEST_FIRST;
@@ -475,4 +489,5 @@ function project_issue_comment_pre_render($form_id, &$form) {
   }
 
   $form['#suffix'] = $suffix . $preview;
+  return $form;
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.326 2009/01/20 18:55:28 dww Exp $
+// $Id: issue.inc,v 1.327 2009/01/22 05:32:39 dww Exp $
 
 
 /**
@@ -458,7 +458,7 @@ function project_issue_pick_project_form_submit($form, &$form_state) {
  *   Otherwise, metadata fields will only be included in the form
  *   if $node->nid is empty.
  */
-function project_issue_form($node, $include_metadata_fields = FALSE) {
+function project_issue_form($node, $form_state, $include_metadata_fields = FALSE) {
   global $user;
 
   // If this function is being called as a result of CCK building the form

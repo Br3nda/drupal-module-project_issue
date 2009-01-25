@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.56 2009-01-25 16:15:18 dww Exp $
+// $Id: project_issue.install,v 1.57 2009-01-25 16:18:07 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -296,7 +296,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'author_has' => array(
-        'description' => t('Boolean indicating whether or not the author of an issue may use this issue status in that issue, regardless of the permissions controling site-wide use of this status.'),
+        'description' => t('Boolean indicating whether or not the author of an issue may use this issue status in that issue, regardless of the permissions controlling site-wide use of this status.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,

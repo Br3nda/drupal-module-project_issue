@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.109 2009/01/26 17:10:21 dww Exp $
+// $Id: project_issue.module,v 1.110 2009/01/26 19:00:47 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -62,7 +62,7 @@ function project_issue_menu() {
       'weight' => 4,
     );
   }
-  
+
   // "My projects" page (which shows all issues for all your projects)
   $items['project/user'] = array(
     'title' => 'My projects',
@@ -360,6 +360,12 @@ function project_issue_form_alter(&$form, &$form_state, $form_id) {
       break;
 
     case 'project_issue_node_form':
+      // For our theming, wrap everything in a 'project-issue' class.
+      $form['#prefix'] = isset($form['#prefix'])? $form['#prefix'] : '';
+      $form['#prefix'] .= '<div class="project-issue">';
+      $form['#suffix'] = isset($form['#suffix'])? $form['#suffix'] : '';
+      $form['#suffix'] = '</div>'. $form['#suffix'];
+
       if (isset($form['attachments'])) {
         if (isset($form['project_info'])) {
           // We already know what project it is, so make sure the 'File
@@ -560,7 +566,7 @@ function project_issue_cron() {
  *   The (minimum) number of days without activity before automatically closing
  *   a fixed issue.
  * @return
- *   Message to be added as a comment to an issue when auto-closing that issue. 
+ *   Message to be added as a comment to an issue when auto-closing that issue.
  */
 function theme_project_issue_auto_close_message($auto_close_days) {
   $auto_close_interval = format_interval($auto_close_days * 24 * 60 * 60, 2);

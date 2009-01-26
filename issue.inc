@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.329 2009/01/26 18:01:46 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.330 2009/01/26 19:00:47 thehunmonkgroup Exp $
 
 
 /**
@@ -494,9 +494,6 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
   }
 
   $default_state = variable_get('project_issue_default_state', 1);
-
-  $form['#prefix'] = '<div class="project-issue">';
-  $form['#suffix'] = '</div>';
 
   // Fetch a list of all projects to test for access.
   $uris = NULL;

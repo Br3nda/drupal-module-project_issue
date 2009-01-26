@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.1 2009/01/16 01:41:15 dww Exp $
+// $Id: project_issue.views.inc,v 1.2 2009/01/26 22:50:35 dww Exp $
 
 /**
  * @file
@@ -55,6 +55,17 @@ function project_issue_views_data() {
       'base' => 'node',
       'handler' => 'views_handler_relationship',
       'label' => t('Project node'),
+    ),
+  );
+
+  $data['node']['project_issue_queue'] = array(
+    'title' => t('Project issue queue'),
+    'help' => t("Displays a link to the issue queue for the project this issue is assigned to."),
+    'field' => array(
+      'field' => 'title',
+      'group' => t('Project issue'),
+      'handler' => 'project_issue_handler_field_issue_queue_link',
+      'click sortable' => TRUE,
     ),
   );
 
@@ -182,6 +193,9 @@ function project_issue_views_handlers() {
         'parent' => 'views_handler_field',
       ),
       'project_issue_handler_field_issue_priority' => array(
+        'parent' => 'views_handler_field',
+      ),
+      'project_issue_handler_field_issue_queue_link' => array(
         'parent' => 'views_handler_field',
       ),
       'project_issue_handler_field_issue_status' => array(

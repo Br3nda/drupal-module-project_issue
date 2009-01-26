@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.116 2009-01-22 05:42:26 dww Exp $
+// $Id: mail.inc,v 1.117 2009-01-26 15:53:40 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -173,33 +173,14 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
 }
 
 function project_mail_notify($nid) {
-  global $base_url, $user;
-
-  /// @TODO: re-enable this once http://drupal.org/node/361651 is done.
-  return;
+  global $user;
 
   if (defined('PROJECT_NOMAIL')) {
     return;
   }
 
-  // There could be stale data in the cached node, so reset the cache.
   $node = node_load($nid, NULL, TRUE);
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
-
-  $fields = project_issue_field_labels('email');
-
-  // Store a copy of the issue, so we can load the original issue values
-  // below.
-  $issue = drupal_clone($node);
-
-  // Load in the original issue data here, since we want a running
-  // reverse history.
-  $original_issue_data = unserialize($node->project_issue['original_issue_data']);
-  foreach ($fields as $field => $label) {
-    if ($field != 'name' && $field != 'updator') {
-      $issue->project_issue[$field] = $original_issue_data->$field;
-    }
-  }
 
   // Record users that are connected to this issue.
   $uids = array();
@@ -222,42 +203,6 @@ function project_mail_notify($nid) {
     if ($comment->uid) {
       $uids[$comment->uid] = $comment->uid;
     }
-    // We need the most recent cid and the next most recent cid for the
-    // message headers.  Instead of issuing another query, just keep track
-    // of them here.
-    $previous_cid = isset($cid) ? $cid : '';
-    $cid = $comment->cid;
-  }
-
-  // Create mail header
-  $sender->name = mime_header_encode(t('!name (!site)', array('!name' => $user->name, '!site' => variable_get('site_name', 'Drupal'))));
-  $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->project['uri']));
-
-  // The sender name is enclosed by double quotes below
-  // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
-  // which requires double quotes when special characters (including
-  // some punctuation) are used.  See example in Appendix A.1.2.
-  $from = "\"$sender->name\" <$sender->mail>";
-  $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url);
-  $header = array(
-    'Return-Path' => "<$sender->mail>",
-    'Date' => date('r'),
-    'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
-    'List-Id' => "$project->title <". $project->project['uri'] ."-issues-$domain>",
-    'List-Archive' => '<'. url('project/issues/'. $project->project['uri'], array('absolute' => TRUE)) .'>',
-    'List-Subscribe' => '<'. url('project/issues/subscribe-mail/'. $project->project['uri'], array('absolute' => TRUE)) .'>',
-    'List-Unsubscribe' => '<'. url('project/issues/subscribe-mail/'. $project->project['uri'], array('absolute' => TRUE)) .'>'
-  );
-
-  // Comments exist, set headers accordingly.
-  if (count($history) > 1) {
-    $header['Message-Id'] = "<type=project&nid=$node->nid&cid=$cid&host=@$domain>";
-    $header['In-Reply-To'] = "<type=project&nid=$node->nid&host=@$domain>";
-    $header['References'] = "<type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$previous_cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
-  }
-  // Only original issue in this email.
-  else {
-    $header['Message-Id'] = "<type=project&nid=$node->nid&host=@$domain>";
   }
 
   if (count($uids)) {
@@ -269,15 +214,11 @@ function project_mail_notify($nid) {
     $result = db_query('SELECT p.*, u.uid, u.name, u.mail FROM {project_subscriptions} p INNER JOIN {users} u ON p.uid = u.uid WHERE u.status = 1 AND p.nid = %d AND p.level = 2', $node->project_issue['pid']);
   }
 
-  // Create link to related node
-  $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", array('absolute' => TRUE)))) ."\n";
-  $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", array('fragment' => 'comment-form', 'absolute' => TRUE)))) ."\n";
-
   // To save workload, check here if either the anonymous role or the
   // authenticated role has the 'view uploaded files' permission, since
   // we only need to process each user's file access permission if this
   // is NOT the case.
-  $check_file_perms = !db_result(db_query("SELECT COUNT (*) FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
+  $check_file_perms = !db_result(db_query("SELECT COUNT(*) FROM {permission} WHERE perm LIKE '%view uploaded files%' AND rid IN (%d, %d)", DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID));
 
   // We need to determine if node_access() checks are necessary.  The
   // check will be needed if any of the following is true:
@@ -292,38 +233,31 @@ function project_mail_notify($nid) {
   $grants = module_implements('node_grants');
   $check_node_access = $node->status != 1 || !$anon_auth_access || !empty($grants);
 
-  project_mail_output($node->title, 0);
-  $subject = t('[!short_name] [!category] !title', array('!short_name' => $project->project['uri'], '!category' => $node->project_issue['category'], '!title' => $node->title));
-
+  $params['node']    = $node;
+  $params['project'] = $project;
+  $params['history'] = $history;
+  
+  $sender->name = t('!name (!site)', array('!name' => $user->name, '!site' => variable_get('site_name', 'Drupal')));
+  $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->project['uri']));
+  // The sender name is enclosed by double quotes below
+  // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
+  // which requires double quotes when special characters (including
+  // some punctuation) are used.  See example in Appendix A.1.2.
+  $from = "\"$sender->name\" <$sender->mail>";
+  
   while ($recipient = db_fetch_object($result)) {
     // To save work, only go through a user_load if we need it.
     if ($check_file_perms || $check_node_access) {
       $account = user_load(array('uid' => $recipient->uid));
     }
-    if ($check_node_access) {
-      // Load the user that's to receive the mail into
-      // the global user object temporarily. We use session_save_session()
-      // to provide safe user impersonation.
-      $original_user = $user;
-      session_save_session(FALSE);
-      $user = $account;
-      $can_access = node_access('view', $node);
-      // Load the original user back in.
-      $user = $original_user;
-      session_save_session(TRUE);
-    }
-    else {
-      $can_access = TRUE;
-    }
+    
+    $can_access = $check_node_access ? node_access('view', $node, $account) : TRUE;
+    
     if ($can_access) {
-      if ($check_file_perms) {
-        $display_files = user_access('view uploaded files', $account);
-      }
-      else {
-        $display_files = TRUE;
-      }
-      $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, $display_files);
-      drupal_mail('project_issue_update', $recipient->mail, $subject, $body, $from, $header);
+      $display_files = $check_file_perms ? user_access('view uploaded files', $account) : TRUE;
+
+      $params['display_files'] = $display_files;
+      drupal_mail('project_issue', 'project_issue_update_notification', $recipient->mail, user_preferred_language($account), $params, $from);      
     }
   }
 
@@ -335,9 +269,79 @@ function project_mail_notify($nid) {
     return;
   }
 
-  if ($project->project_issue['mail_copy']) {
-    $body = "$links\n". project_mail_generate_followup_mail_body($node, $history, TRUE);
-    drupal_mail('project_issue_update', $project->project_issue['mail_copy'], $subject, $body, $from, $header);
+  if (!empty($project->project_issue['mail_copy'])) {
+    $params['display_files'] = TRUE;
+    $message['body'][] = $links;
+    $message['body'][] = project_mail_generate_followup_mail_body($node, $history, TRUE);
+    drupal_mail('project_issue', 'project_issue_update_notification', $project->project_issue['mail_copy'], language_default(), $params, $from);
+  }
+}
+
+/*
+ * Implementation of hook_mail()
+ */
+function project_issue_mail($key, &$message, $params) {
+  global $base_url;
+
+  switch ($key) {
+    case "project_issue_update_notification":
+      // There could be stale data in the cached node, so reset the cache.
+      $node    = $params['node'];
+      $project = $params['project'];
+      $history = $params['history'];      
+      $fields  = project_issue_field_labels('email');
+
+      // Store a copy of the issue, so we can load the original issue values
+      // below.
+      $issue = drupal_clone($node);
+
+      // Load in the original issue data here, since we want a running
+      // reverse history.
+      $original_issue_data = unserialize($node->project_issue['original_issue_data']);
+      foreach ($fields as $field => $label) {
+        if ($field != 'name' && $field != 'updator') {
+          $issue->project_issue[$field] = $original_issue_data->$field;
+        }
+      }
+      
+      $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url);
+            
+      $message['headers'] += array(        
+        'Date' => date('r'),        
+        'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
+        'List-Id' => "$project->title <". $project->project['uri'] ."-issues-$domain>",
+        'List-Archive' => '<'. url('project/issues/'. $project->project['uri'], array('absolute' => TRUE)) .'>',
+        'List-Subscribe' => '<'. url('project/issues/subscribe-mail/'. $project->project['uri'], array('absolute' => TRUE)) .'>',
+        'List-Unsubscribe' => '<'. url('project/issues/subscribe-mail/'. $project->project['uri'], array('absolute' => TRUE)) .'>'
+      );
+
+      // Comments exist, set headers accordingly.
+      if (count($history) > 1) {
+        foreach ($history as $comment) {
+          // We need the most recent cid and the next most recent cid for the
+          // message headers.  Instead of issuing another query, just keep track
+          // of them here.
+          $previous_cid = isset($cid) ? $cid : '';
+          $cid = $comment->cid;
+        }
+        $message['headers']['Message-Id'] = "<type=project&nid=$node->nid&cid=$cid&host=@$domain>";
+        $message['headers']['In-Reply-To'] = "<type=project&nid=$node->nid&host=@$domain>";
+        $message['headers']['References'] = "<type=project&nid=$node->nid&host=@$domain> <type=project&nid=$node->nid&cid=$previous_cid&host=@$domain> <type=project&nid=$node->nid&revcount=1&host=@$domain>";
+      } else {
+        // Only original issue in this email.
+        $message['headers']['Message-Id'] = "<type=project&nid=$node->nid&host=@$domain>";
+      }
+
+      project_mail_output($node->title, 0);
+      $message['subject'] = t('[!short_name] [!category] !title', array('!short_name' => $project->project['uri'], '!category' => $node->project_issue['category'], '!title' => $node->title));
+
+      // Create link to related node
+      $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", array('absolute' => TRUE)))) ."\n";
+      $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", array('fragment' => 'comment-form', 'absolute' => TRUE)))) ."\n";
+      $message['body'][] = $links;
+      $message['body'][] = project_mail_generate_followup_mail_body($node, $history, $params['display_files']);
+
+      break;
   }
 }
 

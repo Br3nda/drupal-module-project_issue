@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.106 2009-01-22 06:19:51 dww Exp $
+// $Id: project_issue.module,v 1.107 2009-01-26 15:21:23 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1463,5 +1463,62 @@ function project_issue_metadata_changes($node, $old_data, $new_data, $field_labe
     $function('diff', $node, $changes, $old_data, $new_data);
   }
   return $changes;
+}
+
+function project_issue_form_project_quick_navigate_form_alter(&$form, $form_state) {
+  $form['issues'] = array(
+    '#type' => 'submit',
+    '#value' => t('View issues'),
+    '#submit' => array('project_issue_quick_navigate_issues_submit'),
+    '#validate' => array('project_issue_quick_navigate_issues_validate'),
+  );
+}
+
+function project_issue_quick_navigate_issues_validate($form, &$form_state) {
+  $project = db_fetch_object(db_query("SELECT pp.uri, pip.issues FROM {project_projects} pp INNER JOIN {project_issue_projects} pip ON pp.nid = pip.nid WHERE pp.nid = %d", $form_state['values']['project_goto']));
+  if (empty($project)) {
+    form_set_error('project_goto', t('You must select a project to view issues for.'));
+  }
+  if (empty($project->issues)) {
+    form_set_error('project_goto', t('The selected project does not have an issue queue.'));
+  }
+  else {
+    $form_state['project_uri'] = $project->uri;
+  }
+}
+
+function project_issue_quick_navigate_issues_submit($form, &$form_state) {
+  $form_state['redirect'] = 'project/issues/'. $form_state['project_uri'];
+}
+
+function project_issue_form_project_quick_navigate_title_form_alter(&$form, $form_state) {
+  $form['issues'] = array(
+    '#type' => 'submit',
+    '#value' => t('View issues'),
+    '#validate' => array('project_issue_quick_navigate_title_issues_validate'),
+    '#submit' => array('project_issue_quick_navigate_title_issues_submit'),
+  );
+}
+
+function project_issue_quick_navigate_title_issues_validate($form, &$form_state) {
+  if (empty($form_state['values']['project_title'])) {
+    form_set_error('project_title', t('You must enter a project to view issues for.'));
+  }
+  else {
+    $project = db_fetch_object(db_query("SELECT pp.uri, pip.issues FROM {node} n INNER JOIN {project_projects} pp ON n.nid = pp.nid INNER JOIN {project_issue_projects} pip ON n.nid = pip.nid WHERE n.title = '%s'", $form_state['values']['project_title']));
+    if (empty($project)) {
+      form_set_error('project_title', t('The name you entered (%title) is not a valid project.', array('%title' => $form_state['values']['project_title'])));
+    }
+    if (empty($project->issues)) {
+      form_set_error('project_title', t('The selected project does not have an issue queue.'));
+    }
+    else {
+      $form_state['project_uri'] = $project->uri;
+    }
+  }
+}
+
+function project_issue_quick_navigate_title_issues_submit($form, &$form_state) {
+  $form_state['redirect'] = 'project/issues/'. $form_state['project_uri'];
 }
 

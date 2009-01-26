@@ -1,12 +1,12 @@
 <?php
-// $Id: project_issue.install,v 1.57 2009/01/25 16:18:07 dww Exp $
+// $Id: project_issue.install,v 1.58 2009/01/26 12:27:14 dww Exp $
 
 /**
  * Implementation of hook_schema().
  */
 function project_issue_schema() {
   $schema['project_issue_projects'] = array(
-    'description' => t('Table containing issue-related settings per project.'),
+    'description' => t('Table containing per-project issue-related settings.'),
     'fields' => array(
       'nid' => array(
         'description' => t('Primary Key: The {project_projects}.nid of the project.'),
@@ -47,14 +47,14 @@ function project_issue_schema() {
         'default' => '',
       ),
       'mail_copy_filter' => array(
-        'description' => t('A serialized array containing the types of issues to include in the email.'),
+        'description' => t('A serialized array containing the types of issues to include in the e-mail sent to {project_projects}.mail_copy.'),
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'mail_copy_filter_state' => array(
-        'description' => t('A serialized array containing the statuses to include in the email.'),
+        'description' => t('A serialized array containing the statuses to include in the e-mail sent to {project_projects}.mail_copy.'),
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -96,7 +96,7 @@ function project_issue_schema() {
         'default' => '',
       ),
       'component' => array(
-        'description' => t('Component of the issue as defined on a project-by-project basis in {project_issue_projects}.components.'),
+        'description' => t('Component of the issue as defined per-project in {project_issue_projects}.components.'),
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -132,7 +132,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'original_issue_data' => array(
-        'description' => t('A serialized object containing the original values that were used when this issue was created.'),
+        'description' => t('A serialized object containing the original metadata values that were used when this issue was created.'),
         'type' => 'text',
         'not null' => TRUE,
       ),
@@ -178,7 +178,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'component' => array(
-        'description' => t('Component of the issue after this comment was made. Components are defined on a project-by-project basis in {project_issue_projects}.components.'),
+        'description' => t('Component of the issue after this comment was made. Components are defined per-project in {project_issue_projects}.components.'),
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -242,7 +242,7 @@ function project_issue_schema() {
   );
 
   $schema['project_subscriptions'] = array(
-    'description' => t('Table keeping track of subscriptions per user per project for issue updates.'),
+    'description' => t('Table keeping track of per-user project_issue subscriptions.'),
     'fields' => array(
       'nid' => array(
         'description' => t('{project_projects}.nid of the project to which the user is subscribed.'),
@@ -259,7 +259,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'level' => array(
-        'description' => t('The type of subscription. Possible values are: 0 = not subscribed, 1 = subscribed to own issues or 2 = subscribed to all issues.'),
+        'description' => t('The type of subscription for the project. Possible values are: 0 = not subscribed, 1 = subscribed to own issues or 2 = subscribed to all issues.'),
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => 1,

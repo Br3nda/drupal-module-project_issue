@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.330 2009/01/26 19:00:47 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.331 2009/01/26 19:57:38 thehunmonkgroup Exp $
 
 
 /**
@@ -259,21 +259,19 @@ function project_issue_statistics($project = 0) {
 function project_issue_subscribe_submit($form, &$form_state) {
 
   global $user;
-  $all = $_POST['all'];
+  $all = $form_state['clicked_button']['#value'];
 
   $levels = array(0 => t('None'), 1 => t('Own issues'), 2 => t('All issues'));
 
     // Remove previous subscriptions for user.
-    if ($nid = $form_state['values']['single']) {
-      db_query('DELETE FROM {project_subscriptions} WHERE nid = %d AND uid = %d', $nid, $user->uid);
+    if (isset($form_state['values']['single'])) {
+      db_query('DELETE FROM {project_subscriptions} WHERE nid = %d AND uid = %d', $form_state['values']['single'], $user->uid);
     }
     else {
       db_query('DELETE FROM {project_subscriptions} WHERE uid = %d', $user->uid);
     }
 
-    if ($all) {
-      $_level = array_search($all, $levels);
-    }
+    $_level = array_search($all, $levels);
 
     foreach ($form_state['values']['options'] as $nid => $level) {
       if ($_level !== 0 && $level !== 0) {
@@ -282,20 +280,38 @@ function project_issue_subscribe_submit($form, &$form_state) {
     }
     drupal_set_message(t('Subscription settings saved.'));
 
-    $form_state['redirect'] = 'project/issues/subscribe-mail';
+    if (isset($form['single'])) {
+      $form_state['redirect'] = 'project/issues/subscribe-mail/'. $form['#project']['#value']->project['uri'];
+    }
+    else {
+      $form_state['redirect'] = 'project/issues/subscribe-mail';
+    }
 }
 
 
-function project_issue_subscribe($project = 0) {
+function project_issue_subscribe($form_state, $project_nid = 0) {
   global $user;
 
   $levels = array(0 => t('None'), 1 => t('Own issues'), 2 => t('All issues'));
 
-  if ($project) {
+  if ($project_nid) {
+    if (!is_numeric($project_nid)) {
+      $project_nid = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $project_nid));
+    }
+    if (!$project_nid) {
+      return drupal_not_found();
+    }
+
+    $project = node_load($project_nid);
+
     $level = db_result(db_query('SELECT level FROM {project_subscriptions} WHERE nid = %d AND uid = %d', $project->nid, $user->uid));
     $form['single'] = array(
       '#type' => 'value',
       '#value' => $project->nid,
+    );
+    $form['#project'] = array(
+      '#type' => 'value',
+      '#value' => $project,
     );
     $form['subscribe'] = array(
       '#type' => 'markup',
@@ -374,7 +390,7 @@ function theme_project_issue_subscribe($form) {
 
   $output = '';
 
-  if (!$form['single']) {
+  if (!isset($form['single'])) {
     $levels = array(0 => t('None'), 1 => t('Own issues'), 2 => t('All issues'));
     $headers = array_merge(array(t('Project')), $levels);
 

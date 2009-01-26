@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.108 2009/01/26 16:44:58 dww Exp $
+// $Id: project_issue.module,v 1.109 2009/01/26 17:10:21 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -991,7 +991,8 @@ function project_issue_user_page($arg = 0) {
   while ($node = db_fetch_object($result)) {
     $node_obj = node_load($node->nid);
     $node->is_admin = node_access('update', $node_obj);
-    $node->project_issue['issues'] = $node_obj->issues;
+    $node->project['uri'] = $node_obj->project['uri'];
+    $node->project_issue['issues'] = $node_obj->project_issue['issues'];
     $node->project_release['releases'] = isset($node_obj->project_release['releases']) ? $node_obj->project_release['releases'] : 0;
     if ($node->is_admin) {
       $any_admin = TRUE;
@@ -1007,15 +1008,15 @@ function project_issue_user_page($arg = 0) {
     $issue_links = array(
       array(
         'title' => t('View'),
-        'href' => "project/issues/$node->nid"
+        'href' => 'project/issues/'. $node->project['uri'],
       ),
       array(
         'title' => t('Search'),
-        'href' => "project/issues/search/$node->nid",
+        'href' => 'project/issues/search/'. $node->project['uri'],
       ),
       array(
         'title' => t('Create'),
-        'href' => "node/add/project-issue/$node->nid",
+        'href' => 'node/add/project-issue/'. $node->project['uri'],
       ),
     );
     if ($node->is_admin) {
@@ -1025,14 +1026,14 @@ function project_issue_user_page($arg = 0) {
           'href' => "node/$node->nid/edit",
         ),
       );
-      if (module_exists('project_release') && $node->releases) {
+      if (module_exists('project_release') && $node->project_release['releases']) {
         $project_links[] = array(
           'title' => t('Add release'),
           'href' => "node/add/project-release/$node->nid",
         );
       }
     }
-    if ($node->issues) {
+    if ($node->project_issue['issues']) {
       $row = array(
         array(
           'data' => l($node->title, "node/$node->nid"),

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.107 2009-01-26 15:21:23 dww Exp $
+// $Id: project_issue.module,v 1.108 2009-01-26 16:44:58 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1200,7 +1200,7 @@ function project_issue_set_breadcrumb($node, $project) {
 /**
  * Implementation of hook_link_alter().
  */
-function project_issue_link_alter(&$node, &$links) {
+function project_issue_link_alter(&$links, $node) {
   // Only remove link for full page views.
   if ($node->type == 'project_issue' && arg(0) == 'node' && is_numeric(arg(1))) {
     unset($links['comment_add']);

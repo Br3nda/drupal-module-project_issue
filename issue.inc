@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.20 2009/01/20 18:55:33 dww Exp $
+// $Id: issue.inc,v 1.304.2.21 2009/01/26 20:22:23 thehunmonkgroup Exp $
 
 function project_issue_page() {
   global $user;
@@ -482,7 +482,12 @@ function project_issue_subscribe_submit($form_id, $form_values) {
     }
     drupal_set_message(t('Subscription settings saved.'));
 
-    return 'project/issues/subscribe-mail';
+    if (isset($form_values['project_uri'])) {
+      return 'project/issues/subscribe-mail/'. $form_values['project_uri'];
+    }
+    else {
+      return 'project/issues/subscribe-mail';
+    }
 }
 
 
@@ -496,6 +501,10 @@ function project_issue_subscribe($project = 0) {
     $form['single'] = array(
       '#type' => 'value',
       '#value' => $project->nid,
+    );
+    $form['project_uri'] = array(
+      '#type' => 'value',
+      '#value' => $project->uri,
     );
     $form['subscribe'] = array(
       '#type' => 'markup',

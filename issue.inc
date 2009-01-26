@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.328 2009/01/22 06:01:41 dww Exp $
+// $Id: issue.inc,v 1.329 2009/01/26 18:01:46 thehunmonkgroup Exp $
 
 
 /**
@@ -461,6 +461,24 @@ function project_issue_pick_project_form_submit($form, &$form_state) {
 function project_issue_form($node, $form_state, $include_metadata_fields = FALSE) {
   global $user;
 
+  // In the case of an issue preview, get our defaults from the submitted form.
+  // TODO: do we want to #tree our form so we don't need this hack?
+  if (isset($form_state['node'])) {
+    $defaults = array(
+      'rid',
+      'component',
+      'category',
+      'priority',
+      'assigned',
+      'sid',
+    );
+    foreach ($defaults as $default) {
+      if (isset($form_state['node'][$default])) {
+        $node->project_issue[$default] = $form_state['node'][$default];
+      }
+    }
+  }
+
   // If this function is being called as a result of CCK building the form
   // in content_admin_field_overview_form(), just return an empty array, since
   // CCK only grabs the top level fields and this form has none of those anyway.
@@ -719,7 +737,7 @@ function project_issue_assigned_choices($issue) {
  * itself would not be invoked, which would lead to all kinds of problems,
  * including hook_nodeapi('validate') never being invoked.
  *
- * @param $node 
+ * @param $node
  *   An object of form values from the project_issue node form, not a fully
  *   loaded issue node object.  Therefore, the fields are not in the usual
  *   $node->project_issue array.

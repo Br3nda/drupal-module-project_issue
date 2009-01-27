@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.137 2009/01/22 05:32:39 dww Exp $
+// $Id: comment.inc,v 1.138 2009/01/27 04:57:22 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -13,18 +13,12 @@ function project_issue_comment(&$arg, $op) {
   // Make a copy here so we have all the original metadata, since some
   // of it can change below.
   $original_node = drupal_clone($node);
+  $old_data = (object) $original_node->project_issue;
+  $old_data->title = $original_node->title;
 
   if ($node->type != 'project_issue') {
     return;
   }
-
-  // Make sure project is current here -- it may have changed when posted.
-  // This is ugly, but the form workflow doesn't really offer a better
-  // choice for this scenario.
-  if (isset($_POST['project_info']['pid'])) {
-    $node->project_issue['pid'] = $_POST['project_info']['pid'];
-  }
-  $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   switch ($op) {
     case 'insert':
@@ -47,7 +41,7 @@ function project_issue_comment(&$arg, $op) {
       }
 
       if (isset($id)) {
-        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
+        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['project_info']['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
         db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['cid']);
         project_issue_update_by_comment($arg, 'insert');
       }
@@ -62,111 +56,37 @@ function project_issue_comment(&$arg, $op) {
         // The hard redirect prevents any bogus data from being inserted for the failed comment.
         drupal_goto('node/'. $arg['nid']);
       }
-
       break;
+
     case 'update':
       project_issue_update_by_comment($arg, 'update');
       break;
+
     case 'delete':
       db_query("DELETE FROM {project_issue_comments} WHERE cid = %d", $arg->cid);
       project_issue_update_by_comment($arg, 'delete');
       break;
+
     case 'view':
       if (isset($arg->cid)) {
         $project_issue_table = project_issue_comment_view($original_node, $arg);
       }
       else {
+        // Previewing a comment.
         $test = drupal_clone($arg);
         $test->pid = $arg->project_info['pid'];
         $test->component = $arg->project_info['component'];
+        $test->assigned = $arg->project_info['assigned'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
         $test->rid = $arg->project_info['rid'] ? $arg->project_info['rid'] : 0;
-        $comment_changes = project_issue_metadata_changes($node, $original_node, $test, project_issue_field_labels('web'));
+        $comment_changes = project_issue_metadata_changes($node, $old_data, $test, project_issue_field_labels('web'));
         $project_issue_table = theme('project_issue_comment_table', $comment_changes);
       }
       if ($project_issue_table) {
         $arg->comment = '<div class="project-issue"><div class="summary">'. $project_issue_table .'</div></div>' . $arg->comment;
       }
       break;
-    case 'validate':
-      // Adjust new file attachments to go to the issues directory.
-      // We have to do this during validate, otherwise we might miss
-      // adjusting the filename before comment upload saves it (module weighting)
-      project_issue_change_comment_upload_path($arg);
 
-      // Only validate metadata changes on new followups.
-      if (isset($arg['cid'])) {
-        return;
-      }
-      if ($project) {
-        // Force all comments to be a child of the main issue, to match the
-        // flat display, and also to prevent accidentally deleting a thread.
-        form_set_value(array('#parents' => array('pid')), 0, $form_state);
-
-        // Validate version.
-        if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0, 'version', 'all', array($arg['project_info']['rid'])))) {
-          $rid = $arg['project_info']['rid'];
-          if ($rid && !in_array($rid, array_keys($releases))) {
-            $rid = 0;
-          }
-          // Check to make sure this release is not marked as an invalid
-          // release node for user selection.
-          $invalid_rids = variable_get('project_issue_invalid_releases', array());
-          if (!empty($invalid_rids) &&
-              ((empty($rid) && in_array($node->project_issue['rid'], $invalid_rids))
-               || in_array($rid, $invalid_rids))) {
-            form_set_error('project_info][rid', t('%version is not a valid version, please select a different value.', array('%version' => $releases[$node->project_issue['rid']])));
-          }
-          elseif (empty($rid)) {
-            form_set_error('project_info][rid', t('You have to specify a valid version.'));
-          }
-        }
-        // Validate component.
-        $component = $arg['project_info']['component'];
-        if ($component && !in_array($component, $project->project_issue['components'])) {
-          $component = 0;
-        }
-        empty($component) && form_set_error('project_info][component', t('You have to specify a valid component.'));
-      }
-      else {
-        form_set_error('project_info][pid', t('You have to specify a valid project.'));
-      }
-      empty($arg['category']) && form_set_error('category', t('You have to specify a valid category.'));
-
-      // Now, make sure the comment changes *something* about the issue.
-      // Unfortunately, hook_comment() is evil, and in the 'validate' case, we
-      // get a form_values array in $arg, whereas in 'view', we get an
-      // object. So, we can't really share the code to initialize this array
-      // of changes, and have to do it again here using the array. If the user
-      // uploaded a file, so long as it's not marked for removal, we consider
-      // that a valid change to the issue, too.
-      $has_file = FALSE;
-      $files = isset($arg['files']) ? $arg['files'] : array();
-      foreach ($files as $number => $data) {
-        if (empty($data['remove'])) {
-          $has_file = TRUE;
-          break;
-        }
-      }
-      if (!$has_file && empty($arg['comment'])) {
-        $comment = drupal_clone((object)$arg);
-        $comment->pid = $arg['project_info']['pid'];
-        $comment->component = $arg['project_info']['component'];
-        // Add a dummy rid if necessary -- prevents incorrect change data.
-        $comment->rid = $arg['project_info']['rid'] ? $arg['project_info']['rid'] : 0;
-        $comment_changes = project_issue_metadata_changes($node, $original_node, $comment, project_issue_field_labels('web'));
-        $has_change = FALSE;
-        foreach ($comment_changes as $field => $changes) {
-          if (isset($changes['new'])) {
-            $has_change = TRUE;
-            break;
-          }
-        }
-        if (!$has_change) {
-          form_set_error('comment', t('You must either add a comment or change something about this issue.'));
-        }
-      }
-      break;
   }
 }
 
@@ -183,6 +103,16 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   $node = node_load($nid);
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
+  $form['#validate'][] = 'project_issue_form_comment_validate';
+
+  // We have to set $form['#action'] to prevent AHAH nastiness.
+  if (!empty($form['pid']['#value'])) {
+    $form['#action'] = url('comment/reply/' . $nid . '/' . $form['pid']['#value']);
+  }
+  else {
+    $form['#action'] = url('comment/reply/' . $nid);
+  }
+
   // Only allow metadata changes on new followups.
   if (isset($form['cid']['#value'])) {
     return;
@@ -192,8 +122,7 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
 
   // We need to ask for almost the same metadata as project issue itself
   // so let's reuse the form.
-  $project_issue_form_state = array();
-  $form += drupal_retrieve_form('project_issue_form', $node, $project_issue_form_state, TRUE);
+  $form += drupal_retrieve_form('project_issue_form', $node, $form_state, TRUE);
 
   // We need this otherwise pid collides with comment.
   $form['project_info']['#tree'] = TRUE;
@@ -211,6 +140,11 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
     '#default_value' => $node->project_issue['pid'],
     '#options' => $projects,
     '#required' => TRUE,
+    '#ahah' => array(
+      'path' => 'project/issues/update_project',
+      'wrapper' => 'project-info-wrapper',
+      'event' => 'change',
+    ),
   );
 
   $form['issue_info']['#weight'] = -1;
@@ -233,17 +167,125 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
     '#weight' => -30,
     '#required' => TRUE,
   );
+  
+  $form['project_info']['assigned'] = $form['issue_info']['assigned'];
+  $form['project_info']['#prefix'] = '<div id="project-info-wrapper" class="inline-options">';
+  $form['project_info']['#suffix'] = '</div>';
 
   // Remove the 'Project information' and 'Issue information' fieldsets,
   // they're ugly after we move things inside the 'Edit issue settings' fieldset.
-  unset($form['project_info']['#type'], $form['project_info']['#title'], $form['issue_info']['#type'], $form['issue_info']['#title']);
+  unset($form['project_info']['#type'], $form['project_info']['#title'], $form['issue_info']['#type'], $form['issue_info']['#title'], $form['issue_info']['assigned']);
 
   // Restructure the UI to de-emphasize the original project form inputs.
   $form['original_issue']['project_info'] = $form['project_info'];
   $form['original_issue']['issue_info'] = $form['issue_info'];
   unset($form['project_info'], $form['issue_info']);
   unset($form['issue_details'], $form['project_help']);
+
   return $form;
+}
+
+/**
+ * Validate issue metadata on the comment form.
+ *
+ * @param $form
+ *   The Drupal form structure.
+ * @param $form_state
+ *   The current state of the form.
+ */
+function project_issue_form_comment_validate($form, &$form_state) {    
+  if(isset($form_state['project_issue_ahah'])) {
+    return;
+  }
+  $nid = $form_state['values']['nid'];
+  $node = node_load($nid);
+  
+  // Make a copy here so we have all the original metadata, since some
+  // of it can change below.
+  $original_node = drupal_clone($node);
+  $old_data = (object) $original_node->project_issue;
+  $old_data->title = $original_node->title;
+
+  // Adjust new file attachments to go to the issues directory.
+  // We have to do this during validate, otherwise we might miss
+  // adjusting the filename before comment upload saves it (module weighting)
+  project_issue_change_comment_upload_path($form_state['values']);
+  
+  // Only validate metadata changes on new followups.
+  if (isset($form_state['values']['cid'])) {
+    return;
+  }
+
+  // Make sure project is current here -- it may have changed when posted.
+  if (isset($form_state['values']['project_info']['pid'])) {
+    $node->project_issue['pid'] = $form_state['values']['project_info']['pid'];
+  }
+  $project = node_load($node->project_issue['pid']);
+
+  if (!empty($project) && $project->type == 'project_project') {
+    // Force all comments to be a child of the main issue, to match the
+    // flat display, and also to prevent accidentally deleting a thread.
+    form_set_value(array('#parents' => array('pid')), 0, $form_state);
+
+    // Validate version.
+    if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0, 'version', 'all', array($form_state['values']['project_info']['rid'])))) {
+      $rid = $form_state['values']['project_info']['rid'];
+      if ($rid && !in_array($rid, array_keys($releases))) {
+        $rid = 0;
+      }
+      // Check to make sure this release is not marked as an invalid
+      // release node for user selection.
+      $invalid_rids = variable_get('project_issue_invalid_releases', array());
+      if (!empty($invalid_rids) &&
+          ((empty($rid) && in_array($node->project_issue['rid'], $invalid_rids))
+           || in_array($rid, $invalid_rids))) {
+        form_set_error('project_info][rid', t('%version is not a valid version, please select a different value.', array('%version' => $releases[$node->project_issue['rid']])));
+      }
+      elseif (empty($rid)) {
+        form_set_error('project_info][rid', t('You have to specify a valid version.'));
+      }
+    }
+    // Validate component.
+    $component = $form_state['values']['project_info']['component'];
+    if ($component && !in_array($component, $project->project_issue['components'])) {
+      $component = 0;
+    }
+    empty($component) && form_set_error('project_info][component', t('You have to specify a valid component.'));
+  }
+  else {
+    form_set_error('project_info][pid', t('You have to specify a valid project.'));
+  }
+  empty($form_state['values']['category']) && form_set_error('category', t('You have to specify a valid category.'));
+
+  // Now, make sure the comment changes *something* about the issue.
+  // If the user uploaded a file, so long as it's not marked for removal, 
+  // we consider that a valid change to the issue, too.
+  $has_file = FALSE;
+  $files = isset($form_state['values']['files']) ? $form_state['values']['files'] : array();
+  foreach ($files as $number => $data) {
+    if (empty($data['remove'])) {
+      $has_file = TRUE;
+      break;
+    }
+  }
+  if (!$has_file && empty($form_state['values']['comment'])) {
+    $comment = drupal_clone((object)$form_state['values']);
+    $comment->pid = $form_state['values']['project_info']['pid'];
+    $comment->component = $form_state['values']['project_info']['component'];
+    // Add a dummy rid if necessary -- prevents incorrect change data.
+    $comment->rid = $form_state['values']['project_info']['rid'] ? $form_state['values']['project_info']['rid'] : 0;
+    $comment_changes = project_issue_metadata_changes($node, $old_data, $comment, project_issue_field_labels('web'));
+    $has_change = FALSE;
+    foreach ($comment_changes as $field => $changes) {
+      if (isset($changes['new'])) {
+        $has_change = TRUE;
+        break;
+      }
+    }
+    if (!$has_change) {
+      form_set_error('comment', t('You must either add a comment or change something about this issue.'));
+    }
+  }
 }
 
 /**

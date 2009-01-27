@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.2 2009-01-26 22:50:35 dww Exp $
+// $Id: project_issue.views.inc,v 1.3 2009-01-27 23:40:35 dww Exp $
 
 /**
  * @file
@@ -98,7 +98,7 @@ function project_issue_views_data() {
       'handler' => 'views_handler_sort',
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_string',
+      'handler' => 'project_issue_handler_filter_issue_component',
     ),
     'argument' => array(
       'handler' => 'views_handler_argument_string',
@@ -202,6 +202,9 @@ function project_issue_views_handlers() {
         'parent' => 'views_handler_field',
       ),
       'project_issue_handler_filter_issue_category' => array(
+        'parent' => 'views_handler_filter_in_operator',
+      ),
+      'project_issue_handler_filter_issue_component' => array(
         'parent' => 'views_handler_filter_in_operator',
       ),
       'project_issue_handler_filter_issue_priority' => array(

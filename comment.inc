@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.139 2009-01-27 14:40:24 dww Exp $
+// $Id: comment.inc,v 1.140 2009-01-27 17:03:58 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -91,12 +91,12 @@ function project_issue_comment(&$arg, $op) {
 }
 
 /**
- * Adds project issue fieldset to the comment form
+ * Add project issue metadata to the comment form.
  * 
  * @param $form
- *   Reference to form structure
+ *   Reference to form structure.
  * @param $form_state
- *   Current form state
+ *   Current form state.
  */
 function project_issue_form_comment_form_alter(&$form, &$form_state) {
   $nid = $form['nid']['#value'];
@@ -107,9 +107,43 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
     return;
   }
   
-  $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
-
+  // Add our own custom validation to the comment form for issue nodes.
   $form['#validate'][] = 'project_issue_form_comment_validate';
+
+  // Comment body is not required since we validate that ourselves.
+  unset($form['comment_filter']['comment']['#required']);
+
+  // The 'your name' item just wastes screen estate.
+  unset($form['_author']);
+
+  // For existing comments, we want to preserve the comment subject,
+  // Even if the subject field is disabled.
+  if ($cid = $form['cid']['#value']) {
+    $subject = db_result(db_query('SELECT subject FROM {comments} WHERE cid = %d', $cid));
+  }
+  // For new comments, show the expected next number for previews.
+  // This is only for show, the number will be generated when the comment
+  // is posted.
+  else {
+    $next_id = db_result(db_query('SELECT last_comment_id FROM {project_issues} WHERE nid = %d', $form['nid']['#value'])) + 1;
+    $subject = "#$next_id";
+    // Clobber the comment signature for new followups if necessary.
+    // TODO: Revamp this for Drupal 6.
+    if (!variable_get('project_issue_show_comment_signatures', 0)) {
+      $form['comment_filter']['comment']['#default_value'] = '';
+    }
+  }
+  $form['subject'] = array(
+    '#type' => 'value',
+    '#value' => $subject,
+  );
+
+  // Any time we're on a reply page, show the full issue below the reply.
+  if (project_issue_is_comment_reply()) {
+    $form['#pre_render'][] = 'project_issue_comment_pre_render';
+  }
+
+  $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   // We have to set $form['#action'] to prevent AHAH nastiness.
   if (!empty($form['pid']['#value'])) {
@@ -175,18 +209,28 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   );
   
   $form['project_info']['assigned'] = $form['issue_info']['assigned'];
+  unset($form['issue_info']['assigned']);
+
   $form['project_info']['#prefix'] = '<div id="project-info-wrapper" class="inline-options">';
   $form['project_info']['#suffix'] = '</div>';
 
   // Remove the 'Project information' and 'Issue information' fieldsets,
-  // they're ugly after we move things inside the 'Edit issue settings' fieldset.
-  unset($form['project_info']['#type'], $form['project_info']['#title'], $form['issue_info']['#type'], $form['issue_info']['#title'], $form['issue_info']['assigned']);
+  // since we'll move everything inside the 'Edit issue settings' fieldset.
+  unset($form['project_info']['#type'], $form['project_info']['#title']);
+  unset($form['issue_info']['#type'], $form['issue_info']['#title']);
 
   // Restructure the UI to de-emphasize the original project form inputs.
   $form['original_issue']['project_info'] = $form['project_info'];
   $form['original_issue']['issue_info'] = $form['issue_info'];
   unset($form['project_info'], $form['issue_info']);
   unset($form['issue_details'], $form['project_help']);
+
+  // Make sure the 'File attachments' fieldset is expanded and before the
+  // original issue fieldset.
+  if (isset($form['attachments'])) {
+    $form['attachments']['#collapsed'] = FALSE;
+    $form['attachments']['#weight'] = 2;
+  }
 
   return $form;
 }

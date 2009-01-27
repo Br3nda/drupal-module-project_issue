@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.2 2009/01/26 23:01:19 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.3 2009/01/27 00:11:42 dww Exp $
 
 
 /**
@@ -172,7 +172,7 @@ function project_issue_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'category_op',
-        'identifier' => 'category',
+        'identifier' => 'categories',
         'label' => 'Category',
         'optional' => 1,
         'single' => 1,
@@ -192,7 +192,7 @@ function project_issue_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'priority_op',
-        'identifier' => 'priority',
+        'identifier' => 'priorities',
         'label' => 'Priority',
         'optional' => 1,
         'single' => 1,
@@ -488,7 +488,7 @@ function project_issue_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'category_op',
-        'identifier' => 'category',
+        'identifier' => 'categories',
         'label' => 'Category',
         'optional' => 1,
         'single' => 1,
@@ -508,7 +508,7 @@ function project_issue_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'priority_op',
-        'identifier' => 'priority',
+        'identifier' => 'priorities',
         'label' => 'Priority',
         'optional' => 1,
         'single' => 1,
@@ -875,7 +875,7 @@ function project_issue_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'category_op',
-        'identifier' => 'category',
+        'identifier' => 'categories',
         'label' => 'Category',
         'optional' => 1,
         'single' => 1,
@@ -895,7 +895,7 @@ function project_issue_views_default_views() {
       'expose' => array(
         'use_operator' => 0,
         'operator' => 'priority_op',
-        'identifier' => 'priority',
+        'identifier' => 'priorities',
         'label' => 'Priority',
         'optional' => 1,
         'single' => 1,

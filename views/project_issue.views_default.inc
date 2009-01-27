@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.6 2009-01-27 16:42:43 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.7 2009-01-27 22:42:35 dww Exp $
 
 
 /**
@@ -1171,25 +1171,6 @@ function project_issue_views_default_views() {
       'field' => 'title',
       'relationship' => 'pid',
     ),
-    'uid' => array(
-      'operator' => 'in',
-      'value' => '',
-      'group' => '0',
-      'exposed' => TRUE,
-      'expose' => array(
-        'use_operator' => 0,
-        'operator' => 'uid_op',
-        'identifier' => 'assigned',
-        'label' => 'Assigned',
-        'optional' => 1,
-        'remember' => 0,
-        'reduce' => 0,
-      ),
-      'id' => 'uid',
-      'table' => 'users',
-      'field' => 'uid',
-      'relationship' => 'assigned',
-    ),
     'category' => array(
       'operator' => 'in',
       'value' => array(),
@@ -1249,6 +1230,25 @@ function project_issue_views_default_views() {
       'table' => 'project_issues',
       'field' => 'sid',
       'relationship' => 'none',
+    ),
+    'uid' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_op',
+        'identifier' => 'assigned',
+        'label' => 'Assigned',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid',
+      'table' => 'users',
+      'field' => 'uid',
+      'relationship' => 'assigned',
     ),
     'uid_1' => array(
       'operator' => 'in',
@@ -1593,25 +1593,6 @@ function project_issue_views_default_views() {
       'field' => 'status_extra',
       'relationship' => 'none',
     ),
-    'uid' => array(
-      'operator' => 'in',
-      'value' => '',
-      'group' => '0',
-      'exposed' => TRUE,
-      'expose' => array(
-        'use_operator' => 0,
-        'operator' => 'uid_op',
-        'identifier' => 'assigned',
-        'label' => 'Assigned',
-        'optional' => 1,
-        'remember' => 0,
-        'reduce' => 0,
-      ),
-      'id' => 'uid',
-      'table' => 'users',
-      'field' => 'uid',
-      'relationship' => 'assigned',
-    ),
     'category' => array(
       'operator' => 'in',
       'value' => array(),
@@ -1690,6 +1671,25 @@ function project_issue_views_default_views() {
       'table' => 'project_issues',
       'field' => 'component',
       'relationship' => 'none',
+    ),
+    'uid' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_op',
+        'identifier' => 'assigned',
+        'label' => 'Assigned',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid',
+      'table' => 'users',
+      'field' => 'uid',
+      'relationship' => 'assigned',
     ),
     'uid_1' => array(
       'operator' => 'in',

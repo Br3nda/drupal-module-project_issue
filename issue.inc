@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.332 2009-01-27 04:57:22 dww Exp $
+// $Id: issue.inc,v 1.333 2009-01-27 14:40:25 dww Exp $
 
 
 /**
@@ -507,6 +507,7 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
         $node->project_issue['pid'] = db_result(db_query(db_rewrite_sql("SELECT p.nid FROM {project_projects} p WHERE p.uri = '%s'", 'p'), $pid));
       }
     }
+    $pid = $node->project_issue['pid'];
   }
 
   if (empty($pid)) {

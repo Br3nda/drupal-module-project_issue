@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.138 2009-01-27 04:57:22 dww Exp $
+// $Id: comment.inc,v 1.139 2009-01-27 14:40:24 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -101,6 +101,12 @@ function project_issue_comment(&$arg, $op) {
 function project_issue_form_comment_form_alter(&$form, &$form_state) {
   $nid = $form['nid']['#value'];
   $node = node_load($nid);
+
+  // Allows only project_issue
+  if ($node->type != 'project_issue') {
+    return;
+  }
+  
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   $form['#validate'][] = 'project_issue_form_comment_validate';

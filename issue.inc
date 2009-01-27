@@ -1,69 +1,63 @@
 <?php
-// $Id: issue.inc,v 1.331 2009-01-26 19:57:38 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.332 2009-01-27 04:57:22 dww Exp $
 
 
 /**
  * JS callback method to return updated elements on the issue form.
  * This function is called when someone changes the "Project" selector.
- * See project_issue.js.
- *
- * @param $pid
- *   The nid of the project we're updating to.
- * @param $issue_nid
- *   The issue nid.
- * @param $cid
- *   The component from the previously selected project.
- * @param $rid
- *   The version from the previously selected project.
- * @param $assigned_uid
- *   The uid of the assigned user from the previously selected project.
  */
-function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL, $assigned_uid = NULL) {
-  // Prevent a malicious user from snooping this callback directly.
-  $error = array('error' => t('An error was detected. Please try again.'));
-  $node = node_load(array('nid' => $pid, 'type' => 'project_project'));
-  if ($node) {
-    if (!node_access('view', $node)) {
-      print drupal_to_js($error);
-      exit();
-    }
-  }
-  else {
-    print drupal_to_js($error);
-    exit();
-  }
+function project_issue_update_project() {
+  $form_state = array('storage' => NULL, 'submitted' => FALSE, 'rebuild' => TRUE);
+  $form_build_id = $_POST['form_build_id'];
+  $form = form_get_cache($form_build_id, $form_state);
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+  $form_state['post'] = $form['#post'] = $_POST;
+  $form['#programmed'] = $form['#redirect'] = FALSE;
+  
+  // Skip validation in project issue.
+  $form_state['project_issue_ahah'] = TRUE;
+  drupal_process_form($form_id, $form, $form_state);
+  
+  // Rebuild the form and cache it again.
+  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
 
-  // Release id options ("Version" selector).
-  $return['rid'] = '';
+  // These used to be path arguments. Now they arrive via form element.
+  $issue_nid = $form['nid']['#value'];
+  $pid = $form_state['values']['project_info']['pid'];
+  $rid = $form_state['values']['project_info']['rid'];
+  $cid = $form_state['values']['cid'];
+  $assigned_uid = $form_state['values']['project_info']['assigned'];
+
+  $project_info = $form['original_issue']['project_info'];
 
   // Only generate release stuff if the project_release module is enabled.
   if (module_exists('project_release')) {
+    
     $project->nid = $pid;
     if ($releases = project_release_get_releases($project, 0)) {
+      $old_version = db_result(db_query("SELECT version FROM {project_release_nodes} WHERE nid = %d", $rid));
       $releases = array(t('<none>')) + $releases;
       // Since the value of releases is by nid, try to match release
       // based on the label instead.
       $default = 0;
       foreach ($releases as $key => $label) {
-        if ($rid == $label) {
+        if ($old_version == $label) {
           $default = $key;
         }
       }
-      $form = array();
       // Element is tree'd here to match the original form layout.
-      $form['project_info']['#tree'] = TRUE;
-      $form['project_info']['rid'] = array(
-        '#type' => 'select',
-        '#title' => t('Version'),
-        '#default_value' => $default,
-        '#options' => $releases,
-        '#required' => TRUE,
-      );
-
-      // Build the HTML output for the rid select.
-      $form_state = array();
-      $form = form_builder('rid', $form, $form_state);
-      $return['rid'] .= drupal_render($form);
+      $project_info['#tree'] = TRUE;
+      $project_info['rid']['#options'] = $releases;
+      $project_info['rid']['#disabled'] = FALSE;
+      if (!empty($default)) {
+        $project_info['rid']['#value'] = $default;
+        $project_info['rid']['#default_value'] = $default;
+      }
+    }
+    else {
+      $project_info['rid']['#disabled'] = TRUE;
+      $project_info['rid']['#options'] = array();
     }
   }
 
@@ -77,24 +71,12 @@ function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL
     $issue = new stdClass;
   }
   $issue->project_issue['pid'] = $pid;
-  $return['assigned'] = '';
   $assigned_choices = project_issue_assigned_choices($issue);
 
-  $form = array();
-  $form['issue_info']['assigned'] = array(
-    '#type' => 'select',
-    '#title' => t('Assigned'),
-    '#default_value' => $assigned_uid,
-    '#options' => $assigned_choices,
-  );
-
-  // Build the HTML output for the assigned select.
-  $form_state = array();
-  $form = form_builder('assigned', $form, $form_state);
-  $return['assigned'] .= drupal_render($form);
+  $project_info['assigned']['#default_value'] = $assigned_uid;
+  $project_info['assigned']['#options'] = $assigned_choices;
 
   // Components.
-  $return['component'] = '';
   $project = db_fetch_object(db_query('SELECT * FROM {project_issue_projects} WHERE nid = %d', $pid));
   $components = array();
   if ($project->components) {
@@ -105,28 +87,12 @@ function project_issue_update_project($pid, $issue_nid, $cid = NULL, $rid = NULL
     }
   }
 
-  $form = array();
-  // Element is tree'd here to match the original form layout.
-  $form['project_info']['#tree'] = TRUE;
-  $form['project_info']['component'] = array(
-    '#type' => 'select',
-    '#title' => t('Component'),
-    '#default_value' => $cid,
-    '#options' => $components,
-    '#required' => TRUE,
-  );
+  $project_info['component']['#default_value'] = $cid;
+  $project_info['component']['#options'] = $components;
 
   // Build the HTML output for the component select.
-  $form_state = array();
-  $form = form_builder('component', $form, $form_state);
-  $return['component'] .= drupal_render($form);
-
-  // Set proper content type header for the AJAX call.
-  drupal_set_header('Content-type: text/javascript');
-
-  // Translate to js before output, so the calling js can work with the data.
-  print drupal_to_js($return);
-  exit();
+  $output = theme('status_messages') . drupal_render($project_info);
+  drupal_json(array('status' => TRUE, 'data' => $output));
 }
 
 function project_issue_statistics($project = 0) {
@@ -520,7 +486,18 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
     return;
   }
 
-  if (empty($node->project_issue['pid'])) {
+  // Figure out what project we should use for the issue metadata.
+  if (!empty($form_state['values']['project_info']['pid'])) {
+    // The project has been selected in the form itself (e.g. it's been
+    // changed and we're previewing, etc.)
+    $pid = $form_state['values']['project_info']['pid'];
+  }
+  elseif (!empty($node->project_issue['pid'])) {
+    // The issue node already knows what project it belongs to.
+    $pid = $node->project_issue['pid'];
+  }
+  else {
+    // Fallback and try to learn the project from the URL -- evil.
     $pid = arg(3);
     if (!empty($pid)) {
       if (is_numeric($pid)) {
@@ -531,12 +508,10 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
       }
     }
   }
-  $pid = $node->project_issue['pid'];
 
   if (empty($pid)) {
     drupal_set_message(t('Invalid project selected.'), 'error');
-    drupal_goto('node/add/project-issue');
-    return;
+    return drupal_goto('node/add/project-issue');
   }
 
   // If this issue has already been created and is just being
@@ -549,18 +524,13 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
     $allow_metadata_changes = empty($node->nid);
   }
 
-  // Load Javascript (unless the issue is being edited).
-  if ($allow_metadata_changes) {
-    drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
-    drupal_add_js(
-      array(
-        'projectUrl' => url('project/issues/update_project'),
-        'issueNid' => $node->nid,
-      ), 'setting');
-  }
-
   // Load the project and initialize some support arrays.
-  $project = node_load(array('nid' => $pid, 'type' => 'project_project'));
+  $project = node_load($pid);
+  if ($project->type != 'project_project') {
+    drupal_set_message(t('Invalid project selected.'), 'error');
+    // Not sure the best place to go here...
+    return drupal_goto('node/add/project-issue');
+  }
   if ($allow_metadata_changes) {
     if (module_exists('project_release') &&
         $releases = project_release_get_releases($project, 0, 'version', 'all', array($node->project_issue['rid']))) {

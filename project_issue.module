@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.113 2009/01/27 16:49:17 dww Exp $
+// $Id: project_issue.module,v 1.114 2009/01/27 17:03:59 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -308,51 +308,6 @@ function project_issue_views_api() {
  */
 function project_issue_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
-    case 'comment_form':
-      $node = node_load($form['nid']['#value']);
-      if ($node->type == 'project_issue') {
-        // Comment is not required for project issue followups, we have our own
-        // validate handler.
-        // The 'your name' item just wastes screen estate.
-        unset($form['comment_filter']['comment']['#required'], $form['_author']);
-        // For existing comments, we want to preserve the comment subject,
-        // Even if the subject field is disabled.
-        if ($cid = $form['cid']['#value']) {
-          $subject = db_result(db_query('SELECT subject FROM {comments} WHERE cid = %d', $cid));
-        }
-        // For new comments, show the expected next number for previews.
-        // This is only for show, the number will be generated when the comment
-        // is posted.
-        else {
-          $next_id = db_result(db_query('SELECT last_comment_id FROM {project_issues} WHERE nid = %d', $form['nid']['#value'])) + 1;
-          $subject = "#$next_id";
-
-          // Clobber the comment signature for new followups if necessary.
-          // TODO: Revamp this for Drupal 6.
-          if (!variable_get('project_issue_show_comment_signatures', 0)) {
-            $form['comment_filter']['comment']['#default_value'] = '';
-          }
-        }
-        $form['subject'] = array(
-          '#type' => 'value',
-          '#value' => $subject,
-        );
-
-        // Any time we're on a reply page, show the full issue below the reply.
-        if (project_issue_is_comment_reply()) {
-          $form['#pre_render'][] = 'project_issue_comment_pre_render';
-        }
-
-        // Make sure the 'File attachments' fieldset is expanded and before the
-        // original issue fieldset.
-        if (isset($form['attachments'])) {
-          $form['attachments']['#collapsed'] = FALSE;
-          $form['attachments']['#weight'] = 2;
-        }
-
-      }
-      break;
-
     // Issues must be updated if any project issue comments are edited/deleted.
     case 'comment_admin_overview':
       $form['#submit'][] = 'project_issue_comment_mass_update';

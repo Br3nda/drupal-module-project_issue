@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.5 2009-01-27 16:00:49 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.6 2009-01-27 16:42:43 dww Exp $
 
 
 /**
@@ -1100,9 +1100,9 @@ function project_issue_views_default_views() {
       'relationship' => 'assigned',
     ),
   ));
-  $filters = array();
+  $custom_filters = array();
   if (module_exists('search')) {
-    $filters['keys'] = array(
+    $custom_filters['keys'] = array(
       'operator' => 'required',
       'value' => '',
       'group' => '0',
@@ -1250,8 +1250,27 @@ function project_issue_views_default_views() {
       'field' => 'sid',
       'relationship' => 'none',
     ),
+    'uid_1' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_1_op',
+        'identifier' => 'submitted',
+        'label' => 'Submitted by',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid_1',
+      'table' => 'users',
+      'field' => 'uid',
+      'relationship' => 'none',
+    ),
   );
-  $handler->override_option('filters', $filters + $shared_filters);
+  $handler->override_option('filters', $custom_filters + $shared_filters);
   $handler->override_option('access', array(
     'type' => 'none',
   ));
@@ -1504,7 +1523,28 @@ function project_issue_views_default_views() {
       'validate_argument_php' => '',
     ),
   ));
-  $handler->override_option('filters', array(
+  $custom_filters = array();
+  if (module_exists('search')) {
+    $custom_filters['keys'] = array(
+      'operator' => 'required',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'keys_op',
+        'identifier' => 'text',
+        'label' => 'Search for',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'keys',
+      'table' => 'search_index',
+      'field' => 'keys',
+      'relationship' => 'none',
+    );
+  }
+  $shared_filters = array(
     'keys' => array(
       'operator' => 'required',
       'value' => '',
@@ -1651,7 +1691,27 @@ function project_issue_views_default_views() {
       'field' => 'component',
       'relationship' => 'none',
     ),
-  ));
+    'uid_1' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_1_op',
+        'identifier' => 'submitted',
+        'label' => 'Submitted by',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid_1',
+      'table' => 'users',
+      'field' => 'uid',
+      'relationship' => 'none',
+    ),
+  );
+  $handler->override_option('filters', $custom_filters + $shared_filters);
   $handler->override_option('access', array(
     'type' => 'none',
   ));

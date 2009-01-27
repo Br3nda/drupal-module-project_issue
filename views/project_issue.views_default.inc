@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.3 2009-01-27 00:11:42 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.4 2009-01-27 04:08:09 dww Exp $
 
 
 /**
@@ -22,7 +22,7 @@ function project_issue_views_default_views() {
   $view->base_table = 'node';
   $view->is_cacheable = FALSE;
   $view->api_version = 2;
-  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $view->disabled = FALSE;
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->override_option('relationships', array(
     'assigned' => array(
@@ -48,13 +48,12 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('fields', array(
-    'title_1' => array(
+    'project_issue_queue' => array(
       'label' => 'Project',
-      'link_to_node' => 0,
       'exclude' => 0,
-      'id' => 'title_1',
+      'id' => 'project_issue_queue',
       'table' => 'node',
-      'field' => 'title',
+      'field' => 'project_issue_queue',
       'relationship' => 'pid',
     ),
     'title' => array(
@@ -238,17 +237,17 @@ function project_issue_views_default_views() {
     'sticky' => 0,
     'order' => 'desc',
     'columns' => array(
-      'title_1' => 'title_1',
+      'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
-      'name' => 'name',
       'version' => 'version',
       'last_comment_timestamp' => 'last_comment_timestamp',
+      'name' => 'name',
     ),
     'info' => array(
-      'title_1' => array(
+      'project_issue_queue' => array(
         'sortable' => 1,
         'separator' => '',
       ),
@@ -268,15 +267,15 @@ function project_issue_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
-      'name' => array(
-        'sortable' => 1,
-        'separator' => '',
-      ),
       'version' => array(
         'sortable' => 1,
         'separator' => '',
       ),
       'last_comment_timestamp' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
+      'name' => array(
         'sortable' => 1,
         'separator' => '',
       ),
@@ -335,6 +334,7 @@ function project_issue_views_default_views() {
   $handler->override_option('sitename_title', FALSE);
 
   $views[$view->name] = $view;
+
 
   // ----------------------------------------
   // Issue queue for a specific project
@@ -931,7 +931,7 @@ function project_issue_views_default_views() {
   $handler->override_option('access', array(
     'type' => 'none',
   ));
-  $handler->override_option('title', 'Issues for all projects');
+  $handler->override_option('title', '');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'table');

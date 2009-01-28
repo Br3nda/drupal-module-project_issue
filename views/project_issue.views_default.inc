@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.7 2009/01/27 22:42:35 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.8 2009/01/28 00:05:25 dww Exp $
 
 
 /**
@@ -538,6 +538,26 @@ function project_issue_views_default_views() {
       'id' => 'sid',
       'table' => 'project_issues',
       'field' => 'sid',
+      'relationship' => 'none',
+    ),
+    'component' => array(
+      'operator' => 'in',
+      'value' => array(),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'component_op',
+        'identifier' => 'component',
+        'label' => 'Component',
+        'optional' => 1,
+        'single' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'component',
+      'table' => 'project_issues',
+      'field' => 'component',
       'relationship' => 'none',
     ),
   ));
@@ -1654,8 +1674,8 @@ function project_issue_views_default_views() {
       'relationship' => 'none',
     ),
     'component' => array(
-      'operator' => 'word',
-      'value' => '',
+      'operator' => 'in',
+      'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
@@ -1664,9 +1684,10 @@ function project_issue_views_default_views() {
         'identifier' => 'component',
         'label' => 'Component',
         'optional' => 1,
+        'single' => 0,
         'remember' => 0,
+        'reduce' => 0,
       ),
-      'case' => 1,
       'id' => 'component',
       'table' => 'project_issues',
       'field' => 'component',

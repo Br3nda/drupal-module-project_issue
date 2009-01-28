@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.333 2009/01/27 14:40:25 dww Exp $
+// $Id: issue.inc,v 1.334 2009/01/28 23:43:10 dww Exp $
 
 
 /**
@@ -1415,7 +1415,7 @@ function project_issue_change_summary($field, $value) {
   }
 }
 
-function theme_project_issue_create_forbidden($uri) {
+function theme_project_issue_create_forbidden($uri = '') {
   global $user;
   if ($user->uid) {
     return '';

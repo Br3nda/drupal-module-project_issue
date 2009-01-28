@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.1 2009-01-28 00:31:53 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.2 2009-01-28 05:32:14 dww Exp $
 
 
 /**
@@ -41,16 +41,14 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
       if (empty($versions)) {
         $arg = reset($this->view->args);
         if (is_numeric($arg)) {
-          $query = db_query(db_rewrite_sql("SELECT prn.nid, prn.version FROM {project_release_nodes} prn WHERE prn.pid = %d", $arg));
+          $project_nid = $arg;
         }
         else {
-          $query = db_query(db_rewrite_sql("SELECT prn.nid, prn.version FROM {project_release_nodes} prn INNER JOIN {project_projects} pp ON prn.pid = pp.nid WHERE pp.uri = '%s'", $arg));
+          $project_nid = db_result(db_query("SELECT nid FROM {project_projects} WHERE uri = '%s'", $arg));
         }
-        while ($release = db_fetch_object($query)) {
-          if (!empty($release->version)) {
-            $versions[$release->nid] = $release->version;
-          }
-        }
+        // This is needed by project_get_releases() and friends.
+        $project = node_load($project_nid);
+        $versions = project_release_get_releases($project, FALSE);
       }
       $this->value_options = $versions;
     }

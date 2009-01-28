@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.4 2009-01-28 00:31:52 dww Exp $
+// $Id: project_issue.views.inc,v 1.5 2009-01-28 06:01:07 dww Exp $
 
 /**
  * @file
@@ -220,3 +220,25 @@ function project_issue_views_handlers() {
   );
 }
 
+function project_issue_views_plugins() {
+  $path = drupal_get_path('module', 'project_issue');
+  $views_path = drupal_get_path('module', 'views');
+  return array(
+    'style' => array(
+      'project_issue_table' => array(
+        'title' => t('Project issue table'),
+        'help' => t('Table with colored rows depending on issue status.'),
+        'handler' => 'project_issue_table_plugin_style',
+        'parent' => 'table',
+        'path' => "$path/views/plugins",
+        'theme' => 'views_view_table',
+        'theme file' => 'theme.inc',
+        'theme path' => "$views_path/views/theme",
+        'uses row plugin' => FALSE,
+        'uses fields' => TRUE,
+        'uses options' => TRUE,
+        'type' => 'normal',
+      ),
+    ),
+  );
+}

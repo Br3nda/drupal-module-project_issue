@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.12 2009-01-28 14:44:39 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.13 2009-01-28 15:14:24 dww Exp $
 
 
 /**
@@ -1135,6 +1135,7 @@ function project_issue_views_default_views() {
 
   $views[$view->name] = $view;
 
+
   // ------------------------------------------
   // Issues across all projects owned by a user
   // ------------------------------------------
@@ -1189,6 +1190,34 @@ function project_issue_views_default_views() {
       'field' => 'title',
       'relationship' => 'none',
     ),
+    'sid' => array(
+      'id' => 'sid',
+      'table' => 'project_issues',
+      'field' => 'sid',
+    ),
+    'priority' => array(
+      'id' => 'priority',
+      'table' => 'project_issues',
+      'field' => 'priority',
+    ),
+    'category' => array(
+      'label' => 'Category',
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'category',
+      'table' => 'project_issues',
+      'field' => 'category',
+      'relationship' => 'none',
+    ),
+    'version' => array(
+      'label' => 'Version',
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'version',
+      'table' => 'project_release_nodes',
+      'field' => 'version',
+      'relationship' => 'rid',
+    ),
     'comment_count' => array(
       'label' => 'Replies',
       'set_precision' => FALSE,
@@ -1218,34 +1247,6 @@ function project_issue_views_default_views() {
       'table' => 'node',
       'field' => 'new_comments',
       'relationship' => 'none',
-    ),
-    'sid' => array(
-      'id' => 'sid',
-      'table' => 'project_issues',
-      'field' => 'sid',
-    ),
-    'priority' => array(
-      'id' => 'priority',
-      'table' => 'project_issues',
-      'field' => 'priority',
-    ),
-    'category' => array(
-      'label' => 'Category',
-      'link_to_node' => 0,
-      'exclude' => 0,
-      'id' => 'category',
-      'table' => 'project_issues',
-      'field' => 'category',
-      'relationship' => 'none',
-    ),
-    'version' => array(
-      'label' => 'Version',
-      'link_to_node' => 0,
-      'exclude' => 0,
-      'id' => 'version',
-      'table' => 'project_release_nodes',
-      'field' => 'version',
-      'relationship' => 'rid',
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
@@ -1355,24 +1356,24 @@ function project_issue_views_default_views() {
       'field' => 'title',
       'relationship' => 'pid',
     ),
-    'category' => array(
+    'sid' => array(
       'operator' => 'in',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'category_op',
-        'identifier' => 'categories',
-        'label' => 'Category',
+        'operator' => 'sid_op',
+        'identifier' => 'status',
+        'label' => 'Status',
         'optional' => 1,
         'single' => 1,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'category',
+      'id' => 'sid',
       'table' => 'project_issues',
-      'field' => 'category',
+      'field' => 'sid',
       'relationship' => 'none',
     ),
     'priority' => array(
@@ -1395,34 +1396,33 @@ function project_issue_views_default_views() {
       'field' => 'priority',
       'relationship' => 'none',
     ),
-    'sid' => array(
+    'category' => array(
       'operator' => 'in',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'sid_op',
-        'identifier' => 'status',
-        'label' => 'Status',
+        'operator' => 'category_op',
+        'identifier' => 'categories',
+        'label' => 'Category',
         'optional' => 1,
         'single' => 1,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'sid',
+      'id' => 'category',
       'table' => 'project_issues',
-      'field' => 'sid',
+      'field' => 'category',
       'relationship' => 'none',
     ),
   ));
   $handler->override_option('access', array(
     'type' => 'none',
   ));
-  $handler->override_option('title', '');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
-  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_plugin', 'project_issue_table');
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
@@ -1431,12 +1431,12 @@ function project_issue_views_default_views() {
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
-      'comment_count' => 'comment_count',
-      'new_comments' => 'comment_count',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
       'version' => 'version',
+      'comment_count' => 'comment_count',
+      'new_comments' => 'comment_count',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
     ),
@@ -1447,13 +1447,6 @@ function project_issue_views_default_views() {
       ),
       'title' => array(
         'sortable' => 1,
-        'separator' => '',
-      ),
-      'comment_count' => array(
-        'sortable' => 1,
-        'separator' => '<br />',
-      ),
-      'new_comments' => array(
         'separator' => '',
       ),
       'sid' => array(
@@ -1472,6 +1465,13 @@ function project_issue_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
+      'comment_count' => array(
+        'sortable' => 1,
+        'separator' => '<br />',
+      ),
+      'new_comments' => array(
+        'separator' => '',
+      ),
       'last_comment_timestamp' => array(
         'sortable' => 1,
         'separator' => '',
@@ -1485,6 +1485,7 @@ function project_issue_views_default_views() {
   ));
 
   $views[$view->name] = $view;
+
 
   // ------------------------------------------
   // Advanced issue search for all projects

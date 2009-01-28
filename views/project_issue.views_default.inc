@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.14 2009/01/28 15:28:35 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.15 2009/01/28 21:59:12 dww Exp $
 
 
 /**
@@ -186,7 +186,9 @@ function project_issue_views_default_views() {
     ),
     'sid' => array(
       'operator' => 'in',
-      'value' => array(),
+      'value' => array(
+        'open' => 'open',
+      ),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
@@ -550,7 +552,9 @@ function project_issue_views_default_views() {
     ),
     'sid' => array(
       'operator' => 'in',
-      'value' => array(),
+      'value' => array(
+        'open' => 'open',
+      ),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
@@ -991,7 +995,9 @@ function project_issue_views_default_views() {
     ),
     'sid' => array(
       'operator' => 'in',
-      'value' => array(),
+      'value' => array(
+        'open' => 'open',
+      ),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
@@ -1358,7 +1364,9 @@ function project_issue_views_default_views() {
     ),
     'sid' => array(
       'operator' => 'in',
-      'value' => array(),
+      'value' => array(
+        'open' => 'open',
+      ),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(

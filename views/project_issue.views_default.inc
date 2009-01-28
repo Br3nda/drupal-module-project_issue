@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.15 2009/01/28 21:59:12 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.16 2009/01/28 22:34:21 dww Exp $
 
 
 /**
@@ -132,6 +132,16 @@ function project_issue_views_default_views() {
       'table' => 'users',
       'field' => 'name',
       'relationship' => 'assigned',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
     ),
   ));
   $handler->override_option('filters', array(
@@ -517,6 +527,16 @@ function project_issue_views_default_views() {
       'default_argument_user' => 0,
       'default_argument_fixed' => '',
       'default_argument_php' => '',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
     ),
   ));
   $handler->override_option('filters', array(
@@ -943,6 +963,16 @@ function project_issue_views_default_views() {
       'validate_argument_php' => '',
     ),
   ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('filters', array(
     'type' => array(
       'operator' => 'in',
@@ -1312,6 +1342,16 @@ function project_issue_views_default_views() {
       'validate_argument_php' => '',
     ),
   ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('filters', array(
     'type' => array(
       'operator' => 'in',
@@ -1595,6 +1635,16 @@ function project_issue_views_default_views() {
       'table' => 'users',
       'field' => 'name',
       'relationship' => 'assigned',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
     ),
   ));
   $custom_filters = array();
@@ -2022,6 +2072,16 @@ function project_issue_views_default_views() {
       'validate_argument_project_term_argument_action_top_with' => 'pass',
       'validate_argument_project_term_argument_action_child' => 'pass',
       'validate_argument_php' => '',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
     ),
   ));
   $custom_filters = array();

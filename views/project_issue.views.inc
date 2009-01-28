@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.3 2009-01-27 23:40:35 dww Exp $
+// $Id: project_issue.views.inc,v 1.4 2009-01-28 00:31:52 dww Exp $
 
 /**
  * @file
@@ -139,7 +139,7 @@ function project_issue_views_data() {
       'validate type' => 'nid',
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
+      'handler' => 'project_issue_handler_filter_issue_version',
     ),
     'relationship' => array(
       'base' => 'node',
@@ -211,6 +211,9 @@ function project_issue_views_handlers() {
         'parent' => 'views_handler_filter_in_operator',
       ),
       'project_issue_handler_filter_issue_status' => array(
+        'parent' => 'views_handler_filter_in_operator',
+      ),
+      'project_issue_handler_filter_issue_version' => array(
         'parent' => 'views_handler_filter_in_operator',
       ),
     ),

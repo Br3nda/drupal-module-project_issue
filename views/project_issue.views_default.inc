@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.8 2009-01-28 00:05:25 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.9 2009-01-28 00:31:52 dww Exp $
 
 
 /**
@@ -558,6 +558,26 @@ function project_issue_views_default_views() {
       'id' => 'component',
       'table' => 'project_issues',
       'field' => 'component',
+      'relationship' => 'none',
+    ),
+    'rid' => array(
+      'operator' => 'in',
+      'value' => array(),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'rid_op',
+        'identifier' => 'version',
+        'label' => 'Version',
+        'optional' => 1,
+        'single' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'rid',
+      'table' => 'project_issues',
+      'field' => 'rid',
       'relationship' => 'none',
     ),
   ));
@@ -1691,6 +1711,26 @@ function project_issue_views_default_views() {
       'id' => 'component',
       'table' => 'project_issues',
       'field' => 'component',
+      'relationship' => 'none',
+    ),
+    'rid' => array(
+      'operator' => 'in',
+      'value' => array(),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'rid_op',
+        'identifier' => 'version',
+        'label' => 'Version',
+        'optional' => 1,
+        'single' => 0,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'rid',
+      'table' => 'project_issues',
+      'field' => 'rid',
       'relationship' => 'none',
     ),
     'uid' => array(

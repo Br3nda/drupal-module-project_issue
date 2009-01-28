@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.13 2009-01-28 15:14:24 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.14 2009-01-28 15:28:35 dww Exp $
 
 
 /**
@@ -1660,24 +1660,24 @@ function project_issue_views_default_views() {
       'field' => 'title',
       'relationship' => 'pid',
     ),
-    'category' => array(
+    'sid' => array(
       'operator' => 'in',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'category_op',
-        'identifier' => 'categories',
-        'label' => 'Category',
+        'operator' => 'sid_op',
+        'identifier' => 'status',
+        'label' => 'Status',
         'optional' => 1,
         'single' => 0,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'category',
+      'id' => 'sid',
       'table' => 'project_issues',
-      'field' => 'category',
+      'field' => 'sid',
       'relationship' => 'none',
     ),
     'priority' => array(
@@ -1700,24 +1700,24 @@ function project_issue_views_default_views() {
       'field' => 'priority',
       'relationship' => 'none',
     ),
-    'sid' => array(
+    'category' => array(
       'operator' => 'in',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'sid_op',
-        'identifier' => 'status',
-        'label' => 'Status',
+        'operator' => 'category_op',
+        'identifier' => 'categories',
+        'label' => 'Category',
         'optional' => 1,
         'single' => 0,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'sid',
+      'id' => 'category',
       'table' => 'project_issues',
-      'field' => 'sid',
+      'field' => 'category',
       'relationship' => 'none',
     ),
     'uid' => array(
@@ -1766,7 +1766,7 @@ function project_issue_views_default_views() {
   $handler->override_option('title', 'Search issues for all projects');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
-  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_plugin', 'project_issue_table');
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
@@ -1823,12 +1823,14 @@ function project_issue_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'normal',
     'title' => 'Advanced search',
+    'description' => '',
     'weight' => '0',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
   ));
   $handler = $view->new_display('feed', 'Feed', 'feed_1');
@@ -1855,12 +1857,14 @@ function project_issue_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
     'name' => '',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
   ));
   $handler->override_option('displays', array(
@@ -1870,6 +1874,7 @@ function project_issue_views_default_views() {
   $handler->override_option('sitename_title', FALSE);
   
   $views[$view->name] = $view;
+
 
   // --------------------------------------------
   // Advanced issue search for a specific project
@@ -1975,7 +1980,7 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('arguments', array(
-    'uri' => array(
+    'pid' => array(
       'default_action' => 'not found',
       'style_plugin' => 'default_summary',
       'style_options' => array(),
@@ -1984,17 +1989,14 @@ function project_issue_views_default_views() {
       'title' => 'Search issues for %1',
       'default_argument_type' => 'fixed',
       'default_argument' => '',
-      'validate_type' => 'none',
+      'validate_type' => 'project_nid',
       'validate_fail' => 'not found',
-      'glossary' => 0,
-      'limit' => '0',
-      'case' => 'none',
-      'path_case' => 'none',
-      'transform_dash' => 0,
-      'id' => 'uri',
-      'table' => 'project_projects',
-      'field' => 'uri',
-      'relationship' => 'pid',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'pid',
+      'table' => 'project_issues',
+      'field' => 'pid',
+      'relationship' => 'none',
       'default_options_div_prefix' => '',
       'default_argument_user' => 0,
       'default_argument_fixed' => '',
@@ -2004,7 +2006,9 @@ function project_issue_views_default_views() {
       'validate_argument_nid_type' => 'nid',
       'validate_argument_vocabulary' => array(),
       'validate_argument_type' => 'tid',
-      'validate_argument_project_term_vocabulary' => array(),
+      'validate_argument_project_term_vocabulary' => array(
+        '1' => 0,
+      ),
       'validate_argument_project_term_argument_type' => 'tid',
       'validate_argument_project_term_argument_action_top_without' => 'pass',
       'validate_argument_project_term_argument_action_top_with' => 'pass',
@@ -2034,24 +2038,6 @@ function project_issue_views_default_views() {
     );
   }
   $shared_filters = array(
-    'keys' => array(
-      'operator' => 'required',
-      'value' => '',
-      'group' => '0',
-      'exposed' => TRUE,
-      'expose' => array(
-        'use_operator' => 0,
-        'operator' => 'keys_op',
-        'identifier' => 'text',
-        'label' => 'Search for',
-        'optional' => 1,
-        'remember' => 0,
-      ),
-      'id' => 'keys',
-      'table' => 'search_index',
-      'field' => 'keys',
-      'relationship' => 'none',
-    ),
     'type' => array(
       'operator' => 'in',
       'value' => array(
@@ -2082,24 +2068,24 @@ function project_issue_views_default_views() {
       'field' => 'status_extra',
       'relationship' => 'none',
     ),
-    'category' => array(
+    'sid' => array(
       'operator' => 'in',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'category_op',
-        'identifier' => 'categories',
-        'label' => 'Category',
+        'operator' => 'sid_op',
+        'identifier' => 'status',
+        'label' => 'Status',
         'optional' => 1,
         'single' => 0,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'category',
+      'id' => 'sid',
       'table' => 'project_issues',
-      'field' => 'category',
+      'field' => 'sid',
       'relationship' => 'none',
     ),
     'priority' => array(
@@ -2122,44 +2108,24 @@ function project_issue_views_default_views() {
       'field' => 'priority',
       'relationship' => 'none',
     ),
-    'sid' => array(
+    'category' => array(
       'operator' => 'in',
       'value' => array(),
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
         'use_operator' => 0,
-        'operator' => 'sid_op',
-        'identifier' => 'status',
-        'label' => 'Status',
+        'operator' => 'category_op',
+        'identifier' => 'categories',
+        'label' => 'Category',
         'optional' => 1,
         'single' => 0,
         'remember' => 0,
         'reduce' => 0,
       ),
-      'id' => 'sid',
+      'id' => 'category',
       'table' => 'project_issues',
-      'field' => 'sid',
-      'relationship' => 'none',
-    ),
-    'component' => array(
-      'operator' => 'in',
-      'value' => array(),
-      'group' => '0',
-      'exposed' => TRUE,
-      'expose' => array(
-        'use_operator' => 0,
-        'operator' => 'component_op',
-        'identifier' => 'component',
-        'label' => 'Component',
-        'optional' => 1,
-        'single' => 0,
-        'remember' => 0,
-        'reduce' => 0,
-      ),
-      'id' => 'component',
-      'table' => 'project_issues',
-      'field' => 'component',
+      'field' => 'category',
       'relationship' => 'none',
     ),
     'rid' => array(
@@ -2180,6 +2146,26 @@ function project_issue_views_default_views() {
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
+      'relationship' => 'none',
+    ),
+    'component' => array(
+      'operator' => 'in',
+      'value' => array(),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'component_op',
+        'identifier' => 'component',
+        'label' => 'Component',
+        'optional' => 1,
+        'single' => 0,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'component',
+      'table' => 'project_issues',
+      'field' => 'component',
       'relationship' => 'none',
     ),
     'uid' => array(
@@ -2228,27 +2214,23 @@ function project_issue_views_default_views() {
   $handler->override_option('title', 'Search issues for a project');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
-  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_plugin', 'project_issue_table');
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
     'sticky' => 0,
     'order' => 'desc',
     'columns' => array(
-      'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
       'version' => 'version',
+      'component' => 'component',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
     ),
     'info' => array(
-      'project_issue_queue' => array(
-        'sortable' => 1,
-        'separator' => '',
-      ),
       'title' => array(
         'sortable' => 1,
         'separator' => '',
@@ -2269,6 +2251,10 @@ function project_issue_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
+      'component' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
       'last_comment_timestamp' => array(
         'sortable' => 1,
         'separator' => '',
@@ -2285,12 +2271,14 @@ function project_issue_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'none',
     'title' => 'Advanced search',
+    'description' => '',
     'weight' => '0',
     'name' => 'navigation',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
   ));
   $handler = $view->new_display('feed', 'Feed', 'feed_1');
@@ -2317,12 +2305,14 @@ function project_issue_views_default_views() {
   $handler->override_option('menu', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
     'name' => '',
   ));
   $handler->override_option('tab_options', array(
     'type' => 'none',
     'title' => '',
+    'description' => '',
     'weight' => 0,
   ));
   $handler->override_option('displays', array(
@@ -2330,7 +2320,7 @@ function project_issue_views_default_views() {
     'default' => 0,
   ));
   $handler->override_option('sitename_title', FALSE);
-  
+
   $views[$view->name] = $view;
 
   return $views;

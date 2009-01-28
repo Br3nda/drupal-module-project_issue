@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.115 2009-01-28 06:01:07 dww Exp $
+// $Id: project_issue.module,v 1.116 2009-01-28 23:43:10 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1485,5 +1485,98 @@ function project_issue_preprocess_views_view_table($variables) {
     }
   }
   $variables['class'] .= " project-issue";
+}
+
+/**
+ * Generate the links used at the top of query result pages.
+ *
+ * @param $project_nid
+ *   The node ID of the project to generate links for, or NULL if it's a page
+ *   of site-wide issues.
+ * @param $is_search
+ *   Boolean indicating if we're on a search page (used to hide search links).
+ *
+ * @return
+ *   Themed HTML output for the list of links.
+ *
+ * @see theme_project_issue_query_result_links()
+ */
+function project_issue_query_result_links($project_nid = NULL, $is_search = FALSE) {
+  global $user;
+  $links = array();
+
+  if (empty($project_nid)) {
+    // These are site-wide links, not per-project
+    if (node_access('create', 'project_issue')) {
+      $links['create'] = array(
+        'title' => t('Create a new issue'),
+        'href' => "node/add/project-issue",
+        'attributes' => array('title' => t('Create a new issue.')),
+      );
+    }
+    else {
+      $links['create'] = array(
+        'title' => theme('project_issue_create_forbidden'),
+        'html'  => TRUE,
+      );
+    }
+    $links['statistics'] = array(
+      'title' => t('Statistics'),
+      'href' => "project/issues/statistics",
+      'attributes' => array('title' => t('See statistics about issues.')),
+    );
+    if (!empty($user->uid)) {
+      $links['subscribe'] = array(
+        'title' => t('Subscribe'),
+        'href' => "project/issues/subscribe-mail",
+        'attributes' => array('title' => t('Receive email updates about issues.')),
+      );
+    }
+    if (!$is_search) {
+      $links['search'] = array(
+        'title' => t('Advanced search'),
+        'href' => "project/issues/search",
+        'attributes' => array('title' => t('Use the advanced search page for finding issues.')),
+      );
+    }
+  }
+  else {
+    // We know the project, make project-specific links.
+    $project = node_load($project_nid);
+    $uri = $project->project['uri'];
+    if (node_access('create', 'project_issue')) {
+      $links['create'] = array(
+        'title' => t('Create a new issue'),
+        'href' => "node/add/project-issue/$uri",
+        'attributes' => array('title' => t('Create a new issue for @project.', array('@project' => $uri))),
+      );
+    }
+    else {
+      $links['create'] = array(
+        'title' => theme('project_issue_create_forbidden', $uri),
+        'html'  => TRUE,
+      );
+    }
+    $links['statistics'] = array(
+      'title' => t('Statistics'),
+      'href' => "project/issues/statistics/$uri",
+      'attributes' => array('title' => t('See statistics about @project issues.', array('@project' => $uri))),
+    );
+    if ($user->uid) {
+      $links['subscribe'] = array(
+        'title' => t('Subscribe'),
+        'href' => "project/issues/subscribe-mail/$uri",
+        'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $uri))),
+      );
+    }
+    if (!$is_search) {
+      $links['search'] = array(
+        'title' => t('Advanced search'),
+        'href' => "project/issues/search/$uri",
+        'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $uri))),
+      );
+    }
+  }
+  return theme('project_issue_query_result_links', $links);
 }
 

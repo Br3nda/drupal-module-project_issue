@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.117 2009/01/26 15:53:40 dww Exp $
+// $Id: mail.inc,v 1.118 2009/01/29 22:01:31 thehunmonkgroup Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -182,6 +182,20 @@ function project_mail_notify($nid) {
   $node = node_load($nid, NULL, TRUE);
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
+  // Store a copy of the issue, so we can load the original issue values
+  // below.
+  $issue = drupal_clone($node);
+
+  // Load in the original issue data here, since we want a running
+  // reverse history.
+  $original_issue_data = unserialize($node->project_issue['original_issue_data']);
+  $fields = project_issue_field_labels('email');
+  foreach ($fields as $field => $label) {
+    if ($field != 'name' && $field != 'updator') {
+      $issue->original_issue_metadata->$field = $original_issue_data->$field;
+    }
+  }
+
   // Record users that are connected to this issue.
   $uids = array();
   if (!empty($node->uid)) {
@@ -236,7 +250,7 @@ function project_mail_notify($nid) {
   $params['node']    = $node;
   $params['project'] = $project;
   $params['history'] = $history;
-  
+
   $sender->name = t('!name (!site)', array('!name' => $user->name, '!site' => variable_get('site_name', 'Drupal')));
   $sender->mail = strtr(variable_get('project_issue_reply_to', variable_get('site_mail', ini_get('sendmail_from'))), array('%project' => $project->project['uri']));
   // The sender name is enclosed by double quotes below
@@ -244,20 +258,24 @@ function project_mail_notify($nid) {
   // which requires double quotes when special characters (including
   // some punctuation) are used.  See example in Appendix A.1.2.
   $from = "\"$sender->name\" <$sender->mail>";
-  
+
   while ($recipient = db_fetch_object($result)) {
     // To save work, only go through a user_load if we need it.
     if ($check_file_perms || $check_node_access) {
       $account = user_load(array('uid' => $recipient->uid));
+      $language = user_preferred_language($account);
     }
-    
+    else {
+      $language = language_default();
+    }
+
     $can_access = $check_node_access ? node_access('view', $node, $account) : TRUE;
-    
+
     if ($can_access) {
       $display_files = $check_file_perms ? user_access('view uploaded files', $account) : TRUE;
 
       $params['display_files'] = $display_files;
-      drupal_mail('project_issue', 'project_issue_update_notification', $recipient->mail, user_preferred_language($account), $params, $from);      
+      drupal_mail('project_issue', 'project_issue_update_notification', $recipient->mail, $language, $params, $from);
     }
   }
 
@@ -288,26 +306,13 @@ function project_issue_mail($key, &$message, $params) {
       // There could be stale data in the cached node, so reset the cache.
       $node    = $params['node'];
       $project = $params['project'];
-      $history = $params['history'];      
+      $history = $params['history'];
       $fields  = project_issue_field_labels('email');
 
-      // Store a copy of the issue, so we can load the original issue values
-      // below.
-      $issue = drupal_clone($node);
-
-      // Load in the original issue data here, since we want a running
-      // reverse history.
-      $original_issue_data = unserialize($node->project_issue['original_issue_data']);
-      foreach ($fields as $field => $label) {
-        if ($field != 'name' && $field != 'updator') {
-          $issue->project_issue[$field] = $original_issue_data->$field;
-        }
-      }
-      
       $domain = preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url);
-            
-      $message['headers'] += array(        
-        'Date' => date('r'),        
+
+      $message['headers'] += array(
+        'Date' => date('r'),
         'X-Mailer' => 'Drupal Project module (http://drupal.org/project/project)',
         'List-Id' => "$project->title <". $project->project['uri'] ."-issues-$domain>",
         'List-Archive' => '<'. url('project/issues/'. $project->project['uri'], array('absolute' => TRUE)) .'>',
@@ -322,7 +327,7 @@ function project_issue_mail($key, &$message, $params) {
           // message headers.  Instead of issuing another query, just keep track
           // of them here.
           $previous_cid = isset($cid) ? $cid : '';
-          $cid = $comment->cid;
+          $cid = isset($comment->cid) ? $comment->cid : 0;
         }
         $message['headers']['Message-Id'] = "<type=project&nid=$node->nid&cid=$cid&host=@$domain>";
         $message['headers']['In-Reply-To'] = "<type=project&nid=$node->nid&host=@$domain>";
@@ -373,22 +378,31 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
     }
   }
 
-  $fields = project_issue_field_labels('email');
-
   // Get most recent update.
   $entry = array_pop($history);
+
   $node->project_issue['updator'] = $entry->name ? $entry->name : $user->name;
 
   // Check if the latest entry is actually the initial issue.
   if (empty($history)) {
+    $metadata_previous = new stdClass();
+    // Have to get the metadata into the entry object.
+    $metadata_entry = $entry->original_issue_metadata;
     $content = $entry->body;
   }
   else {
-    $previous = end($history);
+    $metadata_previous = end($history);
+    // If the previous was the original issue, then we need to pull
+    // out the metadata from project_issue.
+    if (isset($metadata_previous->original_issue_metadata)) {
+      $metadata_previous = $metadata_previous->original_issue_metadata;
+    }
+    $metadata_entry = $entry;
     $content = $entry->comment;
   }
 
-  $comment_changes = project_issue_metadata_changes($node, $previous, $entry, $fields);
+  $fields = project_issue_field_labels('email');
+  $comment_changes = project_issue_metadata_changes($node, $metadata_previous, $metadata_entry, $fields);
 
   // Since $node->name will always be the original issue author, and since
   // $node->project_issue['updator'] isn't a property of either $previous or
@@ -558,6 +572,9 @@ function project_mail_format_attachments($entry, $display_files) {
   $output = '';
   if ($display_files && is_array($entry->files)) {
     foreach ($entry->files as $file) {
+      // Comment upload has it's files in an array, so cast to an object
+      // for consistency.
+      $file = (object) $file;
       $output .= ' '. str_pad(t('Attachment') .':', 14) . file_create_url($file->filepath) .' ('. format_size($file->filesize) .")\n";
     }
   }
@@ -597,8 +614,9 @@ function project_mail_format_entry($entry, $display_files, $is_original = FALSE)
 
   $output .= project_mail_format_attachments($entry, $display_files);
 
-  // Must distinguish between nodes and comments.
-  if (!$entry->vid) {
+  // Must distinguish between nodes and comments -- here we do it
+  // by looking for a revision ID.
+  if (empty($entry->vid)) {
     $content = $entry->comment;
   }
   else {

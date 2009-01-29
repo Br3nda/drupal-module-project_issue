@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.140 2009/01/27 17:03:58 dww Exp $
+// $Id: comment.inc,v 1.141 2009/01/29 22:01:31 thehunmonkgroup Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -78,7 +78,7 @@ function project_issue_comment(&$arg, $op) {
         $test->component = $arg->project_info['component'];
         $test->assigned = $arg->project_info['assigned'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
-        $test->rid = $arg->project_info['rid'] ? $arg->project_info['rid'] : 0;
+        $test->rid = isset($arg->project_info['rid']) ? $arg->project_info['rid'] : 0;
         $comment_changes = project_issue_metadata_changes($node, $old_data, $test, project_issue_field_labels('web'));
         $project_issue_table = theme('project_issue_comment_table', $comment_changes);
       }
@@ -92,13 +92,13 @@ function project_issue_comment(&$arg, $op) {
 
 /**
  * Add project issue metadata to the comment form.
- * 
+ *
  * @param $form
  *   Reference to form structure.
  * @param $form_state
  *   Current form state.
  */
-function project_issue_form_comment_form_alter(&$form, &$form_state) {
+function _project_issue_form_comment_form_alter(&$form, &$form_state) {
   $nid = $form['nid']['#value'];
   $node = node_load($nid);
 
@@ -106,7 +106,7 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   if ($node->type != 'project_issue') {
     return;
   }
-  
+
   // Add our own custom validation to the comment form for issue nodes.
   $form['#validate'][] = 'project_issue_form_comment_validate';
 
@@ -143,6 +143,10 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
     $form['#pre_render'][] = 'project_issue_comment_pre_render';
   }
 
+  // Make sure project is current here -- it may have changed when posted.
+  if (!empty($form_state['values']['project_info']['pid'])) {
+    $node->project_issue['pid'] = $form_state['values']['project_info']['pid'];
+  }
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   // We have to set $form['#action'] to prevent AHAH nastiness.
@@ -207,7 +211,7 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
     '#weight' => -30,
     '#required' => TRUE,
   );
-  
+
   $form['project_info']['assigned'] = $form['issue_info']['assigned'];
   unset($form['issue_info']['assigned']);
 
@@ -231,8 +235,6 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
     $form['attachments']['#collapsed'] = FALSE;
     $form['attachments']['#weight'] = 2;
   }
-
-  return $form;
 }
 
 /**
@@ -243,13 +245,15 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
  * @param $form_state
  *   The current state of the form.
  */
-function project_issue_form_comment_validate($form, &$form_state) {    
-  if(isset($form_state['project_issue_ahah'])) {
+function project_issue_form_comment_validate($form, &$form_state) {
+  if (!empty($form_state['rebuild'])) {
     return;
   }
-  $nid = $form_state['values']['nid'];
+  $values = $form_state['values'];
+  $project_info = $form_state['values']['project_info'];
+  $nid = $values['nid'];
   $node = node_load($nid);
-  
+
   // Make a copy here so we have all the original metadata, since some
   // of it can change below.
   $original_node = drupal_clone($node);
@@ -259,27 +263,28 @@ function project_issue_form_comment_validate($form, &$form_state) {
   // Adjust new file attachments to go to the issues directory.
   // We have to do this during validate, otherwise we might miss
   // adjusting the filename before comment upload saves it (module weighting)
-  project_issue_change_comment_upload_path($form_state['values']);
-  
+  // TODO: is this still true?
+  project_issue_change_comment_upload_path($values);
+
   // Only validate metadata changes on new followups.
-  if (isset($form_state['values']['cid'])) {
+  if (isset($values['cid'])) {
     return;
   }
 
   // Make sure project is current here -- it may have changed when posted.
-  if (isset($form_state['values']['project_info']['pid'])) {
-    $node->project_issue['pid'] = $form_state['values']['project_info']['pid'];
+  if (isset($project_info['pid'])) {
+    $node->project_issue['pid'] = $project_info['pid'];
   }
   $project = node_load($node->project_issue['pid']);
 
   if (!empty($project) && $project->type == 'project_project') {
     // Force all comments to be a child of the main issue, to match the
     // flat display, and also to prevent accidentally deleting a thread.
-    form_set_value(array('#parents' => array('pid')), 0, $form_state);
+    $form_state['values']['pid'] = 0;
 
     // Validate version.
-    if (module_exists('project_release') && ($releases = project_release_get_releases($project, 0, 'version', 'all', array($form_state['values']['project_info']['rid'])))) {
-      $rid = $form_state['values']['project_info']['rid'];
+    if (module_exists('project_release') && isset($project_info['rid']) && ($releases = project_release_get_releases($project, 0, 'version', 'all', array($project_info['rid'])))) {
+      $rid = $project_info['rid'];
       if ($rid && !in_array($rid, array_keys($releases))) {
         $rid = 0;
       }
@@ -295,8 +300,12 @@ function project_issue_form_comment_validate($form, &$form_state) {
         form_set_error('project_info][rid', t('You have to specify a valid version.'));
       }
     }
+    // Add a dummy rid if necessary -- prevents incorrect change data.
+    else {
+      $rid = 0;
+    }
     // Validate component.
-    $component = $form_state['values']['project_info']['component'];
+    $component = $project_info['component'];
     if ($component && !in_array($component, $project->project_issue['components'])) {
       $component = 0;
     }
@@ -305,26 +314,31 @@ function project_issue_form_comment_validate($form, &$form_state) {
   else {
     form_set_error('project_info][pid', t('You have to specify a valid project.'));
   }
-  empty($form_state['values']['category']) && form_set_error('category', t('You have to specify a valid category.'));
+  empty($values['category']) && form_set_error('category', t('You have to specify a valid category.'));
 
   // Now, make sure the comment changes *something* about the issue.
-  // If the user uploaded a file, so long as it's not marked for removal, 
+  // If the user uploaded a file, so long as it's not marked for removal,
   // we consider that a valid change to the issue, too.
   $has_file = FALSE;
-  $files = isset($form_state['values']['files']) ? $form_state['values']['files'] : array();
+  $files = isset($values['files']) ? $values['files'] : array();
   foreach ($files as $number => $data) {
     if (empty($data['remove'])) {
       $has_file = TRUE;
       break;
     }
   }
-  if (!$has_file && empty($form_state['values']['comment'])) {
-    $comment = drupal_clone((object)$form_state['values']);
-    $comment->pid = $form_state['values']['project_info']['pid'];
-    $comment->component = $form_state['values']['project_info']['component'];
-    // Add a dummy rid if necessary -- prevents incorrect change data.
-    $comment->rid = $form_state['values']['project_info']['rid'] ? $form_state['values']['project_info']['rid'] : 0;
+  if (!$has_file && empty($values['comment'])) {
+
+    $comment = drupal_clone((object) $values);
+    $comment->pid = $project_info['pid'];
+    $comment->component = $component;
+    $comment->rid = $rid;
+    $comment->assigned = $project_info['assigned'];
     $comment_changes = project_issue_metadata_changes($node, $old_data, $comment, project_issue_field_labels('web'));
+    // If the PID changed, rebuild the form
+    if (isset($comment_changes['pid']['new']) && $comment_changes['pid']['new'] === TRUE) {
+      $form_state['rebuild'] = TRUE;
+    }
     $has_change = FALSE;
     foreach ($comment_changes as $field => $changes) {
       if (isset($changes['new'])) {
@@ -333,7 +347,7 @@ function project_issue_form_comment_validate($form, &$form_state) {
       }
     }
     if (!$has_change) {
-      form_set_error('comment', t('You must either add a comment or change something about this issue.'));
+      form_set_error('comment', t('You must either add a comment, upload a file, or change something about this issue.'));
     }
   }
 }
@@ -444,7 +458,7 @@ function project_issue_comment_view(&$node, $comment = NULL) {
   if (isset($comment)) {
     return isset($project_issue_tables[$comment->cid]) ? $project_issue_tables[$comment->cid] : '';
   }
-  if ($node->comment_count) {
+  if (!empty($node->comment_count)) {
     $old = unserialize(db_result(db_query('SELECT original_issue_data FROM {project_issues} WHERE nid = %d', $node->nid)));
     $labels = project_issue_field_labels('web');
     $result = db_query('SELECT p.cid, p.title, p.pid, p.rid, p.component, p.category, p.priority, p.assigned, p.sid FROM {project_issue_comments} p INNER JOIN {comments} c ON p.cid = c.cid WHERE p.nid = %d AND c.status = %d ORDER BY p.timestamp ASC', $node->nid, COMMENT_PUBLISHED);
@@ -573,7 +587,7 @@ function project_issue_comment_pre_render($form) {
   // after the comment form on preview, in the case where the comment
   // parent is 0.  If we want our issue previews to be consistent, this
   // ugly hack is necessary.
-  if ($_POST['op'] == t('Preview comment')) {
+  if (isset($_POST['op']) && $_POST['op'] == t('Preview comment')) {
     $preview = comment_render($node, 0);
   }
   else {

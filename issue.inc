@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.334 2009/01/28 23:43:10 dww Exp $
+// $Id: issue.inc,v 1.335 2009/01/29 22:01:31 thehunmonkgroup Exp $
 
 
 /**
@@ -14,18 +14,16 @@ function project_issue_update_project() {
   $form_id = array_shift($args);
   $form_state['post'] = $form['#post'] = $_POST;
   $form['#programmed'] = $form['#redirect'] = FALSE;
-  
-  // Skip validation in project issue.
-  $form_state['project_issue_ahah'] = TRUE;
+
   drupal_process_form($form_id, $form, $form_state);
-  
+
   // Rebuild the form and cache it again.
   $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
 
   // These used to be path arguments. Now they arrive via form element.
   $issue_nid = $form['nid']['#value'];
   $pid = $form_state['values']['project_info']['pid'];
-  $rid = $form_state['values']['project_info']['rid'];
+  $rid = isset($form_state['values']['project_info']['rid']) ? $form_state['values']['project_info']['rid'] : 0;
   $cid = $form_state['values']['cid'];
   $assigned_uid = $form_state['values']['project_info']['assigned'];
 
@@ -33,7 +31,7 @@ function project_issue_update_project() {
 
   // Only generate release stuff if the project_release module is enabled.
   if (module_exists('project_release')) {
-    
+
     $project->nid = $pid;
     if ($releases = project_release_get_releases($project, 0)) {
       $old_version = db_result(db_query("SELECT version FROM {project_release_nodes} WHERE nid = %d", $rid));
@@ -443,17 +441,25 @@ function project_issue_pick_project_form_submit($form, &$form_state) {
 function project_issue_form($node, $form_state, $include_metadata_fields = FALSE) {
   global $user;
 
+  $defaults = array(
+    'rid',
+    'component',
+    'category',
+    'priority',
+    'assigned',
+    'sid',
+  );
+
+  // Set some defaults for new forms.
+  if (!isset($node->nid)) {
+    foreach ($defaults as $default) {
+      $node->project_issue[$default] = 0;
+    }
+  }
+
   // In the case of an issue preview, get our defaults from the submitted form.
   // TODO: do we want to #tree our form so we don't need this hack?
   if (isset($form_state['node'])) {
-    $defaults = array(
-      'rid',
-      'component',
-      'category',
-      'priority',
-      'assigned',
-      'sid',
-    );
     foreach ($defaults as $default) {
       if (isset($form_state['node'][$default])) {
         $node->project_issue[$default] = $form_state['node'][$default];
@@ -512,7 +518,7 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
 
   if (empty($pid)) {
     drupal_set_message(t('Invalid project selected.'), 'error');
-    return drupal_goto('node/add/project-issue');
+    drupal_goto('node/add/project-issue');
   }
 
   // If this issue has already been created and is just being
@@ -530,10 +536,10 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
   if ($project->type != 'project_project') {
     drupal_set_message(t('Invalid project selected.'), 'error');
     // Not sure the best place to go here...
-    return drupal_goto('node/add/project-issue');
+    drupal_goto('node/add/project-issue');
   }
   if ($allow_metadata_changes) {
-    if (module_exists('project_release') &&
+    if (module_exists('project_release') && isset($node->project_issue['rid']) &&
         $releases = project_release_get_releases($project, 0, 'version', 'all', array($node->project_issue['rid']))) {
       $releases = array(t('<none>')) + $releases;
     }
@@ -551,7 +557,7 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
     }
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
-    $states = project_issue_state(0, true, $node->nid && ($node->uid == $user->uid), $node->project_issue['sid']);
+    $states = project_issue_state(0, TRUE, !empty($node->nid) && ($node->uid == $user->uid), $node->project_issue['sid']);
     $assigned = project_issue_assigned_choices($node);
   }
 

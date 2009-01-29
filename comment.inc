@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.129.2.5 2008/12/17 08:07:33 dww Exp $
+// $Id: comment.inc,v 1.129.2.6 2009/01/29 16:30:37 thehunmonkgroup Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -223,7 +223,7 @@ function project_issue_comment(&$arg, $op) {
           }
         }
         if (!$has_change) {
-          form_set_error('comment', t('You must either add a comment or change something about this issue.'));
+          form_set_error('comment', t('You must either add a comment, upload a file, or change something about this issue.'));
         }
       }
       break;

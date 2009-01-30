@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.335 2009/01/29 22:01:31 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.336 2009/01/30 07:16:57 dww Exp $
 
 
 /**
@@ -781,7 +781,7 @@ function project_issue_view($node, $teaser = false, $page = false) {
       'label' => t('Project'),
       'current' => $project->title,
     );
-    if ($release->project_release['version']) {
+    if (!empty($release->project_release['version'])) {
       $current_data['rid'] = array(
         'label' => t('Version'),
         'current' => $release->project_release['version'],

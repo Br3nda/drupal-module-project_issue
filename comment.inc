@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.141 2009-01-29 22:01:31 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.142 2009-01-30 07:16:57 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -10,15 +10,14 @@ function project_issue_comment(&$arg, $op) {
     $nid = is_array($arg['nid']) ? $arg['nid']['#value'] : $arg['nid'];
   }
   $node = node_load($nid);
+  if ($node->type != 'project_issue') {
+    return;
+  }
   // Make a copy here so we have all the original metadata, since some
   // of it can change below.
   $original_node = drupal_clone($node);
   $old_data = (object) $original_node->project_issue;
   $old_data->title = $original_node->title;
-
-  if ($node->type != 'project_issue') {
-    return;
-  }
 
   switch ($op) {
     case 'insert':
@@ -98,7 +97,7 @@ function project_issue_comment(&$arg, $op) {
  * @param $form_state
  *   Current form state.
  */
-function _project_issue_form_comment_form_alter(&$form, &$form_state) {
+function project_issue_form_comment_form_alter(&$form, &$form_state) {
   $nid = $form['nid']['#value'];
   $node = node_load($nid);
 
@@ -228,13 +227,6 @@ function _project_issue_form_comment_form_alter(&$form, &$form_state) {
   $form['original_issue']['issue_info'] = $form['issue_info'];
   unset($form['project_info'], $form['issue_info']);
   unset($form['issue_details'], $form['project_help']);
-
-  // Make sure the 'File attachments' fieldset is expanded and before the
-  // original issue fieldset.
-  if (isset($form['attachments'])) {
-    $form['attachments']['#collapsed'] = FALSE;
-    $form['attachments']['#weight'] = 2;
-  }
 }
 
 /**

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.119 2009-01-30 07:03:41 dww Exp $
+// $Id: project_issue.module,v 1.120 2009-01-30 07:16:57 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -357,12 +357,14 @@ function project_issue_form_alter(&$form, &$form_state, $form_id) {
       }
       break;
 
+    // see also: project_issue_form_comment_form_alter
     case 'comment_form':
-      // Using a form-specific hook here causes some of the altering
-      // code to be run before we have all the form elements we need.
-      // So here we break out this code into a separate function for
-      // clarity but leave it in the general hook_form_alter().
-      _project_issue_form_comment_form_alter($form, $form_state);
+      // Make sure the 'File attachments' fieldset is expanded and before the
+      // original issue fieldset.
+      if (isset($form['attachments'])) {
+        $form['attachments']['#collapsed'] = FALSE;
+        $form['attachments']['#weight'] = 2;
+      }
       break;
 
     case 'comment_confirm_delete':

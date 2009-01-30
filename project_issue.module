@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.117 2009/01/29 22:01:31 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.118 2009/01/30 01:20:36 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -418,7 +418,7 @@ function project_issue_settings_form() {
     '#default_value' => $followup_username,
     '#maxlength' => 60,
     '#description' => t('Enter the name of the user which will create automatic followups to issues -- leave empty to disable auto-followup or set to %anon to use the anonymous user.', array('%anon' => $anon)),
-    '#validate' => array('project_issue_validate_followup_user'),
+    '#element_validate' => array('project_issue_validate_followup_user'),
     '#autocomplete_path' => 'user/autocomplete',
   );
 
@@ -469,7 +469,7 @@ function project_issue_validate_issues_per_page($form) {
  * Validates that the followup user exists, and has sufficient permissions
  * to follow up on issues.
  */
-function project_issue_validate_followup_user($form) {
+function project_issue_validate_followup_user($form, &$form_state) {
   $name = $form['#value'];
   if ($name !== '') {
     $anon = variable_get('anonymous', t('Anonymous'));
@@ -480,7 +480,7 @@ function project_issue_validate_followup_user($form) {
     if ($account) {
       if (user_access('access project issues', $account)) {
         // Transform the username into the more stable user ID.
-        form_set_value($form, $account->uid, $form_state);
+        $form_state['values']['project_issue_followup_user'] = $account->uid;
       }
       else {
         form_error($form, t('%name does not have sufficient permissions to follow up on issues.', array('%name' => $is_anon ? $anon : $name)));
@@ -560,13 +560,6 @@ function project_issue_add_followup($changes) {
     $result = db_query('SELECT pi.nid, pi.rid, pi.component, pi.category, pi.priority, pi.assigned, pi.sid, pi.pid, n.title FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE n.nid = %d', $changes['nid']);
 
     if ($issue = db_fetch_object($result)) {
-      // Code from comment_save.
-      $roles = variable_get('comment_roles_' . $node->type, array());
-      $score = 0;
-      foreach (array_intersect(array_keys($roles), array_keys($user->roles)) as $rid) {
-        $score = max($roles[$rid], $score);
-      }
-      $users = serialize(array(0 => $score));
       // Build vancode
       $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $changes['nid']));
       // Strip the "/" from the end of the thread.
@@ -583,11 +576,9 @@ function project_issue_add_followup($changes) {
         'subject' => '--project followup subject--',
         'hostname' => ip_address(),
         'timestamp' => time(),
-        'score' => $score,
         'status' => COMMENT_PUBLISHED,
         'format' => FILTER_FORMAT_DEFAULT,
         'thread' => $thread,
-        'users' => $users,
         'name' => $user->name,
         'mail' => '',
         'homepage' => '',
@@ -605,11 +596,12 @@ function project_issue_add_followup($changes) {
         'pid' => $issue->pid,
         'rid' => $issue->rid,
         'component' => $issue->component,
+        'assigned' => $issue->assigned,
       );
 
-      db_query("INSERT INTO {comments} (pid, nid, uid, subject, comment, hostname, timestamp, score, status, format, thread, users, name, mail, homepage) VALUES (%d, %d, %d, %d, '%s', '%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', '%s', '%s')", $comment['pid'], $comment['nid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['hostname'], $comment['timestamp'], $comment['score'], $comment['status'], $comment['format'], $comment['thread'], $comment['users'], $comment['name'], $comment['mail'], $comment['homepage']);
+      db_query("INSERT INTO {comments} (pid, nid, uid, subject, comment, hostname, timestamp, status, format, thread, name, mail, homepage) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, %d, %d, '%s', '%s', '%s', '%s')", $comment['pid'], $comment['nid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['hostname'], $comment['timestamp'], $comment['status'], $comment['format'], $comment['thread'], $comment['name'], $comment['mail'], $comment['homepage']);
 
-      $comment->cid = db_last_insert_id('comments', 'cid');
+      $comment['cid'] = db_last_insert_id('comments', 'cid');
 
       _comment_update_node_statistics($comment['nid']);
 

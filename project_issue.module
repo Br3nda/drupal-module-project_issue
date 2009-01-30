@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.118 2009-01-30 01:20:36 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.119 2009-01-30 07:03:41 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -207,6 +207,29 @@ function project_issue_help($path, $arg) {
         '<dt>'. t('Default status') .'</dt>'.
         '<dd>'. t('The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status. The default issue status cannot be deleted. If you wish to delete this status, first set a different status to default.') .'</dd>'.
         '</dl>';
+
+      // NOTE: This totally sucks, and is a dirty, ugly hack.  Since we don't
+      // want to rely on PHP filtered headers for our views, and defining our
+      // own display plugin breaks other nice things like RSS, we just cheat
+      // and display these links in here.  We'd like to remove this once a
+      // better solution is available that doesn't hard-code the paths.
+    case 'project/issues':
+      return project_issue_query_result_links();
+
+    case 'project/issues/user':
+      return project_issue_query_result_links();
+
+    case 'project/issues/search':
+      return project_issue_query_result_links(NULL, TRUE);
+
+  }
+
+  if ($arg[0] == 'project' && $arg[1] == 'issues' && $arg[2] == 'search' && !empty($arg[3])) {
+    return project_issue_query_result_links($arg[3], TRUE);
+  }
+
+  if ($arg[0] == 'project' && $arg[1] == 'issues' && !empty($arg[2])) {
+    return project_issue_query_result_links($arg[2]);
   }
 }
 
@@ -1500,11 +1523,11 @@ function project_issue_preprocess_views_view_table($variables) {
  *
  * @see theme_project_issue_query_result_links()
  */
-function project_issue_query_result_links($project_nid = NULL, $is_search = FALSE) {
+function project_issue_query_result_links($project_arg = NULL, $is_search = FALSE) {
   global $user;
   $links = array();
 
-  if (empty($project_nid)) {
+  if (empty($project_arg)) {
     // These are site-wide links, not per-project
     if (node_access('create', 'project_issue')) {
       $links['create'] = array(
@@ -1541,8 +1564,14 @@ function project_issue_query_result_links($project_nid = NULL, $is_search = FALS
   }
   else {
     // We know the project, make project-specific links.
-    $project = node_load($project_nid);
-    $uri = $project->project['uri'];
+    if (is_numeric($project_arg)) {
+      $project = node_load($project_arg);
+      $uri = $project->project['uri'];
+    }
+    else {
+      $uri = $project_arg;
+    }
+
     if (node_access('create', 'project_issue')) {
       $links['create'] = array(
         'title' => t('Create a new issue'),

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.142 2009-01-30 07:16:57 dww Exp $
+// $Id: comment.inc,v 1.143 2009-01-30 23:01:03 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -40,7 +40,8 @@ function project_issue_comment(&$arg, $op) {
       }
 
       if (isset($id)) {
-        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $arg['project_info']['rid'], $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['project_info']['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
+        $rid = isset($arg['project_info']['rid']) ? $arg['project_info']['rid'] : 0;
+        db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $rid, $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['project_info']['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
         db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['cid']);
         project_issue_update_by_comment($arg, 'insert');
       }
@@ -105,9 +106,6 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   if ($node->type != 'project_issue') {
     return;
   }
-
-  // Add our own custom validation to the comment form for issue nodes.
-  $form['#validate'][] = 'project_issue_form_comment_validate';
 
   // Comment body is not required since we validate that ourselves.
   unset($form['comment_filter']['comment']['#required']);
@@ -476,7 +474,7 @@ function project_issue_update_by_comment($comment_data, $op) {
       // Massage the incoming data so the structure is consistent throughout the function.
       $comment_data['component'] = $comment_data['project_info']['component'];
       $comment_data['pid'] = $comment_data['project_info']['pid'];
-      $comment_data['rid'] = $comment_data['project_info']['rid'];
+      $comment_data['rid'] = isset($comment_data['project_info']['rid']) ? $comment_data['project_info']['rid'] : 0;
       unset ($comment_data['project_info']);
       $comment_data = (object) $comment_data;
       // Mark the node for email notification during hook_exit(), so all issue

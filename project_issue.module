@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.120 2009-01-30 07:16:57 dww Exp $
+// $Id: project_issue.module,v 1.121 2009-01-30 23:01:03 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -359,12 +359,21 @@ function project_issue_form_alter(&$form, &$form_state, $form_id) {
 
     // see also: project_issue_form_comment_form_alter
     case 'comment_form':
+      $nid = $form['nid']['#value'];
+      $node = node_load($nid);
+
+      // Allows only project_issue
+      if ($node->type != 'project_issue') {
+        return;
+      }
       // Make sure the 'File attachments' fieldset is expanded and before the
       // original issue fieldset.
       if (isset($form['attachments'])) {
         $form['attachments']['#collapsed'] = FALSE;
         $form['attachments']['#weight'] = 2;
       }
+      // Add our own custom validation to the comment form for issue nodes.
+      $form['#validate'][] = 'project_issue_form_comment_validate';
       break;
 
     case 'comment_confirm_delete':

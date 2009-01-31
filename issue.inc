@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.336 2009/01/30 07:16:57 dww Exp $
+// $Id: issue.inc,v 1.337 2009/01/31 05:43:38 dww Exp $
 
 
 /**
@@ -91,6 +91,7 @@ function project_issue_update_project() {
   // Build the HTML output for the component select.
   $output = theme('status_messages') . drupal_render($project_info);
   drupal_json(array('status' => TRUE, 'data' => $output));
+  exit;
 }
 
 function project_issue_statistics($project = 0) {

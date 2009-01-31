@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.143 2009/01/30 23:01:03 dww Exp $
+// $Id: comment.inc,v 1.144 2009/01/31 05:43:37 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -174,19 +174,44 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   // of all projects to make swapping simpler.
   unset($form['project_info']['project_display']);
   $uris = NULL;
-  $projects = array(t('<none>')) + project_projects_select_options($uris);
-  $form['project_info']['pid'] = array(
-    '#type' => 'select',
-    '#title' => t('Project'),
-    '#default_value' => $node->project_issue['pid'],
-    '#options' => $projects,
-    '#required' => TRUE,
-    '#ahah' => array(
-      'path' => 'project/issues/update_project',
-      'wrapper' => 'project-info-wrapper',
-      'event' => 'change',
-    ),
-  );
+
+  if (variable_get('project_issue_autocomplete', 0) == 1) {
+    $form['project_info']['project_title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Project'),
+      '#default_value' => $project->title,
+      '#required' => TRUE,
+      '#weight' => -1,
+      '#size' => 35,
+      '#autocomplete_path' => 'project/autocomplete',
+      '#attributes' => array(
+        'onFocus' => 'project_issue_autocomplete_handler()',
+      ),
+      '#ahah' => array(
+        'progress' => array(
+          'type' => 'none',
+        ),
+        'path' => 'project/issues/update_project',
+        'wrapper' => 'project-info-wrapper',
+      ),
+    );
+  }
+  else {
+    $projects = array(t('<none>')) + project_projects_select_options($uris);
+    $form['project_info']['pid'] = array(
+      '#type' => 'select',
+      '#title' => t('Project'),
+      '#default_value' => $project->nid,
+      '#options' => $projects,
+      '#required' => TRUE,
+      '#weight' => -1,
+      '#ahah' => array(
+        'path' => 'project/issues/update_project',
+        'wrapper' => 'project-info-wrapper',
+        'event' => 'change',
+      ),
+    );
+  }
 
   $form['issue_info']['#weight'] = -1;
   $form['#prefix'] = '<div class="project-issue"><div class="node-form"><div class="standard">';
@@ -225,6 +250,7 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   $form['original_issue']['issue_info'] = $form['issue_info'];
   unset($form['project_info'], $form['issue_info']);
   unset($form['issue_details'], $form['project_help']);
+  drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
 }
 
 /**
@@ -236,6 +262,21 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
  *   The current state of the form.
  */
 function project_issue_form_comment_validate($form, &$form_state) {
+  if (variable_get('project_issue_autocomplete', 0) == 1) {
+    if (empty($form_state['values']['project_info']['project_title'])) {
+      form_set_error('project_title', t('You must enter a project to navigate to.'));
+    }
+    else {
+      $pid = db_result(db_query("SELECT nid FROM {node} WHERE title = '%s' AND type = '%s'", $form_state['values']['project_info']['project_title'], 'project_project'));
+      if (empty($pid)) {
+        form_set_error('project_info][project_title', t('The name you entered (%title) is not a valid project.', array('%title' => $form_state['values']['project_info']['project_title'])));
+      }
+      else {
+        $form_state['values']['project_info']['pid'] = $pid;
+      }
+    }
+  }
+
   if (!empty($form_state['rebuild'])) {
     return;
   }

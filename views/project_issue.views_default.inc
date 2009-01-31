@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.16 2009-01-28 22:34:21 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.17 2009-01-31 02:46:17 dww Exp $
 
 
 /**
@@ -50,6 +50,7 @@ function project_issue_views_default_views() {
   $handler->override_option('fields', array(
     'project_issue_queue' => array(
       'label' => 'Project',
+      'link_type' => 'issues',
       'exclude' => 0,
       'id' => 'project_issue_queue',
       'table' => 'node',
@@ -837,6 +838,7 @@ function project_issue_views_default_views() {
   $handler->override_option('fields', array(
     'project_issue_queue' => array(
       'label' => 'Project',
+      'link_type' => 'issues',
       'exclude' => 0,
       'id' => 'project_issue_queue',
       'table' => 'node',
@@ -1211,6 +1213,7 @@ function project_issue_views_default_views() {
   $handler->override_option('fields', array(
     'project_issue_queue' => array(
       'label' => 'Project',
+      'link_type' => 'issues',
       'exclude' => 0,
       'id' => 'project_issue_queue',
       'table' => 'node',
@@ -1574,6 +1577,7 @@ function project_issue_views_default_views() {
   $handler->override_option('fields', array(
     'project_issue_queue' => array(
       'label' => 'Project',
+      'link_type' => 'search',
       'exclude' => 0,
       'id' => 'project_issue_queue',
       'table' => 'node',

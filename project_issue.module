@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.121 2009-01-30 23:01:03 dww Exp $
+// $Id: project_issue.module,v 1.122 2009-01-31 05:43:38 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -477,6 +477,13 @@ function project_issue_settings_form() {
     $form['project_issue_reply_to']['#type'] = 'select';
     $form['project_issue_reply_to']['#options'] = $items;
   }
+
+  $form['project_issue_autocomplete'] = array(
+    '#type' => 'radios',
+    '#title' => t('Project selection widget'),
+    '#default_value' => variable_get('project_issue_autocomplete', 0),
+    '#options' => array(t('Select Menu'), t('Autocomplete')),
+  );
 
   $form['project_issue_site_help'] = array(
     '#title' => t('Site-wide help text for new issues'),

@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.22 2008-10-29 00:20:08 dww Exp $ */
+/* $Id: project_issue.css,v 1.23 2009-01-31 05:43:38 dww Exp $ */
 
 /* Summary content */
 #project-issue-summary-table {
@@ -184,3 +184,16 @@ table.projects .project-project-links a {
 .project-issue-status-7 {
   text-decoration: line-through;
 }
+
+.wrapper-throbber {
+  /*
+    Apparently there's no safe way to do this in CSS, so this could
+    be broken for sites that install in subdirectories.
+  */
+  background: url(/misc/throbber.gif) no-repeat right -18px;
+  width: 20px;
+  height: 18px;
+  margin-top: 20px;
+  float: left;
+}
+

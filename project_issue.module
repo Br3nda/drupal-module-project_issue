@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.122 2009/01/31 05:43:38 dww Exp $
+// $Id: project_issue.module,v 1.123 2009/01/31 08:59:57 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -383,6 +383,9 @@ function project_issue_form_alter(&$form, &$form_state, $form_id) {
       }
       break;
 
+    case 'views_exposed_form':
+      project_issue_alter_views_exposed_form($form, $form_state);
+      break;
   }
 }
 
@@ -1514,6 +1517,19 @@ function project_issue_quick_navigate_title_issues_validate($form, &$form_state)
 
 function project_issue_quick_navigate_title_issues_submit($form, &$form_state) {
   $form_state['redirect'] = 'project/issues/'. $form_state['project_uri'];
+}
+
+function project_issue_alter_views_exposed_form(&$form, &$form_state) {
+  switch ($form_state['view']->name) {
+    case 'project_issue_all_projects':
+    case 'project_issue_user_issues':
+    case 'project_issue_user_projects':
+    case 'project_issue_search_all':
+      if (!empty($form['projects'])) {
+        $form['projects']['#autocomplete_path'] = 'project/autocomplete';
+      }
+      break;
+  }
 }
 
 function project_issue_preprocess_views_view_table($variables) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.18 2009-01-31 08:59:57 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.19 2009-01-31 10:03:04 dww Exp $
 
 
 /**
@@ -268,7 +268,7 @@ function project_issue_views_default_views() {
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'desc',
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
@@ -684,7 +684,7 @@ function project_issue_views_default_views() {
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'desc',
     'columns' => array(
       'title' => 'title',
@@ -1098,7 +1098,7 @@ function project_issue_views_default_views() {
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'desc',
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
@@ -1477,7 +1477,7 @@ function project_issue_views_default_views() {
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'desc',
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
@@ -1832,7 +1832,7 @@ function project_issue_views_default_views() {
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'desc',
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
@@ -2290,7 +2290,7 @@ function project_issue_views_default_views() {
   $handler->override_option('style_options', array(
     'grouping' => '',
     'override' => 1,
-    'sticky' => 0,
+    'sticky' => 1,
     'order' => 'desc',
     'columns' => array(
       'title' => 'title',

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_field_issue_queue_link.inc,v 1.1 2009/01/26 22:50:35 dww Exp $
+// $Id: project_issue_handler_field_issue_queue_link.inc,v 1.2 2009/01/31 02:46:17 dww Exp $
 
 
 /**
@@ -15,8 +15,35 @@ class project_issue_handler_field_issue_queue_link extends views_handler_field {
     $this->additional_fields['uri'] = array('table' => 'project_projects', 'field' => 'uri');
   }
 
+  function option_definition() {
+    $options = parent::option_definition();
+    $options['link_type'] = array('default' => 'issue', 'translatable' => FALSE);
+    return $options;
+  }
+
+  function options_form(&$form, &$form_state) {
+    parent::option_definition();
+    $form['link_type'] = array(
+      '#type' => 'radios',
+      '#title' => t('Type of link to display'),
+      '#options' => $this->get_link_type_options(),
+      '#default_value' => $this->options['link_type'],
+    );
+  }
+
+  function get_link_type_options() {
+    return array(
+      'issues' => t('Link to issue queue'),
+      'search' => t('Link to advanced search'),
+    );
+  }
+
   function render($values) {
-    return l($values->{$this->field_alias}, 'project/issues/'. $values->{$this->aliases['uri']});
+    $basepath = 'project/issues/';
+    if ($this->options['link_type'] == 'search') {
+      $basepath .= 'search/';
+    }
+    return l($values->{$this->field_alias}, $basepath . $values->{$this->aliases['uri']});
   }
 }
 

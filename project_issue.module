@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.124 2009-02-01 18:14:13 dww Exp $
+// $Id: project_issue.module,v 1.125 2009-02-01 18:34:09 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -208,29 +208,30 @@ function project_issue_help($path, $arg) {
         '<dd>'. t('The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status. The default issue status cannot be deleted. If you wish to delete this status, first set a different status to default.') .'</dd>'.
         '</dl>';
 
-      // NOTE: This totally sucks, and is a dirty, ugly hack.  Since we don't
-      // want to rely on PHP filtered headers for our views, and defining our
-      // own display plugin breaks other nice things like RSS, we just cheat
-      // and display these links in here.  We'd like to remove this once a
-      // better solution is available that doesn't hard-code the paths.
-    case 'project/issues':
+  }
+
+  // NOTE: This totally sucks, and is a dirty, ugly hack.  Since we don't
+  // want to rely on PHP filtered headers for our views, and defining our
+  // own display plugin breaks other nice things like RSS, we just cheat
+  // and render these links in here.  We'd like to remove this once a
+  // better solution is available that doesn't hard-code the paths.
+  if ($arg[0] == 'project' && $arg[1] == 'issues') {
+    // If there's no other arg, we're done.
+    if (empty($arg[2])) {
       return project_issue_query_result_links();
+    }
+    switch ($arg[2]) {
+      case 'user':
+      case 'search':
+      case 'statistics':
+      case 'subscribe-mail':
+        return project_issue_query_result_links($arg[3]);
 
-    case 'project/issues/user':
-      return project_issue_query_result_links();
-
-    case 'project/issues/search':
-      return project_issue_query_result_links(NULL, TRUE);
-
+      default:
+        return project_issue_query_result_links($arg[2]);
+    }
   }
 
-  if ($arg[0] == 'project' && $arg[1] == 'issues' && $arg[2] == 'search' && !empty($arg[3])) {
-    return project_issue_query_result_links($arg[3], TRUE);
-  }
-
-  if ($arg[0] == 'project' && $arg[1] == 'issues' && !empty($arg[2])) {
-    return project_issue_query_result_links($arg[2]);
-  }
 }
 
 /**
@@ -1546,18 +1547,16 @@ function project_issue_preprocess_views_view_table($variables) {
 /**
  * Generate the links used at the top of query result pages.
  *
- * @param $project_nid
- *   The node ID of the project to generate links for, or NULL if it's a page
- *   of site-wide issues.
- * @param $is_search
- *   Boolean indicating if we're on a search page (used to hide search links).
+ * @param $project_arg
+ *   The node ID or project short name (uri) of the project to generate links
+ *   for, or NULL if it's a page of site-wide issues.
  *
  * @return
  *   Themed HTML output for the list of links.
  *
  * @see theme_project_issue_query_result_links()
  */
-function project_issue_query_result_links($project_arg = NULL, $is_search = FALSE) {
+function project_issue_query_result_links($project_arg = NULL) {
   global $user;
   $links = array();
 
@@ -1576,23 +1575,21 @@ function project_issue_query_result_links($project_arg = NULL, $is_search = FALS
         'html'  => TRUE,
       );
     }
+    $links['search'] = array(
+      'title' => t('Advanced search'),
+      'href' => "project/issues/search",
+      'attributes' => array('title' => t('Use the advanced search page for finding issues.')),
+    );
     $links['statistics'] = array(
       'title' => t('Statistics'),
       'href' => "project/issues/statistics",
       'attributes' => array('title' => t('See statistics about issues.')),
     );
-    if (!empty($user->uid)) {
+    if (!empty($user->uid) && variable_get('project_issue_global_subscribe_page', TRUE)) {
       $links['subscribe'] = array(
         'title' => t('Subscribe'),
         'href' => "project/issues/subscribe-mail",
         'attributes' => array('title' => t('Receive email updates about issues.')),
-      );
-    }
-    if (!$is_search) {
-      $links['search'] = array(
-        'title' => t('Advanced search'),
-        'href' => "project/issues/search",
-        'attributes' => array('title' => t('Use the advanced search page for finding issues.')),
       );
     }
   }
@@ -1618,6 +1615,11 @@ function project_issue_query_result_links($project_arg = NULL, $is_search = FALS
         'html'  => TRUE,
       );
     }
+    $links['search'] = array(
+      'title' => t('Advanced search'),
+      'href' => "project/issues/search/$uri",
+      'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $uri))),
+    );
     $links['statistics'] = array(
       'title' => t('Statistics'),
       'href' => "project/issues/statistics/$uri",
@@ -1628,13 +1630,6 @@ function project_issue_query_result_links($project_arg = NULL, $is_search = FALS
         'title' => t('Subscribe'),
         'href' => "project/issues/subscribe-mail/$uri",
         'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $uri))),
-      );
-    }
-    if (!$is_search) {
-      $links['search'] = array(
-        'title' => t('Advanced search'),
-        'href' => "project/issues/search/$uri",
-        'attributes' => array('title' => t('Use the advanced search page to find @project issues.', array('@project' => $uri))),
       );
     }
   }

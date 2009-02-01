@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.2 2009-01-28 05:32:14 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.3 2009-02-01 18:14:13 dww Exp $
 
 
 /**
@@ -44,7 +44,7 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
           $project_nid = $arg;
         }
         else {
-          $project_nid = db_result(db_query("SELECT nid FROM {project_projects} WHERE uri = '%s'", $arg));
+          $project_nid = project_get_nid_from_uri($arg);
         }
         // This is needed by project_get_releases() and friends.
         $project = node_load($project_nid);

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.129.2.6 2009/01/29 16:30:37 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.129.2.7 2009/02/02 00:30:23 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -47,7 +47,7 @@ function project_issue_comment(&$arg, $op) {
       // of all projects to make swapping simpler.
       unset($form['project_info']['project_display']);
       $uris = NULL;
-      $projects = array(t('<none>')) + project_projects_select_options($uris);
+      $projects = project_projects_select_options($uris);
       $form['project_info']['pid'] = array(
         '#type' => 'select',
         '#title' => t('Project'),

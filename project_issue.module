@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88.2.13 2009/01/16 03:38:14 dww Exp $
+// $Id: project_issue.module,v 1.88.2.14 2009/02/03 02:28:59 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1177,11 +1177,34 @@ function project_issue_views_arguments() {
  *   The comment id to be appended to the link, optional.
  * @param $comment_number
  *   The comment's number, as visible to users, optional.
+ * @param $include_assigned
+ *   Optional boolean to include the user the issue is assigned to.
  */
-function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_number = NULL) {
+function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_number = NULL, $include_assigned = FALSE) {
   $path = "node/$node->nid";
-  $attributes = array('title' => project_issue_state($node->sid));
-  if ($comment_id) {
+
+  // See if the issue is assigned to anyone.  If so, we'll include it either
+  // in the title attribute on hover, or next to the issue link if there was
+  // an '@' appended to the issue nid.
+  if (!empty($node->assigned)) {
+    $username = db_result(db_query("SELECT name FROM {users} WHERE uid = %d", $node->assigned));
+  }
+  else {
+    $username = '';
+  }
+
+  if (!empty($username) && !$include_assigned) {
+    // We have an assigned user, but we're not going to print it next to the
+    // issue link, so include it in title. l() runs $attributes through
+    // drupal_attributes() which escapes the value.
+    $attributes = array('title' => t('Status: !status, Assigned to: !username', array('!status' => project_issue_state($node->sid), '!username' => $username)));
+  }
+  else {
+    // Just the status.
+    $attributes = array('title' => t('Status: !status', array('!status' => project_issue_state($node->sid))));
+  }
+
+  if (isset($comment_id)) {
     $title = "#$node->nid-$comment_number: $node->title";
     $link = l($title, $path, $attributes, NULL, "comment-$comment_id");
   }
@@ -1189,7 +1212,12 @@ function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_numb
     $title = "#$node->nid: $node->title";
     $link = l($title, $path, $attributes);
   }
-  $output = "<span class=\"project-issue-status-$node->sid\">$link</span>";
+
+  $output = '<span class="project-issue-status-'. $node->sid .' project-issue-status-info">'. $link;
+  if ($include_assigned && !empty($username)) {
+    $output .= ' <span class="project-issue-assigned-user">'. t('Assigned to: @username', array('@username' => $username)) .'</span>';
+  }
+  $output .= '</span>';
   return $output;
 }
 
@@ -1199,7 +1227,7 @@ function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_numb
  */
 function project_issue_filter_tips($delta, $format, $long = FALSE) {
   if ($long) {
-    return t('References to project issues in the form of [#1234] (or [#1234-2] for comments) turn into links automatically, with the title of the issue appended. The status of the issue is shown on hover.');
+    return t("References to project issues in the form of [#1234] (or [#1234-2] for comments) turn into links automatically, with the title of the issue appended. The status of the issue is shown on hover. If '@' is appended (e.g. [#1234@]), the user the issue is assigned to will also be printed.");
   }
   else {
     return t('Project issue numbers (ex. [#12345]) turn into links automatically.');
@@ -1221,21 +1249,23 @@ function project_issue_filter($op, $delta = 0, $format = -1, $text = '') {
     case 'prepare':
       return $text;
     case 'process':
-      $regex = '(?<!\w)(\[#(\d+)(-(\d+))?\])(?![^<]*<\/a>|([^<]++|(<(?!code)))*<\/code>|([^<]++|(<(?!pre)))*<\/pre>|\w)';
+      $regex = '(?<!\w)(\[#(\d+)(-(\d+))?(@)?\])(?![^<]*<\/a>|([^<]++|(<(?!code)))*<\/code>|([^<]++|(<(?!pre)))*<\/pre>|\w)';
       $offset = 0;
+      $preg_matches = array();
       while(preg_match("/$regex/", $text, $preg_matches, PREG_OFFSET_CAPTURE, $offset)) {
         $offset++;
         $match = $preg_matches[1];
         $nid = $preg_matches[2][0];
-        $comment_number = $preg_matches[4][0];
+        $comment_number = isset($preg_matches[4][0]) ? $preg_matches[4][0] : NULL;
+        $include_assigned = isset($preg_matches[5][0]);
         $node = node_load($nid);
         if (is_object($node) && node_access('view', $node) && $node->type == 'project_issue') {
           // Pull comment id based on the comment number if we have one.
-          if (!is_null($comment_number) && ($comment_id = db_result(db_query("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {comments} c ON pic.cid = c.cid WHERE pic.nid = %d AND pic.comment_number = %d AND c.status = %d", $nid, $comment_number, COMMENT_PUBLISHED)))) {
-            $link = theme('project_issue_issue_link', $node, $comment_id, $comment_number);
+          if (isset($comment_number) && ($comment_id = db_result(db_query("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {comments} c ON pic.cid = c.cid WHERE pic.nid = %d AND pic.comment_number = %d AND c.status = %d", $nid, $comment_number, COMMENT_PUBLISHED)))) {
+            $link = theme('project_issue_issue_link', $node, $comment_id, $comment_number, $include_assigned);
           }
           else {
-            $link = theme('project_issue_issue_link', $node);
+            $link = theme('project_issue_issue_link', $node, NULL, NULL, $include_assigned);
           }
           $text = substr_replace($text, $link, $match[1], strlen($match[0]));
           $offset = max($offset, $match[1] + strlen($link));

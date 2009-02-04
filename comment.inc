@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.145 2009/02/02 00:30:13 dww Exp $
+// $Id: comment.inc,v 1.146 2009/02/04 01:46:23 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -183,7 +183,7 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
       '#required' => TRUE,
       '#weight' => -1,
       '#size' => 35,
-      '#autocomplete_path' => 'project/autocomplete',
+      '#autocomplete_path' => 'project/autocomplete/issues/project',
       '#attributes' => array(
         'onFocus' => 'project_issue_autocomplete_handler()',
       ),

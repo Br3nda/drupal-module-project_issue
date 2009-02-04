@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.126 2009-02-03 02:28:56 dww Exp $
+// $Id: project_issue.module,v 1.127 2009-02-04 01:46:23 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -26,6 +26,8 @@ function project_issue_init() {
 
 function project_issue_menu() {
   $items = array();
+
+  $includes = drupal_get_path('module', 'project_issue') .'/includes';
 
   // Issues
   $items['project/issues/update_project'] = array(
@@ -131,6 +133,40 @@ function project_issue_menu() {
     'page arguments' => array(3, 4),
     'access callback' => 'node_access',
     'access arguments' => array('create', 'project_issue'),
+    'type' => MENU_CALLBACK,
+  );
+
+  // Autocomplete paths.
+
+  // Autocomplete a single project that has issue tracking enabled.
+  $items['project/autocomplete/issue/project'] = array(
+    'page callback' => 'project_issue_autocomplete_issue_project',
+    'access callback' => 'project_issue_menu_access',
+    'access arguments' => array('any'),
+    'file' => 'autocomplete.inc',
+    'file path' => $includes,
+    'type' => MENU_CALLBACK,
+  );
+
+  // Autocomplete a comma-separated list of projects that have issues enabled.
+  $items['project/autocomplete/issue/projects'] = array(
+    'page callback' => 'project_issue_autocomplete_issue_projects',
+    'access callback' => 'project_issue_menu_access',
+    'access arguments' => array('any'),
+    'file' => 'autocomplete.inc',
+    'file path' => $includes,
+    'type' => MENU_CALLBACK,
+  );
+
+  // Autocomplete a comma-separated list of projects from all issues a user
+  // has either submitted or commented on.
+  $items['project/autocomplete/issue/user/%'] = array(
+    'page callback' => 'project_issue_autocomplete_user_issue_project',
+    'page arguments' => array(4, 5),
+    'access callback' => 'project_issue_menu_access',
+    'access arguments' => array('any'),
+    'file' => 'autocomplete.inc',
+    'file path' => $includes,
     'type' => MENU_CALLBACK,
   );
 

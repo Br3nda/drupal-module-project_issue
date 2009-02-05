@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.128 2009/02/05 02:53:55 dww Exp $
+// $Id: project_issue.module,v 1.129 2009/02/05 06:46:47 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1119,7 +1119,6 @@ function project_issue_user_page($arg = 0) {
     $header[] = array('data' => t('Project links'), 'class' => 'project-project-links');
   }
   $output = theme('table', $header, $rows, array('class' => 'projects'));
-  $output .= l('#', "project/user/$user->name");
 
   /// @todo Allow configuration of which view to embed here?
   $view = views_get_view('project_issue_user_projects');

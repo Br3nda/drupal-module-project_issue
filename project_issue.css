@@ -1,4 +1,4 @@
-/* $Id: project_issue.css,v 1.24 2009/02/03 02:28:56 dww Exp $ */
+/* $Id: project_issue.css,v 1.25 2009/02/05 06:46:47 dww Exp $ */
 
 /* Summary content */
 #project-issue-summary-table {
@@ -67,6 +67,7 @@
 /* "My Projects" table UI */
 table.projects {
   width: 100%;
+  margin-bottom: 3em;
 }
 table.projects .project-name {
   width: 24%;

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.129 2009/02/05 06:46:47 dww Exp $
+// $Id: project_issue.module,v 1.130 2009/02/05 06:58:41 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1126,6 +1126,18 @@ function project_issue_user_page($arg = 0) {
   $view_args = array($user->name, arg(3));
   $output .=  $view->preview('default', $view_args);
 
+  return $output;
+}
+
+/**
+ * Page callback function for the "Issues" subtab at the site-wide search page.
+ */
+function project_issue_search_page() {
+  $view_info = variable_get('project_issue_search_issues_view', 'project_issue_search_all:default');
+  $view_parts = explode(':', $view_info);
+  $view = views_get_view($view_parts[0]);
+  $view->override_path = 'search/issues';
+  $output .=  $view->preview($view_parts[1]);
   return $output;
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88.2.14 2009/02/03 02:28:59 dww Exp $
+// $Id: project_issue.module,v 1.88.2.15 2009/02/05 02:53:58 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1249,33 +1249,34 @@ function project_issue_filter($op, $delta = 0, $format = -1, $text = '') {
     case 'prepare':
       return $text;
     case 'process':
-      $regex = '(?<!\w)(\[#(\d+)(-(\d+))?(@)?\])(?![^<]*<\/a>|([^<]++|(<(?!code)))*<\/code>|([^<]++|(<(?!pre)))*<\/pre>|\w)';
-      $offset = 0;
-      $preg_matches = array();
-      while(preg_match("/$regex/", $text, $preg_matches, PREG_OFFSET_CAPTURE, $offset)) {
-        $offset++;
-        $match = $preg_matches[1];
-        $nid = $preg_matches[2][0];
-        $comment_number = isset($preg_matches[4][0]) ? $preg_matches[4][0] : NULL;
-        $include_assigned = isset($preg_matches[5][0]);
-        $node = node_load($nid);
-        if (is_object($node) && node_access('view', $node) && $node->type == 'project_issue') {
-          // Pull comment id based on the comment number if we have one.
-          if (isset($comment_number) && ($comment_id = db_result(db_query("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {comments} c ON pic.cid = c.cid WHERE pic.nid = %d AND pic.comment_number = %d AND c.status = %d", $nid, $comment_number, COMMENT_PUBLISHED)))) {
-            $link = theme('project_issue_issue_link', $node, $comment_id, $comment_number, $include_assigned);
-          }
-          else {
-            $link = theme('project_issue_issue_link', $node, NULL, NULL, $include_assigned);
-          }
-          $text = substr_replace($text, $link, $match[1], strlen($match[0]));
-          $offset = max($offset, $match[1] + strlen($link));
-        }
-        else {
-          $offset = max($offset, $match[1] + strlen($match[0]));
+      $regex = '(?:(?<!\w)\[#\d+(?:-\d+)?(@)?\](?!\w))|<pre>.*?<\/pre>|<code>.*?<\/code>|<a(?:[^>"\']|"[^"]*"|\'[^\']*\')*>.*?<\/a>';
+      $text = preg_replace_callback("/$regex/", 'project_issue_link_filter_callback', $text);
+      return $text;
+
+  }
+}
+
+function project_issue_link_filter_callback($matches) {
+  $parts = array();
+  if (preg_match('/^\[#(\d+)(?:-(\d+))?(@)?\]$/', $matches[0], $parts)) {
+    $nid = $parts[1];
+    $node = node_load($nid);
+    $include_assigned = isset($parts[3]);
+    if (is_object($node) && node_access('view', $node) && $node->type == 'project_issue') {
+      if (isset($parts[2])) {
+        // Pull comment id based on the comment number if we have one.
+        $comment_number = $parts[2];
+        if ($comment_id = db_result(db_query("SELECT pic.cid FROM {project_issue_comments} pic INNER JOIN {comments} c ON pic.cid = c.cid WHERE pic.nid = %d AND pic.comment_number = %d AND c.status = %d", $nid, $comment_number, COMMENT_PUBLISHED))) {
+          return theme('project_issue_issue_link', $node, $comment_id, $comment_number, $include_assigned);
         }
       }
-      return $text;
+      // If we got this far there wasn't a valid comment number, so just link
+      // to the node instead.
+      return theme('project_issue_issue_link', $node, NULL, NULL, $include_assigned);
+    }
   }
+  // If we haven't already returned a replacement, return the original text.
+  return $matches[0];
 }
 
 /**

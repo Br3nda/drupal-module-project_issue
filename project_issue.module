@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.130 2009/02/05 06:58:41 dww Exp $
+// $Id: project_issue.module,v 1.131 2009/02/06 23:37:07 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1123,7 +1123,7 @@ function project_issue_user_page($arg = 0) {
   /// @todo Allow configuration of which view to embed here?
   $view = views_get_view('project_issue_user_projects');
   $view->override_path = 'project/user';
-  $view_args = array($user->name, arg(3));
+  $view_args = array($user->uid, arg(3));
   $output .=  $view->preview('default', $view_args);
 
   return $output;

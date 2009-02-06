@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.20 2009-02-06 22:52:18 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.21 2009-02-06 23:11:14 dww Exp $
 
 
 /**
@@ -1830,6 +1830,25 @@ function project_issue_views_default_views() {
       'field' => 'uid',
       'relationship' => 'none',
     ),
+    'uid_touch' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_touch_op',
+        'identifier' => 'participant',
+        'label' => 'Participant',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid_touch',
+      'table' => 'node',
+      'field' => 'uid_touch',
+      'relationship' => 'none',
+    ),
   );
   $handler->override_option('filters', $custom_filters + $shared_filters);
   $handler->override_option('access', array(
@@ -2288,6 +2307,25 @@ function project_issue_views_default_views() {
       'id' => 'uid_1',
       'table' => 'users',
       'field' => 'uid',
+      'relationship' => 'none',
+    ),
+    'uid_touch' => array(
+      'operator' => 'in',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'uid_touch_op',
+        'identifier' => 'participant',
+        'label' => 'Participant',
+        'optional' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'uid_touch',
+      'table' => 'node',
+      'field' => 'uid_touch',
       'relationship' => 'none',
     ),
   );

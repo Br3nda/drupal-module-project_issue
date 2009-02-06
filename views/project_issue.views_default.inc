@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.19 2009/01/31 10:03:04 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.20 2009/02/06 22:52:18 dww Exp $
 
 
 /**
@@ -128,6 +128,8 @@ function project_issue_views_default_views() {
     'name' => array(
       'label' => 'Assigned to',
       'link_to_user' => 1,
+      'overwrite_anonymous' => 1,
+      'anonymous_text' => '',
       'exclude' => 0,
       'id' => 'name',
       'table' => 'users',
@@ -499,6 +501,8 @@ function project_issue_views_default_views() {
     'name' => array(
       'label' => 'Assigned to',
       'link_to_user' => 1,
+      'overwrite_anonymous' => 1,
+      'anonymous_text' => '',
       'exclude' => 0,
       'id' => 'name',
       'table' => 'users',
@@ -925,6 +929,8 @@ function project_issue_views_default_views() {
     'name' => array(
       'label' => 'Assigned to',
       'link_to_user' => 1,
+      'overwrite_anonymous' => 1,
+      'anonymous_text' => '',
       'exclude' => 0,
       'id' => 'name',
       'table' => 'users',
@@ -1300,6 +1306,8 @@ function project_issue_views_default_views() {
     'name' => array(
       'label' => 'Assigned to',
       'link_to_user' => 1,
+      'overwrite_anonymous' => 1,
+      'anonymous_text' => '',
       'exclude' => 0,
       'id' => 'name',
       'table' => 'users',
@@ -1634,6 +1642,8 @@ function project_issue_views_default_views() {
     'name' => array(
       'label' => 'Assigned to',
       'link_to_user' => 1,
+      'overwrite_anonymous' => 1,
+      'anonymous_text' => '',
       'exclude' => 0,
       'id' => 'name',
       'table' => 'users',
@@ -2034,6 +2044,8 @@ function project_issue_views_default_views() {
     'name' => array(
       'label' => 'Assigned to',
       'link_to_user' => 1,
+      'overwrite_anonymous' => 1,
+      'anonymous_text' => '',
       'exclude' => 0,
       'id' => 'name',
       'table' => 'users',

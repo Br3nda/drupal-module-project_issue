@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.21 2009-02-06 23:11:14 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.22 2009-02-06 23:37:08 dww Exp $
 
 
 /**
@@ -948,7 +948,7 @@ function project_issue_views_default_views() {
       'title' => 'Issues for %1',
       'default_argument_type' => 'current_user',
       'default_argument' => '',
-      'validate_type' => 'none',
+      'validate_type' => 'user',
       'validate_fail' => 'not found',
       'id' => 'uid_touch',
       'table' => 'node',
@@ -958,17 +958,8 @@ function project_issue_views_default_views() {
       'default_argument_user' => 0,
       'default_argument_fixed' => '',
       'default_argument_php' => '',
-      'validate_argument_node_type' => array(),
-      'validate_argument_node_access' => 0,
-      'validate_argument_nid_type' => 'nid',
-      'validate_argument_vocabulary' => array(),
-      'validate_argument_type' => 'tid',
-      'validate_argument_project_term_vocabulary' => array(),
-      'validate_argument_project_term_argument_type' => 'tid',
-      'validate_argument_project_term_argument_action_top_without' => 'pass',
-      'validate_argument_project_term_argument_action_top_with' => 'pass',
-      'validate_argument_project_term_argument_action_child' => 'pass',
-      'validate_argument_php' => '',
+      'user_argument_type' => 'either',
+      'restrict_user_roles' => 0,
     ),
   ));
   $handler->override_option('sorts', array(
@@ -1316,8 +1307,8 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('arguments', array(
-    'name' => array(
-      'default_action' => 'not found',
+    'uid' => array(
+      'default_action' => 'default',
       'style_plugin' => 'default_summary',
       'style_options' => array(),
       'wildcard' => 'all',
@@ -1325,32 +1316,21 @@ function project_issue_views_default_views() {
       'title' => 'Projects by %1',
       'default_argument_type' => 'current_user',
       'default_argument' => '',
-      'validate_type' => 'none',
+      'validate_type' => 'user',
       'validate_fail' => 'not found',
-      'glossary' => 0,
-      'limit' => '0',
-      'case' => 'none',
-      'path_case' => 'none',
-      'transform_dash' => 0,
-      'id' => 'name',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'uid',
       'table' => 'users',
-      'field' => 'name',
+      'field' => 'uid',
       'relationship' => 'pid',
       'default_options_div_prefix' => '',
       'default_argument_user' => 0,
       'default_argument_fixed' => '',
       'default_argument_php' => '',
-      'validate_argument_node_type' => array(),
-      'validate_argument_node_access' => 0,
-      'validate_argument_nid_type' => 'nid',
-      'validate_argument_vocabulary' => array(),
-      'validate_argument_type' => 'tid',
-      'validate_argument_project_term_vocabulary' => array(),
-      'validate_argument_project_term_argument_type' => 'tid',
-      'validate_argument_project_term_argument_action_top_without' => 'pass',
-      'validate_argument_project_term_argument_action_top_with' => 'pass',
-      'validate_argument_project_term_argument_action_child' => 'pass',
-      'validate_argument_php' => '',
+      'user_argument_type' => 'either',
+      'restrict_user_roles' => 0,
+      'user_roles' => array(),
     ),
   ));
   $handler->override_option('sorts', array(

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.5 2009/01/28 06:01:07 dww Exp $
+// $Id: project_issue.views.inc,v 1.6 2009/02/07 04:50:29 dww Exp $
 
 /**
  * @file
@@ -49,7 +49,7 @@ function project_issue_views_data() {
     ),
     // Information for accepting a pid as a filter
     'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
+      'handler' => 'project_issue_handler_filter_issue_project',
     ),
     'relationship' => array(
       'base' => 'node',
@@ -208,6 +208,9 @@ function project_issue_views_handlers() {
         'parent' => 'views_handler_filter_in_operator',
       ),
       'project_issue_handler_filter_issue_priority' => array(
+        'parent' => 'views_handler_filter_in_operator',
+      ),
+      'project_issue_handler_filter_issue_project' => array(
         'parent' => 'views_handler_filter_in_operator',
       ),
       'project_issue_handler_filter_issue_status' => array(

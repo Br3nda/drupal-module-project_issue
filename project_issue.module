@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.131 2009/02/06 23:37:07 dww Exp $
+// $Id: project_issue.module,v 1.132 2009/02/07 04:50:28 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -138,19 +138,9 @@ function project_issue_menu() {
 
   // Autocomplete paths.
 
-  // Autocomplete a single project that has issue tracking enabled.
+  // Autocomplete a comma-separated list of projects that have issues enabled.
   $items['project/autocomplete/issue/project'] = array(
     'page callback' => 'project_issue_autocomplete_issue_project',
-    'access callback' => 'project_issue_menu_access',
-    'access arguments' => array('any'),
-    'file' => 'autocomplete.inc',
-    'file path' => $includes,
-    'type' => MENU_CALLBACK,
-  );
-
-  // Autocomplete a comma-separated list of projects that have issues enabled.
-  $items['project/autocomplete/issue/projects'] = array(
-    'page callback' => 'project_issue_autocomplete_issue_projects',
     'access callback' => 'project_issue_menu_access',
     'access arguments' => array('any'),
     'file' => 'autocomplete.inc',
@@ -1600,13 +1590,7 @@ function project_issue_quick_navigate_title_issues_submit($form, &$form_state) {
 
 function project_issue_alter_views_exposed_form(&$form, &$form_state) {
   switch ($form_state['view']->name) {
-    case 'project_issue_all_projects':
-    case 'project_issue_user_issues':
-    case 'project_issue_user_projects':
     case 'project_issue_search_all':
-      if (!empty($form['projects'])) {
-        $form['projects']['#autocomplete_path'] = 'project/autocomplete';
-      }
       break;
   }
 }
@@ -1712,5 +1696,60 @@ function project_issue_query_result_links($project_arg = NULL) {
     }
   }
   return theme('project_issue_query_result_links', $links);
+}
+
+/**
+ * Helper function to return an array of projects that meet a given constraint.
+ *
+ * @param $constraint
+ *   Restrict the list of projects.  Valid options are 'all' (all projects
+ *   with issue tracking enabled), 'owner' (all projects owned by a given
+ *   user) and 'participant' (all projects from issues that a given user
+ *   submitted or commented on.
+ * @param $uid
+ *   User ID to use for $constraint == 'owner' or 'participant'.
+ *
+ * @return
+ *   Array of project titles, keyed by node ID (nid) that match the given
+ *   constraint.
+ */
+function project_issue_get_projects($constraint = 'all', $uid = NULL) {
+  $options = array();
+  $join = '';
+
+  // Only published projects.
+  $where[] = 'n.status = %d';
+  $args[] = 1;
+  // That have issue tracking enabled.
+  $where[] = 'pip.issues = %d';
+  $args[] = 1;
+
+  // Add extra JOIN and WHERE depending on the requested project source.
+  switch ($constraint) {
+    case 'owner':
+      // The given uid must own each project.
+      $where[] = 'n.uid = %d';
+      $args[] = $uid;
+      break;
+
+    case 'participant':
+      $join = 'INNER JOIN {project_issues} pi ON n.nid = pi.pid INNER JOIN {node} pin ON pi.nid = pin.nid LEFT JOIN {comments} c ON pi.nid = c.nid';
+      // Restrict to published issues...
+      $where[] = 'pin.status = %d';
+      $args[] = 1;
+      // ...that this user submitted or commented on. 
+      $where[] = '(pin.uid = %d OR c.uid = %d)';
+      $args[] = $uid;
+      $args[] = $uid;
+      break;
+  }
+
+  // Build the actual query.
+  $sql = "SELECT n.nid, n.title FROM {node} n INNER JOIN {project_issue_projects} pip ON n.nid = pip.nid $join WHERE " . implode(' AND ', $where) . " ORDER BY n.title ASC";
+  $query = db_query(db_rewrite_sql($sql), $args);
+  while ($project = db_fetch_object($query)) {
+    $options[$project->nid] = $project->title;
+  }
+  return $options;
 }
 

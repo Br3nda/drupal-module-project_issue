@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.24 2009-02-16 20:23:56 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.25 2009-02-16 20:36:32 dww Exp $
 
 
 /**
@@ -35,7 +35,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 1,
+      'required' => 0,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
@@ -410,7 +410,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 1,
+      'required' => 0,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
@@ -833,7 +833,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 1,
+      'required' => 0,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
@@ -1207,7 +1207,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 1,
+      'required' => 0,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
@@ -1568,7 +1568,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 1,
+      'required' => 0,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
@@ -1995,7 +1995,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 1,
+      'required' => 0,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',

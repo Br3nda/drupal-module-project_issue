@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.25 2009/02/16 20:36:32 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.26 2009/02/16 22:43:29 dww Exp $
 
 
 /**
@@ -150,22 +150,6 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'project_issue' => 'project_issue',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -551,22 +535,6 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'project_issue' => 'project_issue',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -981,22 +949,6 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'project_issue' => 'project_issue',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -1358,22 +1310,6 @@ function project_issue_views_default_views() {
     ),
   ));
   $handler->override_option('filters', array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'project_issue' => 'project_issue',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -1683,22 +1619,6 @@ function project_issue_views_default_views() {
     );
   }
   $shared_filters = array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'project_issue' => 'project_issue',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -2147,22 +2067,6 @@ function project_issue_views_default_views() {
     );
   }
   $shared_filters = array(
-    'type' => array(
-      'operator' => 'in',
-      'value' => array(
-        'project_issue' => 'project_issue',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'type',
-      'table' => 'node',
-      'field' => 'type',
-      'relationship' => 'none',
-    ),
     'status_extra' => array(
       'operator' => '=',
       'value' => '',

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.23 2009/02/07 04:50:29 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.24 2009/02/16 20:23:56 dww Exp $
 
 
 /**
@@ -27,7 +27,7 @@ function project_issue_views_default_views() {
   $handler->override_option('relationships', array(
     'assigned' => array(
       'label' => 'Assigned user',
-      'required' => 0,
+      'required' => 1,
       'id' => 'assigned',
       'table' => 'project_issues',
       'field' => 'assigned',
@@ -35,13 +35,15 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 0,
+      'required' => 1,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
       'relationship' => 'none',
     ),
     'pid' => array(
+      'label' => 'Project node',
+      'required' => 1,
       'id' => 'pid',
       'table' => 'project_issues',
       'field' => 'pid',
@@ -400,7 +402,7 @@ function project_issue_views_default_views() {
   $handler->override_option('relationships', array(
     'assigned' => array(
       'label' => 'Assigned user',
-      'required' => 0,
+      'required' => 1,
       'id' => 'assigned',
       'table' => 'project_issues',
       'field' => 'assigned',
@@ -408,7 +410,7 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 0,
+      'required' => 1,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
@@ -823,7 +825,7 @@ function project_issue_views_default_views() {
   $handler->override_option('relationships', array(
     'assigned' => array(
       'label' => 'Assigned user',
-      'required' => 0,
+      'required' => 1,
       'id' => 'assigned',
       'table' => 'project_issues',
       'field' => 'assigned',
@@ -831,13 +833,15 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 0,
+      'required' => 1,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
       'relationship' => 'none',
     ),
     'pid' => array(
+      'label' => 'Project node',
+      'required' => 1,
       'id' => 'pid',
       'table' => 'project_issues',
       'field' => 'pid',
@@ -1195,7 +1199,7 @@ function project_issue_views_default_views() {
   $handler->override_option('relationships', array(
     'assigned' => array(
       'label' => 'Assigned user',
-      'required' => 0,
+      'required' => 1,
       'id' => 'assigned',
       'table' => 'project_issues',
       'field' => 'assigned',
@@ -1203,13 +1207,15 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 0,
+      'required' => 1,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
       'relationship' => 'none',
     ),
     'pid' => array(
+      'label' => 'Project node',
+      'required' => 1,
       'id' => 'pid',
       'table' => 'project_issues',
       'field' => 'pid',
@@ -1554,7 +1560,7 @@ function project_issue_views_default_views() {
   $handler->override_option('relationships', array(
     'assigned' => array(
       'label' => 'Assigned user',
-      'required' => 0,
+      'required' => 1,
       'id' => 'assigned',
       'table' => 'project_issues',
       'field' => 'assigned',
@@ -1562,13 +1568,15 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 0,
+      'required' => 1,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
       'relationship' => 'none',
     ),
     'pid' => array(
+      'label' => 'Project node',
+      'required' => 1,
       'id' => 'pid',
       'table' => 'project_issues',
       'field' => 'pid',
@@ -1979,7 +1987,7 @@ function project_issue_views_default_views() {
   $handler->override_option('relationships', array(
     'assigned' => array(
       'label' => 'Assigned user',
-      'required' => 0,
+      'required' => 1,
       'id' => 'assigned',
       'table' => 'project_issues',
       'field' => 'assigned',
@@ -1987,13 +1995,15 @@ function project_issue_views_default_views() {
     ),
     'rid' => array(
       'label' => 'Version',
-      'required' => 0,
+      'required' => 1,
       'id' => 'rid',
       'table' => 'project_issues',
       'field' => 'rid',
       'relationship' => 'none',
     ),
     'pid' => array(
+      'label' => 'Project node',
+      'required' => 1,
       'id' => 'pid',
       'table' => 'project_issues',
       'field' => 'pid',

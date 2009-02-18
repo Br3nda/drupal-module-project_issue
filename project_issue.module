@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.134 2009-02-18 18:23:42 dww Exp $
+// $Id: project_issue.module,v 1.135 2009-02-18 19:53:32 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1235,7 +1235,7 @@ function project_issue_set_breadcrumb($node, $project) {
   $extra[] = l($project->title, 'node/'. $project->nid);
   $extra[] = l(t('Issues'), 'project/issues/'. $project->project['uri']);
   // Add the issue title if we're on a comment reply page.
-  if (project_issue_is_comment_reply()) {
+  if (project_issue_is_comment_reply() || project_issue_is_comment_edit()) {
     $extra[] = l($node->title, 'node/'. $node->nid);
   }
   project_project_set_breadcrumb($project, $extra);
@@ -1751,7 +1751,7 @@ function project_issue_get_projects($constraint = 'all', $uid = NULL) {
       // Restrict to published issues...
       $where[] = 'pin.status = %d';
       $args[] = 1;
-      // ...that this user submitted or commented on. 
+      // ...that this user submitted or commented on.
       $where[] = '(pin.uid = %d OR c.uid = %d)';
       $args[] = $uid;
       $args[] = $uid;

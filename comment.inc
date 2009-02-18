@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.148 2009/02/18 17:29:19 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.149 2009/02/18 19:53:32 thehunmonkgroup Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -146,6 +146,13 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   }
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
+  project_issue_set_breadcrumb($node, $project);
+
+  // Only allow metadata changes on new followups.
+  if (isset($form['cid']['#value'])) {
+    return;
+  }
+
   // We have to set $form['#action'] to prevent AHAH nastiness.
   if (!empty($form['pid']['#value'])) {
     $form['#action'] = url('comment/reply/' . $nid . '/' . $form['pid']['#value']);
@@ -153,13 +160,6 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   else {
     $form['#action'] = url('comment/reply/' . $nid);
   }
-
-  // Only allow metadata changes on new followups.
-  if (isset($form['cid']['#value'])) {
-    return;
-  }
-
-  project_issue_set_breadcrumb($node, $project);
 
   // We need to ask for almost the same metadata as project issue itself
   // so let's reuse the form.
@@ -603,6 +603,16 @@ function project_issue_get_newest_comment($comment_data) {
  */
 function project_issue_is_comment_reply() {
   return arg(0) == 'comment' && arg(1) == 'reply';
+}
+
+/**
+ * Test to determine if the active page is the comment edit form.
+ *
+ * @return
+ *   TRUE if the active page is the comment edit form, FALSE otherwise.
+ */
+function project_issue_is_comment_edit() {
+  return arg(0) == 'comment' && arg(1) == 'edit';
 }
 
 /**

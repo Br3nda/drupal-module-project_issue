@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.147 2009/02/07 07:50:23 dww Exp $
+// $Id: comment.inc,v 1.148 2009/02/18 17:29:19 thehunmonkgroup Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -520,7 +520,9 @@ function project_issue_update_by_comment($comment_data, $op) {
       $comment_data = (object) $comment_data;
       // Mark the node for email notification during hook_exit(), so all issue
       // and file data is in a consistent state before we generate the email.
-      project_issue_set_mail_notify($comment_data->nid);
+      if (!isset($comment_data->followup_no_mail)) {  // Temporary hack to get around sending of auto-close emails.
+        project_issue_set_mail_notify($comment_data->nid);
+      }
       break;
     case 'update':
       $comment_data = (object) $comment_data;

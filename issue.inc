@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.337 2009/01/31 05:43:38 dww Exp $
+// $Id: issue.inc,v 1.338 2009/02/18 18:23:42 dww Exp $
 
 
 /**
@@ -94,7 +94,7 @@ function project_issue_update_project() {
   exit;
 }
 
-function project_issue_statistics($project = 0) {
+function project_issue_statistics($project = NULL) {
   $states = project_issue_state();
   if ($project->nid) {
     $filter = sprintf(' AND p.pid = %d ', (int)$project->nid);
@@ -268,6 +268,7 @@ function project_issue_subscribe($form_state, $project_nid = 0) {
     }
 
     $project = node_load($project_nid);
+    project_project_set_breadcrumb($project, TRUE);
 
     $level = db_result(db_query('SELECT level FROM {project_subscriptions} WHERE nid = %d AND uid = %d', $project->nid, $user->uid));
     $form['single'] = array(

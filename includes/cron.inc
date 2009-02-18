@@ -1,5 +1,5 @@
 <?php
-// $Id: cron.inc,v 1.4 2009-02-18 10:00:44 dww Exp $
+// $Id: cron.inc,v 1.5 2009-02-18 17:29:19 thehunmonkgroup Exp $
 
 
 /**
@@ -51,6 +51,7 @@ function project_issue_auto_close() {
       'nid' => $issue->nid,
       'sid' => PROJECT_ISSUE_STATE_CLOSED,
       'comment' => $comment,
+      'followup_no_mail' => TRUE,  // Temporary hack to get around sending of auto-close emails.
     ));
   }
 }

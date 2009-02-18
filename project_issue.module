@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.133 2009-02-07 06:55:49 dww Exp $
+// $Id: project_issue.module,v 1.134 2009-02-18 18:23:42 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -39,7 +39,15 @@ function project_issue_menu() {
   $items['project/issues/statistics'] = array(
     'title' => 'Statistics',
     'page callback' => 'project_issue_statistics',
-    'page arguments' => array(4),
+    'access callback' => 'project_issue_menu_access',
+    'access arguments' => array('any'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'issue.inc',
+  );
+  $items['project/issues/statistics/%project_node'] = array(
+    'title' => 'Statistics',
+    'page callback' => 'project_issue_statistics',
+    'page arguments' => array(3),
     'access callback' => 'project_issue_menu_access',
     'access arguments' => array('any'),
     'type' => MENU_NORMAL_ITEM,

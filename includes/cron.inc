@@ -1,12 +1,12 @@
 <?php
-// $Id: cron.inc,v 1.3 2009/01/20 18:38:04 dww Exp $
+// $Id: cron.inc,v 1.4 2009/02/18 10:00:44 dww Exp $
 
 
 /**
  * @file
  * Contains the code required during cron runs for periodic functionality.
  *
- * This code is either invoked via hook_cron() or project-issue-cron.php 
+ * This code is either invoked via hook_cron() or project-issue-cron.php
  * depending on the value of the 'project_issue_hook_cron' variable.
  */
 
@@ -56,7 +56,6 @@ function project_issue_auto_close() {
 }
 
 function project_mail_reminder() {
-  global $base_url;
 
   if (defined('PROJECT_NOMAIL')) {
     return;
@@ -66,92 +65,97 @@ function project_mail_reminder() {
   $result = db_query(db_rewrite_sql('SELECT p.nid, n.title FROM {project_issue_projects} p INNER JOIN {node} n ON p.nid = n.nid WHERE p.mail_reminder = 1 AND n.status = 1', 'p'));
   while ($project = db_fetch_object($result)) {
     $projects[$project->nid] = $project->title;
-    $pids[] = "p.pid = $project->nid";
   }
-  if (count($projects)) {
 
-    $sender->name = variable_get('site_name', '');
-    $sender->mail = variable_get('site_mail', '');
+  if (!empty($projects)) {
+    // Note: We can INNER JOIN on {users} on uid = p.assigned since there's
+    // still a record in {users} for uid 0 (anonymous), so we'll still get a
+    // (bogus) value, even if the issue is unassigned.
+    $pids = array_keys($projects);
+    $placeholders = db_placeholders($pids);
+    $result = db_query(db_rewrite_sql("SELECT p.nid, n.*, p.*, u.name, u.mail, u.language, u2.name AS assigned_name FROM {project_issues} p INNER JOIN {node} n ON p.nid = n.nid INNER JOIN {users} u ON n.uid = u.uid INNER JOIN {users} u2 ON u2.uid = p.assigned WHERE n.status = 1 AND u.status = 1 AND p.pid IN ($placeholders) AND u.mail <> '' AND (p.sid = 1 OR p.sid = 2) ORDER BY u.uid, p.pid, p.component, p.sid, n.changed DESC", 'p'), $pids);
 
-    $result = db_query(db_rewrite_sql('SELECT p.nid, n.*, p.*, u.name, u.mail FROM {project_issues} p INNER JOIN {node} n ON p.nid = n.nid INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND u.status = 1 AND ('. implode(' OR ', $pids) .") AND u.mail <> '' AND (p.sid = 1 OR p.sid = 2) ORDER BY u.uid, p.pid, p.component, p.sid, n.changed DESC", 'p'));
+    $body = $mail = $pid = NULL;
 
+    // TODO: This logic sucks, is inefficient, and is fragile.  It'd be nice
+    // to rewrite this someday when I have more time to not be so crazy. -dww
     while (($node = db_fetch_object($result)) || !empty($body)) {
+
+      // If we already have a message we're planning to send, and either we
+      // ran out of issues, or the e-mail address of the user changed
+      // (different user's issues), send out what we've got already.
       if ($body && $mail && ((!$node) || ($mail != $node->mail))) {
-        $header = array(
-          'Return-Path' => "<$sender->mail;>",
-          'Date' => date('r'),
-          'From' => "$sender->name <$sender->mail>",
-          'X-Mailer' => 'Drupal Project Issues module (http://drupal.org/project/project_issue)',
-          'List-Id' => "$sender->name <project-reminder-". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url) .'>',
-          'List-Archive' => '<'. url('project', array('absolute' => TRUE)) .'>',
-        );
-
-        drupal_mail('project_issue_reminder', $mail, t('Your submitted bugs for !date', array('!date' => date('F d, Y', time()))), $body, NULL, $header);
-
+        $params['body'] = $body;
+        drupal_mail('project_issue', 'project_issue_reminder', $mail, $language, $params);
         $body = '';
       }
-      $mail = $node->mail;
 
-      if ($node->nid) {
-        if ($pid != $node->pid || $component != $node->component) {
+      if ($node) {
+        // If this is a new project, a new component, or a new user, start a
+        // new banner to indicate what this issue belongs to.
+        if ($pid != $node->pid || $component != $node->component || $mail != $node->mail) {
           $pid = $node->pid;
           $component = $node->component;
           $banner = "$projects[$pid] / $component";
           $body .= "[ $banner ]". str_repeat('=', 72 - 4 - strlen($banner)) ."\n";
         }
         $body .= "$node->title\n";
-        if ($node->assigned && $assigned = user_load(array('uid' => $node->assigned))) {
-          $body .= "  assigned: $assigned->name\n";
+        if ($node->assigned) {
+          $body .= "  assigned: $node->assigned_name\n";
         }
         $body .= '  state: '. project_issue_state($node->sid) ."\n";
         $body .= '  age: '. format_interval(time() - $node->created) ."\n";
         $body .= '  url: '. url("node/$node->nid", array('absolute' => TRUE)) ."\n";
         $body .= "\n";
+
+        // Remember the e-mail and language of this issue's user so that when
+        // we next decide to send what we've got, we'll have the right values.
+        $mail = $node->mail;
+        // We can pass $node here because user_preferred_language()
+        // only needs $account->language to function, and we have that
+        // loaded into the $node object.
+        $language = user_preferred_language($node);
       }
     }
   }
 }
 
 function project_mail_digest() {
-  global $base_url;
-
   if (defined('PROJECT_NOMAIL')) {
     return;
   }
 
-  $body = array();
-  $header = array(
-    'Date' => date('r'),
-    'X-Mailer' => 'Drupal Project Issues module (http://drupal.org/project/project_issue)',
-    'List-Id' => "$project->title <". preg_replace('|.+://([a-zA-Z0-9\._-]+).*|', '\1', $base_url) .'-project-issues-digest>',
-    'List-Archive' => '<'. url('project/issues?priorities=1', array('absolute' => TRUE)) .'>',
-  );
+  $projects = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.*, u.language FROM {node} n INNER JOIN {project_issue_projects} p ON n.nid = p.nid INNER JOIN {users} u ON u.uid = n.uid WHERE n.status = 1 AND p.mail_digest <> '' ORDER BY n.title, p.mail_digest"));
 
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, p.* FROM {node} n INNER JOIN {project_issue_projects} p ON n.nid = p.nid WHERE n.status = 1 AND p.mail_digest <> '' ORDER BY n.title, p.mail_digest"));
-  while ($project = db_fetch_object($result)) {
+  while ($project = db_fetch_object($projects)) {
     $category = '';
-    $result2 = db_query(db_rewrite_sql('SELECT p.nid, n.title, n.created, p.sid, p.category, p.component, p.priority, p.assigned FROM {project_issues} p INNER JOIN {node} n ON p.nid = n.nid WHERE n.status = 1 AND p.pid = %d AND p.sid = 1 AND p.priority = 1 ORDER BY p.category, n.created DESC', 'p'), $project->nid);
-    while ($node = db_fetch_object($result2)) {
+    $body = '';
+    $issues = db_query(db_rewrite_sql('SELECT p.nid, n.title, n.created, p.sid, p.category, p.component, p.priority, p.assigned, u.name AS assigned_name FROM {project_issues} p INNER JOIN {node} n ON p.nid = n.nid INNER JOIN {users} u ON u.uid = p.assigned WHERE n.status = 1 AND p.pid = %d AND p.sid = 1 AND p.priority = 1 ORDER BY p.category, n.created DESC', 'p'), $project->nid);
+    while ($node = db_fetch_object($issues)) {
       if ($category != $node->category) {
         $category = $node->category;
         $banner = "$project->title / ". project_issue_category($node->category);
-        $body[$project->mail_digest] .= "$banner\n". str_repeat('-', $banner) ."\n";
+        $body .= "$banner\n". str_repeat('-', $banner) ."\n";
       }
-      $body[$project->mail_digest] .= "$node->title\n";
-      if ($node->assigned && $assigned = user_load(array('uid' => $node->assigned))) {
-        $body[$project->mail_digest] .= '  assigned: '. $assigned->name ."\n";
+      $body .= "$node->title\n";
+      if ($node->assigned) {
+        $body .= '  assigned: '. $node->assigned_name ."\n";
       }
-      $body[$project->mail_digest] .= '  age: '. format_interval(time() - $node->created) ."\n";
-      $body[$project->mail_digest] .= '  url: '. url("node/$node->nid", array('absolute' => TRUE)) ."\n";
-      $body[$project->mail_digest] .= "\n";
+      $body .= '  age: '. format_interval(time() - $node->created) ."\n";
+      $body .= '  url: '. url("node/$node->nid", array('absolute' => TRUE)) ."\n";
+      $body .= "\n";
     }
-  }
 
-  foreach ($body as $mailto => $text) {
-    $header['From'] = $mailto;
-    $header['Return-Path'] = "<$mailto>";
-
-    drupal_mail('project_issue_critical_summary', $mailto, t('Release critical bugs for !date', array('!date' => date('F d, Y', time()))), $text, NULL, $header);
+    if (!empty($body)) {
+      // We can pass $project here because user_preferred_language()
+      // only needs $account->language to function, and we have that
+      // loaded into the $project object.
+      $language = user_preferred_language($project);
+      $mailto = $project->mail_digest;
+      $params['project'] = $project;
+      $params['body'] = $body;
+      drupal_mail('project_issue', 'project_issue_critical_summary', $mailto, $language, $params, $mailto);
+    }
   }
 }
 

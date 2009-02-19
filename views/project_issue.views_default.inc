@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.29 2009-02-19 01:14:59 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.30 2009-02-19 01:17:39 dww Exp $
 
 
 /**
@@ -1279,6 +1279,16 @@ function project_issue_views_default_views() {
       'relationship' => 'assigned',
     ),
   ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('arguments', array(
     'uid' => array(
       'default_action' => 'default',
@@ -1304,16 +1314,6 @@ function project_issue_views_default_views() {
       'validate_user_argument_type' => 'either',
       'validate_user_restrict_roles' => 0,
       'validate_user_roles' => array(),
-    ),
-  ));
-  $handler->override_option('sorts', array(
-    'last_comment_timestamp' => array(
-      'order' => 'DESC',
-      'granularity' => 'second',
-      'id' => 'last_comment_timestamp',
-      'table' => 'node_comment_statistics',
-      'field' => 'last_comment_timestamp',
-      'relationship' => 'none',
     ),
   ));
   $handler->override_option('filters', array(
@@ -1485,6 +1485,50 @@ function project_issue_views_default_views() {
     ),
     'default' => 'last_comment_timestamp',
   ));
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'project/user');
+  $handler->override_option('menu', array(
+    'type' => 'normal',
+    'title' => 'My projects',
+    'description' => '',
+    'weight' => '0',
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+  ));
+  $handler = $view->new_display('feed', 'Feed', 'feed_1');
+  $handler->override_option('style_plugin', 'rss');
+  $handler->override_option('style_options', array(
+    'mission_description' => FALSE,
+    'description' => '',
+  ));
+  $handler->override_option('row_plugin', 'node_rss');
+  $handler->override_option('row_options', array(
+    'item_length' => 'default',
+  ));
+  $handler->override_option('path', 'project/user/%/feed');
+  $handler->override_option('menu', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+  ));
+  $handler->override_option('displays', array(
+    'page_1' => 'page_1',
+    'default' => 0,
+  ));
+  $handler->override_option('sitename_title', FALSE);
 
   $views[$view->name] = $view;
 

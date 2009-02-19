@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.136 2009-02-19 01:14:59 dww Exp $
+// $Id: project_issue.module,v 1.137 2009-02-19 01:17:39 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -249,6 +249,10 @@ function project_issue_help($path, $arg) {
   // own display plugin breaks other nice things like RSS, we just cheat
   // and render these links in here.  We'd like to remove this once a
   // better solution is available that doesn't hard-code the paths.
+  if ($arg[0] == 'project' && $arg[1] == 'user') {
+    return project_issue_my_projects_table();
+  }
+
   if ($arg[0] == 'project' && $arg[1] == 'issues') {
     // If there's no other arg, we're done.
     if (empty($arg[2])) {
@@ -972,28 +976,14 @@ function project_issue_exit() {
   }
 }
 
-function project_issue_user_page($arg = 0) {
-  $current_user = FALSE;
-  if ($arg) {
-    $where = '';
-    if (is_numeric($arg)) {
-      $where = 'uid = %d';
-    }
-    else {
-      $where = "name = '%s'";
-    }
-    $user = db_fetch_object(db_query("SELECT uid, name FROM {users} WHERE $where", $arg));
-    if ($user) {
-      drupal_set_title(t('Projects by @user', array('@user' => $user->name)));
-    }
+function project_issue_my_projects_table() {
+  $uid = 0;
+  $display = views_get_page_view();
+  if (!empty($display->view->argument['uid'])) {
+    $uid = $display->view->argument['uid']->get_value();
   }
 
-  if (empty($user)) {
-    global $user;
-    $current_user = TRUE;
-  }
-
-  if (!$user->uid) {
+  if (empty($uid)) {
     return t('You need to log in to see your projects.');
   }
 
@@ -1012,7 +1002,7 @@ function project_issue_user_page($arg = 0) {
     array('data' => t('Issue links'), 'class' => 'project-issue-links'),
   );
   $default_states = implode(',', project_issue_default_states());
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} pi ON n.nid = pi.pid AND pi.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = pi.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $user->uid);
+  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} pi ON n.nid = pi.pid AND pi.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = pi.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $uid);
 
   $any_admin = FALSE;
   $projects = array();
@@ -1029,7 +1019,7 @@ function project_issue_user_page($arg = 0) {
   }
 
   if (empty($projects)) {
-    return ($current_user ? t('You have no projects.') : t('This user has no projects.'));
+    return ($uid ? t('You have no projects.') : t('This user has no projects.'));
   }
 
   foreach ($projects as $node) {
@@ -1116,15 +1106,7 @@ function project_issue_user_page($arg = 0) {
   if ($any_admin) {
     $header[] = array('data' => t('Project links'), 'class' => 'project-project-links');
   }
-  $output = theme('table', $header, $rows, array('class' => 'projects'));
-
-  /// @todo Allow configuration of which view to embed here?
-  $view = views_get_view('project_issue_user_projects');
-  $view->override_path = 'project/user';
-  $view_args = array($user->uid, arg(3));
-  $output .=  $view->preview('default', $view_args);
-
-  return $output;
+  return theme('table', $header, $rows, array('class' => 'projects'));
 }
 
 /**

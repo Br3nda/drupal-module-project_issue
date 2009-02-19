@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.27 2009/02/18 11:17:36 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.28 2009/02/19 01:10:45 dww Exp $
 
 
 /**
@@ -254,6 +254,8 @@ function project_issue_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'Issues for all projects');
+  $handler->override_option('empty', 'No issues match your criteria.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'project_issue_table');
@@ -656,6 +658,8 @@ function project_issue_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'Issues by project');
+  $handler->override_option('empty', 'No issues match your criteria.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'project_issue_table');
@@ -1054,6 +1058,8 @@ function project_issue_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'My issues');
+  $handler->override_option('empty', 'No issues match your criteria.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'project_issue_table');
@@ -1414,6 +1420,8 @@ function project_issue_views_default_views() {
   $handler->override_option('access', array(
     'type' => 'none',
   ));
+  $handler->override_option('empty', 'No issues match your criteria.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'project_issue_table');
@@ -1780,6 +1788,8 @@ function project_issue_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'Search issues for all projects');
+  $handler->override_option('empty', 'No issues match your criteria.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'project_issue_table');
@@ -2245,6 +2255,8 @@ function project_issue_views_default_views() {
     'type' => 'none',
   ));
   $handler->override_option('title', 'Search issues for a project');
+  $handler->override_option('empty', 'No issues match your criteria.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('items_per_page', 50);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'project_issue_table');

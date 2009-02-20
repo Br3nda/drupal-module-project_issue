@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.31 2009/02/19 11:43:02 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.32 2009/02/20 06:39:52 dww Exp $
 
 
 /**
@@ -1644,6 +1644,36 @@ function project_issue_views_default_views() {
       'field' => 'version',
       'relationship' => 'rid',
     ),
+    'comment_count' => array(
+      'label' => 'Replies',
+      'set_precision' => FALSE,
+      'precision' => 0,
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => '',
+      'exclude' => 0,
+      'id' => 'comment_count',
+      'table' => 'node_comment_statistics',
+      'field' => 'comment_count',
+      'relationship' => 'none',
+    ),
+    'new_comments' => array(
+      'label' => 'New replies',
+      'set_precision' => FALSE,
+      'precision' => 0,
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => ' new',
+      'link_to_comment' => 1,
+      'no_empty' => 1,
+      'exclude' => 0,
+      'id' => 'new_comments',
+      'table' => 'node',
+      'field' => 'new_comments',
+      'relationship' => 'none',
+    ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
       'date_format' => 'time ago',
@@ -1875,6 +1905,8 @@ function project_issue_views_default_views() {
       'priority' => 'priority',
       'category' => 'category',
       'version' => 'version',
+      'comment_count' => 'comment_count',
+      'new_comments' => 'comment_count',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
     ),
@@ -1901,6 +1933,13 @@ function project_issue_views_default_views() {
       ),
       'version' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'comment_count' => array(
+        'sortable' => 1,
+        'separator' => '<br />',
+      ),
+      'new_comments' => array(
         'separator' => '',
       ),
       'last_comment_timestamp' => array(
@@ -2055,6 +2094,36 @@ function project_issue_views_default_views() {
       'id' => 'component',
       'table' => 'project_issues',
       'field' => 'component',
+      'relationship' => 'none',
+    ),
+    'comment_count' => array(
+      'label' => 'Replies',
+      'set_precision' => FALSE,
+      'precision' => 0,
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => '',
+      'exclude' => 0,
+      'id' => 'comment_count',
+      'table' => 'node_comment_statistics',
+      'field' => 'comment_count',
+      'relationship' => 'none',
+    ),
+    'new_comments' => array(
+      'label' => 'New replies',
+      'set_precision' => FALSE,
+      'precision' => 0,
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => ' new',
+      'link_to_comment' => 1,
+      'no_empty' => 1,
+      'exclude' => 0,
+      'id' => 'new_comments',
+      'table' => 'node',
+      'field' => 'new_comments',
       'relationship' => 'none',
     ),
     'last_comment_timestamp' => array(
@@ -2342,6 +2411,8 @@ function project_issue_views_default_views() {
       'category' => 'category',
       'version' => 'version',
       'component' => 'component',
+      'comment_count' => 'comment_count',
+      'new_comments' => 'comment_count',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
     ),
@@ -2368,6 +2439,13 @@ function project_issue_views_default_views() {
       ),
       'component' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'comment_count' => array(
+        'sortable' => 1,
+        'separator' => '<br />',
+      ),
+      'new_comments' => array(
         'separator' => '',
       ),
       'last_comment_timestamp' => array(

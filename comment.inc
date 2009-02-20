@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.150 2009-02-20 01:43:08 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.151 2009-02-20 06:43:23 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -262,7 +262,7 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
  *   The current state of the form.
  */
 function project_issue_form_comment_validate($form, &$form_state) {
-  if (variable_get('project_issue_autocomplete', 0) == 1) {
+  if (empty($form['cid']['#value']) && variable_get('project_issue_autocomplete', 0) == 1) {
     if (empty($form_state['values']['project_info']['project_title'])) {
       form_set_error('project_title', t('You must enter a project to navigate to.'));
     }

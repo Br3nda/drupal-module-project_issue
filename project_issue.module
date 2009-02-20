@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.139 2009-02-20 01:43:08 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.140 2009-02-20 07:50:01 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1002,7 +1002,7 @@ function project_issue_my_projects_table() {
   }
 
   if (empty($uid)) {
-    return t('You need to log in to see your projects.');
+    return;
   }
 
   $header = array(

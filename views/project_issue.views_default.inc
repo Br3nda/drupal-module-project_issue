@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.34 2009/02/20 23:31:12 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.35 2009/02/20 23:32:32 dww Exp $
 
 
 /**
@@ -1394,8 +1394,8 @@ function project_issue_views_default_views() {
       'default_argument_fixed' => '',
       'default_argument_php' => '',
       'validate_user_argument_type' => 'either',
-      'validate_user_restrict_roles' => 0,
-      'validate_user_roles' => array(),
+      'validate_user_restrict_roles' => 1,
+      'validate_user_roles' => array('2' => 2),
     ),
   ));
   $handler->override_option('filters', array(

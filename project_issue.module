@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.141 2009-02-20 18:45:29 dww Exp $
+// $Id: project_issue.module,v 1.142 2009-02-20 23:31:11 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -263,8 +263,17 @@ function project_issue_help($path, $arg) {
     if (empty($arg[2])) {
       return project_issue_query_result_links();
     }
+    // project/issues/user is a special case, since if there's an argument,
+    // it's a username, not a project.  Furthermore, we don't want any links
+    // for anonymous.
+    if ($arg[2] == 'user') {
+      global $user;
+      if (empty($user->uid) && empty($arg[3])) {
+        return;
+      }
+      return project_issue_query_result_links();
+    }
     switch ($arg[2]) {
-      case 'user':
       case 'search':
       case 'statistics':
       case 'subscribe-mail':

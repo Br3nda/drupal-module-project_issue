@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.32 2009/02/20 06:39:52 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.33 2009/02/20 23:13:49 dww Exp $
 
 
 /**
@@ -66,6 +66,17 @@ function project_issue_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
     'sid' => array(
@@ -267,6 +278,7 @@ function project_issue_views_default_views() {
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
+      'timestamp' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
@@ -282,6 +294,9 @@ function project_issue_views_default_views() {
       ),
       'title' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'timestamp' => array(
         'separator' => '',
       ),
       'sid' => array(
@@ -411,6 +426,17 @@ function project_issue_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
     'sid' => array(
@@ -670,6 +696,7 @@ function project_issue_views_default_views() {
     'order' => 'desc',
     'columns' => array(
       'title' => 'title',
+      'timestamp' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
@@ -683,6 +710,9 @@ function project_issue_views_default_views() {
     'info' => array(
       'title' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'timestamp' => array(
         'separator' => '',
       ),
       'sid' => array(
@@ -836,6 +866,17 @@ function project_issue_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
     'sid' => array(
@@ -1071,6 +1112,7 @@ function project_issue_views_default_views() {
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
+      'timestamp' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
@@ -1087,6 +1129,9 @@ function project_issue_views_default_views() {
       ),
       'title' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'timestamp' => array(
         'separator' => '',
       ),
       'sid' => array(
@@ -1223,6 +1268,17 @@ function project_issue_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
     'sid' => array(
@@ -1459,6 +1515,7 @@ function project_issue_views_default_views() {
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
+      'timestamp' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
@@ -1475,6 +1532,9 @@ function project_issue_views_default_views() {
       ),
       'title' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'timestamp' => array(
         'separator' => '',
       ),
       'sid' => array(
@@ -1614,6 +1674,17 @@ function project_issue_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
     'sid' => array(
@@ -1901,6 +1972,7 @@ function project_issue_views_default_views() {
     'columns' => array(
       'project_issue_queue' => 'project_issue_queue',
       'title' => 'title',
+      'timestamp' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
@@ -1917,6 +1989,9 @@ function project_issue_views_default_views() {
       ),
       'title' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'timestamp' => array(
         'separator' => '',
       ),
       'sid' => array(
@@ -2057,6 +2132,17 @@ function project_issue_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
       'relationship' => 'none',
     ),
     'sid' => array(
@@ -2406,6 +2492,7 @@ function project_issue_views_default_views() {
     'order' => 'desc',
     'columns' => array(
       'title' => 'title',
+      'timestamp' => 'title',
       'sid' => 'sid',
       'priority' => 'priority',
       'category' => 'category',
@@ -2419,6 +2506,9 @@ function project_issue_views_default_views() {
     'info' => array(
       'title' => array(
         'sortable' => 1,
+        'separator' => '',
+      ),
+      'timestamp' => array(
         'separator' => '',
       ),
       'sid' => array(

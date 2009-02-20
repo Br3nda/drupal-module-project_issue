@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.149 2009/02/18 19:53:32 thehunmonkgroup Exp $
+// $Id: comment.inc,v 1.150 2009/02/20 01:43:08 thehunmonkgroup Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -554,19 +554,10 @@ function project_issue_update_by_comment($comment_data, $op) {
 function project_issue_change_comment_upload_path(&$comment) {
   static $run = NULL;
 
-  $node = node_load($comment['nid']);
-  if (isset($comment['files']) && !isset($run)) {
+  // Only for new comments with attachments.
+  if (empty($comment['cid']) && isset($comment['files']) && !isset($run)) {
     $run = TRUE;  // Make sure this only gets run once.
-    $issue_dir = variable_get('project_directory_issues', 'issues');
-    foreach ($comment['files'] as $key => $file) {
-      if ($issue_dir && 0 === strpos($key, 'upload_')) {  // Only rewrite the name when adding the file, not when updating it
-        // Change where the file will be saved to the specified directory.
-        // Since changes to the comment aren't carried to submit, we have
-        // to adjust $form_values here.
-        $filename = $issue_dir .'/'. $comment['files'][$key]['filename'];
-        form_set_value(array('#parents' => array('files', $key, 'filename')), $filename, $form_state);
-      }
-    }
+    project_issue_rewrite_issue_filepath($comment['files']);
   }
 }
 

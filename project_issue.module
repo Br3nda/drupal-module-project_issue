@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.138 2009/02/19 14:57:43 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.139 2009/02/20 01:43:08 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -917,16 +917,9 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
       project_issue_comment_view($node);
       break;
     case 'presave':
-      if (isset($node->files)) {
-        $issue_dir = variable_get('project_directory_issues', 'issues');
-        foreach ($node->files as $key => $file) {
-          // Only rewrite the name when an issues directory exists, and when
-          // adding the file, not when updating it.
-          if ($issue_dir && 0 === strpos($key, 'upload_')) {
-            // Change where the file will be saved to the specified directory.
-            $node->files[$key]['filename'] = $issue_dir .'/'. $node->files[$key]['filename'];
-          }
-        }
+      // Only for new nodes with files set.
+      if (empty($node->nid) && isset($node->files)) {
+        project_issue_rewrite_issue_filepath($node->files);
       }
       break;
     case 'insert':
@@ -977,6 +970,26 @@ function project_issue_exit() {
   if (!empty($nids)) {
     foreach ($nids as $nid) {
       project_mail_notify($nid);
+    }
+  }
+}
+
+/**
+ * Rewrites the file information to move files to the issues directory.
+ *
+ * @param $files
+ *   An array of file objects, keyed by file ID.
+ */
+function project_issue_rewrite_issue_filepath($files) {
+  if ($issue_dir = variable_get('project_directory_issues', 'issues') ) {
+    foreach ($files as $key => $file) {
+      $file = (object) $file;
+      $old_path = $file->filepath;
+      $final_dir = file_directory_path() .'/'. $issue_dir;
+      $move_path = $old_path;
+      file_move($move_path, $final_dir .'/'. basename($file->filepath));
+      $new_basename = basename($move_path);
+      db_query("UPDATE {files} SET filepath = '%s' WHERE fid = %d", $final_dir .'/'. $new_basename, $file->fid);
     }
   }
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.35 2009/02/20 23:32:32 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.36 2009/02/22 00:31:32 dww Exp $
 
 
 /**
@@ -130,7 +130,7 @@ function project_issue_views_default_views() {
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
-      'date_format' => 'time ago',
+      'date_format' => 'raw time ago',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'last_comment_timestamp',
@@ -508,7 +508,7 @@ function project_issue_views_default_views() {
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
-      'date_format' => 'time ago',
+      'date_format' => 'raw time ago',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'last_comment_timestamp',
@@ -939,7 +939,7 @@ function project_issue_views_default_views() {
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
-      'date_format' => 'time ago',
+      'date_format' => 'raw time ago',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'last_comment_timestamp',
@@ -1341,7 +1341,7 @@ function project_issue_views_default_views() {
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
-      'date_format' => 'time ago',
+      'date_format' => 'raw time ago',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'last_comment_timestamp',
@@ -1747,7 +1747,7 @@ function project_issue_views_default_views() {
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
-      'date_format' => 'time ago',
+      'date_format' => 'raw time ago',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'last_comment_timestamp',
@@ -2214,7 +2214,7 @@ function project_issue_views_default_views() {
     ),
     'last_comment_timestamp' => array(
       'label' => 'Last updated',
-      'date_format' => 'time ago',
+      'date_format' => 'raw time ago',
       'custom_date_format' => '',
       'exclude' => 0,
       'id' => 'last_comment_timestamp',

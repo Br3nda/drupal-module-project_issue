@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.4 2009-02-22 00:44:09 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.5 2009-02-22 07:48:58 dww Exp $
 
 
 /**
@@ -27,14 +27,14 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
     if (!empty($this->value_options)) {
       parent::value_form($form, $form_state);
     }
-    else {
+    elseif (!empty($form_state['exposed'])) {
       // This project has no versions at all, hide this filter.      
       $this->view->filter['rid']->options['exposed'] = FALSE;
       // And exclude the field itself. Instead of assuming the field key is
       // 'version', search for a field using {project_release_nodes}.version
       // from the same relationship as this filter.
-      foreach ($this->view->field as $field) {
-        if ($field->table == 'project_release_nodes' && $field->field == 'version' && $this->options['relationship'] == $field->options['relationship']) {
+      foreach ($this->view->field as  $field) {
+        if ($field->table == 'project_release_nodes' && $field->field == 'version') {
           $field->options['exclude'] = TRUE;
         }
       }

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.338 2009-02-18 18:23:42 dww Exp $
+// $Id: issue.inc,v 1.339 2009-02-22 01:01:46 dww Exp $
 
 
 /**
@@ -256,6 +256,11 @@ function project_issue_subscribe_submit($form, &$form_state) {
 
 function project_issue_subscribe($form_state, $project_nid = 0) {
   global $user;
+
+  if (!valid_email_address($user->mail)) {
+    drupal_set_message(t('You need to provide a valid e-mail address to subscribe to issue e-mails. Please edit your user information.'), 'error');
+    drupal_goto('user/'. $user->uid .'/edit');
+  }
 
   $levels = array(0 => t('None'), 1 => t('Own issues'), 2 => t('All issues'));
 

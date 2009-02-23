@@ -1,0 +1,8 @@
+; $Id: project_issue_search_index.info,v 1.1 2009-02-23 23:28:23 dww Exp $
+name = Project issue search index
+description = Index the content of project issue nodes using the core search index.
+dependencies[] = search
+dependencies[] = project_issue
+package = Project
+core = "6.x"
+

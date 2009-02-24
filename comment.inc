@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.129.2.7 2009/02/02 00:30:23 dww Exp $
+// $Id: comment.inc,v 1.129.2.8 2009/02/24 00:58:47 thehunmonkgroup Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -28,12 +28,12 @@ function project_issue_comment(&$arg, $op) {
 
   switch ($op) {
     case 'form':
+      project_issue_set_breadcrumb($node, $project);
+
       // Only allow metadata changes on new followups.
       if (isset($arg['cid']['#value'])) {
         return array();
       }
-
-      project_issue_set_breadcrumb($node, $project);
 
       // We need to ask for almost the same metadata as project issue itself
       // so let's reuse the form.
@@ -448,6 +448,16 @@ function project_issue_get_newest_comment($comment_data) {
  */
 function project_issue_is_comment_reply() {
   return arg(0) == 'comment' && arg(1) == 'reply';
+}
+
+/**
+ * Test to determine if the active page is the comment edit form.
+ *
+ * @return
+ *   TRUE if the active page is the comment edit form, FALSE otherwise.
+ */
+function project_issue_is_comment_edit() {
+  return arg(0) == 'comment' && arg(1) == 'edit';
 }
 
 /**

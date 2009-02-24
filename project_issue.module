@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.88.2.15 2009/02/05 02:53:58 dww Exp $
+// $Id: project_issue.module,v 1.88.2.16 2009/02/24 00:58:47 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -319,7 +319,7 @@ function project_issue_cron() {
  *   The (minimum) number of days without activity before automatically closing
  *   a fixed issue.
  * @return
- *   Message to be added as a comment to an issue when auto-closing that issue. 
+ *   Message to be added as a comment to an issue when auto-closing that issue.
  */
 function theme_project_issue_auto_close_message($auto_close_days) {
   $auto_close_interval = format_interval($auto_close_days * 24 * 60 * 60, 2);
@@ -1113,7 +1113,7 @@ function project_issue_set_breadcrumb($node, $project) {
   $extra[] = l($project->title, 'node/'. $project->nid);
   $extra[] = l(t('Issues'), 'project/issues/'. $project->uri);
   // Add the issue title if we're on a comment reply page.
-  if (project_issue_is_comment_reply()) {
+  if (project_issue_is_comment_reply() || project_issue_is_comment_edit()) {
     $extra[] = l($node->title, 'node/'. $node->nid);
   }
   project_project_set_breadcrumb($project, $extra);

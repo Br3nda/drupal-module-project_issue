@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.119 2009/02/18 10:00:44 dww Exp $
+// $Id: mail.inc,v 1.120 2009/02/25 20:27:23 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -257,7 +257,7 @@ function project_mail_notify($nid) {
   // to satisfy RFC2822 <http://www.faqs.org/rfcs/rfc2822.html>,
   // which requires double quotes when special characters (including
   // some punctuation) are used.  See example in Appendix A.1.2.
-  $from = "\"$sender->name\" <$sender->mail>";
+  $from = '"' . mime_header_encode($sender->name) . "\" <$sender->mail>";
 
   while ($recipient = db_fetch_object($result)) {
     // To save work, only go through a user_load if we need it.

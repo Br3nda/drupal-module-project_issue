@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.5 2009-02-22 07:48:58 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.6 2009-02-25 10:29:48 dww Exp $
 
 
 /**
@@ -12,6 +12,8 @@
  */
 class project_issue_handler_filter_issue_version extends views_handler_filter_in_operator {
   var $is_exposed = FALSE;
+  var $project_versions = array();
+  var $project_version_series = array();
 
   function value_form(&$form, &$form_state) {
     if (!empty($form_state['exposed'])) {
@@ -47,29 +49,87 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
     }
   }
 
-  function get_value_options() {
-    static $versions = array();
-    // We only want to return real options if we're building an exposed filter
-    // form and we have a project argument (either nid or uri).  So, we check
-    // the flag set in value_form() to see if this is an exposed filter.
-    if ($this->is_exposed) {
-      if (empty($versions)) {
-        $arg = reset($this->view->args);
-        if (is_numeric($arg)) {
-          $project_nid = $arg;
-        }
-        else {
-          $project_nid = project_get_nid_from_uri($arg);
-        }
-        // This is needed by project_get_releases() and friends.
-        $project = node_load($project_nid);
-        $versions = project_release_get_releases($project, FALSE);
+  function init_version_info()  {
+    if (empty($this->project_versions) && isset($this->view->argument['pid'])) {
+      $arg = $this->view->argument['pid']->get_value();
+      if (is_numeric($arg)) {
+        $project_nid = $arg;
       }
-      $this->value_options = $versions;
+      else {
+        $project_nid = project_get_nid_from_uri($arg);
+      }
+      // This is needed by project_get_releases() and friends.
+      $project = node_load($project_nid);
+      $this->project_versions = project_release_get_releases($project, FALSE);
+
+      $active_tids = array_keys(project_release_compatibility_list());
+      $tid_placeholders = db_placeholders($active_tids);
+      $nids = array_keys($this->project_versions);
+      $nid_placeholders = db_placeholders($nids);
+      $query_args = array_merge($active_tids, $nids);
+      $query = db_query("SELECT td.name, td.tid, tn.nid FROM {term_data} td INNER JOIN {term_node} tn ON td.tid = tn.tid WHERE tn.tid IN ($tid_placeholders) AND tn.nid IN ($nid_placeholders) ORDER BY td.weight", $query_args);
+      while ($release = db_fetch_object($query)) {
+        $this->project_version_series[$release->name][] = $release->nid;
+      }
+    }
+  }
+
+  function get_value_options() {
+    // We only want to return real options if we're building an exposed filter
+    // form, so we check the flag set in value_form().
+    if ($this->is_exposed) {
+      $this->init_version_info();
+      if (!empty($this->project_version_series)) {
+        foreach ($this->project_version_series as $series => $nids) {
+          $this->value_options[$series] = t('- @series issues -', array('@series' => $series));
+        }
+      }
+      $this->value_options += $this->project_versions;
     }
     else {
       $this->value_options = array();
     }
+  }
+
+  /**
+   * Accept the input to the exposed filter and map it to the right values.
+   *
+   * This is where the special logic for the "- $series issues -" choices is
+   * converted back into the real release nid values for the underlying query.
+   * First, we invoke the parent method to try to handle the input.  Then, we
+   * see if the input includes a value for this filter.  If the value is an
+   * array we know we're a multi-select filter, and we need to more carefully
+   * handle the choices.
+   */
+  function accept_exposed_input($input) {
+    $rc = parent::accept_exposed_input($input);
+    if ($rc) {
+      if (!empty($this->options['expose']['identifier'])) {
+        $this->init_version_info();        
+        $identifier = $this->options['expose']['identifier'];
+        if (isset($input[$identifier])) {
+          if (is_array($input[$identifier])) {
+            $this->value = array();
+            foreach ($input[$identifier] as $value) {
+              if (!empty($this->project_version_series[$value])) {
+                $this->value = array_merge($this->value, $this->project_version_series[$value]);
+              }
+              else {
+                $this->value[] = $value;
+              }
+            }
+          }
+          else {
+            // Input is not an array (we're configured as "force single").
+            $value = $input[$identifier];
+            if (!empty($this->project_version_series[$value])) {
+              $this->value = $this->project_version_series[$value];
+            }
+          }
+        }
+      }
+    }
+    return $rc;
   }
 
 }

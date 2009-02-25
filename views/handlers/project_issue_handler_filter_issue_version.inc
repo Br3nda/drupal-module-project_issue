@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.6 2009-02-25 10:29:48 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.7 2009-02-25 11:21:05 dww Exp $
 
 
 /**
@@ -61,20 +61,22 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
       // This is needed by project_get_releases() and friends.
       $project = node_load($project_nid);
       $this->project_versions = project_release_get_releases($project, FALSE);
-
-      $active_tids = array_keys(project_release_compatibility_list());
-      $tid_placeholders = db_placeholders($active_tids);
-      $nids = array_keys($this->project_versions);
-      $nid_placeholders = db_placeholders($nids);
-      $query_args = array_merge($active_tids, $nids);
-      $query = db_query("SELECT td.name, td.tid, tn.nid FROM {term_data} td INNER JOIN {term_node} tn ON td.tid = tn.tid WHERE tn.tid IN ($tid_placeholders) AND tn.nid IN ($nid_placeholders) ORDER BY td.weight", $query_args);
-      while ($release = db_fetch_object($query)) {
-        $this->project_version_series[$release->name][] = $release->nid;
+      if (!empty($this->project_versions)) {
+        $active_tids = array_keys(project_release_compatibility_list());
+        $tid_placeholders = db_placeholders($active_tids);
+        $nids = array_keys($this->project_versions);
+        $nid_placeholders = db_placeholders($nids);
+        $query_args = array_merge($active_tids, $nids);
+        $query = db_query("SELECT td.name, td.tid, tn.nid FROM {term_data} td INNER JOIN {term_node} tn ON td.tid = tn.tid WHERE tn.tid IN ($tid_placeholders) AND tn.nid IN ($nid_placeholders) ORDER BY td.weight", $query_args);
+        while ($release = db_fetch_object($query)) {
+          $this->project_version_series[$release->name][] = $release->nid;
+        }
       }
     }
   }
 
   function get_value_options() {
+    $this->value_options = array();
     // We only want to return real options if we're building an exposed filter
     // form, so we check the flag set in value_form().
     if ($this->is_exposed) {
@@ -84,10 +86,9 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
           $this->value_options[$series] = t('- @series issues -', array('@series' => $series));
         }
       }
-      $this->value_options += $this->project_versions;
-    }
-    else {
-      $this->value_options = array();
+      if (!empty($this->project_versions)) {
+        $this->value_options += $this->project_versions;
+      }
     }
   }
 

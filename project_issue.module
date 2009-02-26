@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.145 2009/02/26 23:03:21 dww Exp $
+// $Id: project_issue.module,v 1.146 2009/02/26 23:05:48 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1337,7 +1337,7 @@ function project_issue_filter_tips($delta, $format, $long = FALSE) {
 }
 
 /**
- * Implementation of hook_form_filter().
+ * Implementation of hook_filter().
  * @ingroup project_issue_filter
  */
 function project_issue_filter($op, $delta = 0, $format = -1, $text = '') {

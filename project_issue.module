@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.143 2009/02/26 01:36:23 dww Exp $
+// $Id: project_issue.module,v 1.144 2009/02/26 22:58:30 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1628,6 +1628,10 @@ function project_issue_alter_views_exposed_form(&$form, &$form_state) {
         }
       }
       break;
+  }
+  // Rename the "Apply" button to "Search" on all project_issue_* views.
+  if (substr($form_state['view']->name, 0, 14) == 'project_issue_') {
+    $form['submit']['#value'] = t('Search');
   }
 }
 

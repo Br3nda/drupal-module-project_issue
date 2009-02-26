@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.142 2009/02/20 23:31:11 dww Exp $
+// $Id: project_issue.module,v 1.143 2009/02/26 01:36:23 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1614,9 +1614,10 @@ function project_issue_alter_views_exposed_form(&$form, &$form_state) {
   switch ($form_state['view']->name) {
     case 'project_issue_search_all':
     case 'project_issue_search_project':
+    case 'project_issue_user_projects':
       $user_filters = array('assigned', 'submitted', 'participant');
       foreach (element_children($form) as $element) {
-        if ($form[$element]['#type'] == 'textfield') {
+        if ($form[$element]['#type'] == 'textfield' && $form_state['view']->name != 'project_issue_user_projects') {
           $form[$element]['#size'] = 32;
         }
         elseif ($form[$element]['#type'] == 'select' && $form[$element]['#multiple']) {

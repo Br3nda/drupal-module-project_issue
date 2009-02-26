@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.39 2009-02-26 01:36:23 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.40 2009-02-26 22:58:30 dww Exp $
 
 
 /**
@@ -49,7 +49,7 @@ function project_issue_views_default_views() {
       'field' => 'pid',
     ),
   ));
-  $handler->override_option('fields', array(
+  $fields = array(
     'project_issue_queue' => array(
       'label' => 'Project',
       'link_type' => 'issues',
@@ -149,18 +149,46 @@ function project_issue_views_default_views() {
       'field' => 'name',
       'relationship' => 'assigned',
     ),
-  ));
-  $handler->override_option('sorts', array(
-    'last_comment_timestamp' => array(
-      'order' => 'DESC',
-      'granularity' => 'second',
-      'id' => 'last_comment_timestamp',
-      'table' => 'node_comment_statistics',
-      'field' => 'last_comment_timestamp',
+  );
+  if (module_exists('search')) {
+    $fields['score'] = array(
+      'label' => 'Score',
+      'alter' => array(),
+      'set_precision' => 1,
+      'precision' => '3',
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => '',
+      'alternate_sort' => 'last_comment_timestamp',
+      'alternate_order' => 'desc',
+      'exclude' => 0,
+      'id' => 'score',
+      'table' => 'search_index',
+      'field' => 'score',
       'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('filters', array(
+    );
+  }
+  $handler->override_option('fields', $fields);
+  $sorts['last_comment_timestamp'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'last_comment_timestamp',
+    'table' => 'node_comment_statistics',
+    'field' => 'last_comment_timestamp',
+    'relationship' => 'none',
+  );
+  if (module_exists('search')) {
+    $sorts['score'] = array(
+      'order' => 'DESC',
+      'id' => 'score',
+      'table' => 'search_index',
+      'field' => 'score',
+      'relationship' => 'none',
+    );
+  }
+  $handler->override_option('sorts', $sorts);
+  $filters = array(
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -260,7 +288,28 @@ function project_issue_views_default_views() {
       'field' => 'category',
       'relationship' => 'none',
     ),
-  ));
+  );
+  if (module_exists('search')) {
+    $filters['keys'] = array(
+      'operator' => 'optional',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'keys_op',
+        'identifier' => 'text',
+        'label' => 'Search for',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'keys',
+      'table' => 'search_index',
+      'field' => 'keys',
+      'relationship' => 'none',
+    );
+  }
+  $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
     'type' => 'none',
   ));
@@ -286,6 +335,7 @@ function project_issue_views_default_views() {
       'new_comments' => 'comment_count',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
+      'score' => 'score',
     ),
     'info' => array(
       'project_issue_queue' => array(
@@ -326,8 +376,12 @@ function project_issue_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
+      'score' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
     ),
-    'default' => 'last_comment_timestamp',
+    'default' => module_exists('search') ? 'score' : 'last_comment_timestamp',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'project/issues');
@@ -418,7 +472,7 @@ function project_issue_views_default_views() {
       'relationship' => 'none',
     ),
   ));
-  $handler->override_option('fields', array(
+  $fields = array(
     'title' => array(
       'label' => 'Summary',
       'link_to_node' => 1,
@@ -527,7 +581,27 @@ function project_issue_views_default_views() {
       'field' => 'name',
       'relationship' => 'assigned',
     ),
-  ));
+  );
+  if (module_exists('search')) {
+    $fields['score'] = array(
+      'label' => 'Score',
+      'alter' => array(),
+      'set_precision' => 1,
+      'precision' => '3',
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => '',
+      'alternate_sort' => 'last_comment_timestamp',
+      'alternate_order' => 'desc',
+      'exclude' => 0,
+      'id' => 'score',
+      'table' => 'search_index',
+      'field' => 'score',
+      'relationship' => 'none',
+    );
+  }
+  $handler->override_option('fields', $fields);
   $handler->override_option('arguments', array(
     'pid' => array(
       'default_action' => 'not found',
@@ -552,17 +626,25 @@ function project_issue_views_default_views() {
       'default_argument_php' => '',
     ),
   ));
-  $handler->override_option('sorts', array(
-    'last_comment_timestamp' => array(
+  $sorts['last_comment_timestamp'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'last_comment_timestamp',
+    'table' => 'node_comment_statistics',
+    'field' => 'last_comment_timestamp',
+    'relationship' => 'none',
+  );
+  if (module_exists('search')) {
+    $sorts['score'] = array(
       'order' => 'DESC',
-      'granularity' => 'second',
-      'id' => 'last_comment_timestamp',
-      'table' => 'node_comment_statistics',
-      'field' => 'last_comment_timestamp',
+      'id' => 'score',
+      'table' => 'search_index',
+      'field' => 'score',
       'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('filters', array(
+    );
+  }
+  $handler->override_option('sorts', $sorts);
+  $filters = array(
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -679,7 +761,28 @@ function project_issue_views_default_views() {
       'field' => 'component',
       'relationship' => 'none',
     ),
-  ));
+  );
+  if (module_exists('search')) {
+    $filters['keys'] = array(
+      'operator' => 'optional',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'keys_op',
+        'identifier' => 'text',
+        'label' => 'Search for',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'keys',
+      'table' => 'search_index',
+      'field' => 'keys',
+      'relationship' => 'none',
+    );
+  }
+  $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
     'type' => 'none',
   ));
@@ -706,6 +809,7 @@ function project_issue_views_default_views() {
       'new_comments' => 'comment_count',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
+      'score' => 'score',
     ),
     'info' => array(
       'title' => array(
@@ -750,8 +854,12 @@ function project_issue_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
+      'score' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
     ),
-    'default' => 'last_comment_timestamp',
+    'default' => module_exists('search') ? 'score' : 'last_comment_timestamp',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'project/issues/%');
@@ -849,7 +957,7 @@ function project_issue_views_default_views() {
       'field' => 'pid',
     ),
   ));
-  $handler->override_option('fields', array(
+  $fields = array(
     'project_issue_queue' => array(
       'label' => 'Project',
       'link_type' => 'issues',
@@ -958,7 +1066,27 @@ function project_issue_views_default_views() {
       'field' => 'name',
       'relationship' => 'assigned',
     ),
-  ));
+  );
+  if (module_exists('search')) {
+    $fields['score'] = array(
+      'label' => 'Score',
+      'alter' => array(),
+      'set_precision' => 1,
+      'precision' => '3',
+      'decimal' => '.',
+      'separator' => ',',
+      'prefix' => '',
+      'suffix' => '',
+      'alternate_sort' => 'last_comment_timestamp',
+      'alternate_order' => 'desc',
+      'exclude' => 0,
+      'id' => 'score',
+      'table' => 'search_index',
+      'field' => 'score',
+      'relationship' => 'none',
+    );
+  }
+  $handler->override_option('fields', $fields);
   $handler->override_option('arguments', array(
     'uid_touch' => array(
       'default_action' => 'default',
@@ -984,17 +1112,25 @@ function project_issue_views_default_views() {
       'validate_user_roles' => array('2' => 2),
     ),
   ));
-  $handler->override_option('sorts', array(
-    'last_comment_timestamp' => array(
+  $sorts['last_comment_timestamp'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'last_comment_timestamp',
+    'table' => 'node_comment_statistics',
+    'field' => 'last_comment_timestamp',
+    'relationship' => 'none',
+  );
+  if (module_exists('search')) {
+    $sorts['score'] = array(
       'order' => 'DESC',
-      'granularity' => 'second',
-      'id' => 'last_comment_timestamp',
-      'table' => 'node_comment_statistics',
-      'field' => 'last_comment_timestamp',
+      'id' => 'score',
+      'table' => 'search_index',
+      'field' => 'score',
       'relationship' => 'none',
-    ),
-  ));
-  $handler->override_option('filters', array(
+    );
+  }
+  $handler->override_option('sorts', $sorts);
+  $filters = array(
     'status_extra' => array(
       'operator' => '=',
       'value' => '',
@@ -1094,7 +1230,28 @@ function project_issue_views_default_views() {
       'field' => 'category',
       'relationship' => 'none',
     ),
-  ));
+  );
+  if (module_exists('search')) {
+    $filters['keys'] = array(
+      'operator' => 'optional',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'keys_op',
+        'identifier' => 'text',
+        'label' => 'Search for',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'id' => 'keys',
+      'table' => 'search_index',
+      'field' => 'keys',
+      'relationship' => 'none',
+    );
+  }
+  $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
     'type' => 'none',
   ));
@@ -1121,6 +1278,7 @@ function project_issue_views_default_views() {
       'new_comments' => 'comment_count',
       'last_comment_timestamp' => 'last_comment_timestamp',
       'name' => 'name',
+      'score' => 'score',
     ),
     'info' => array(
       'project_issue_queue' => array(
@@ -1165,8 +1323,12 @@ function project_issue_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
+      'score' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
     ),
-    'default' => '-1',
+    'default' => module_exists('search') ? 'score' : 'last_comment_timestamp',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'project/issues/user');
@@ -1529,7 +1691,7 @@ function project_issue_views_default_views() {
   );
   if (module_exists('search')) {
     $filters['keys'] = array(
-      'operator' => 'required',
+      'operator' => 'optional',
       'value' => '',
       'group' => '0',
       'exposed' => TRUE,
@@ -1862,7 +2024,7 @@ function project_issue_views_default_views() {
   $custom_filters = array();
   if (module_exists('search')) {
     $custom_filters['keys'] = array(
-      'operator' => 'required',
+      'operator' => 'optional',
       'value' => '',
       'group' => '0',
       'exposed' => TRUE,
@@ -2399,7 +2561,7 @@ function project_issue_views_default_views() {
   $custom_filters = array();
   if (module_exists('search')) {
     $custom_filters['keys'] = array(
-      'operator' => 'required',
+      'operator' => 'optional',
       'value' => '',
       'group' => '0',
       'exposed' => TRUE,

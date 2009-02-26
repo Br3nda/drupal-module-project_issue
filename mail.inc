@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.120 2009/02/25 20:27:23 dww Exp $
+// $Id: mail.inc,v 1.121 2009/02/26 23:03:21 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -112,7 +112,7 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
         $body .= "\n * $field: $text";
       }
 
-      drupal_mail('project_issue_mailhandler_error', $mailto, t('Email submission to !sn failed - !subj', array('!sn' => variable_get('site_name', 'Drupal'), '!subj' => $header->subject)), $body, $mailfrom, $headers);
+      drupal_mail('project_issue_mailhandler_error', $mailto, t('E-mail submission to !sn failed - !subj', array('!sn' => variable_get('site_name', 'Drupal'), '!subj' => $header->subject)), $body, $mailfrom, $headers);
     }
 
     // Return a NULL result so mailhandler doesn't save the node using the default methods.

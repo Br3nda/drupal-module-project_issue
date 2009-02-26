@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.144 2009-02-26 22:58:30 dww Exp $
+// $Id: project_issue.module,v 1.145 2009-02-26 23:03:21 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1691,7 +1691,7 @@ function project_issue_query_result_links($project_arg = NULL) {
       $links['subscribe'] = array(
         'title' => t('Subscribe'),
         'href' => "project/issues/subscribe-mail",
-        'attributes' => array('title' => t('Receive email updates about issues.')),
+        'attributes' => array('title' => t('Receive e-mail updates about issues.')),
       );
     }
   }
@@ -1731,7 +1731,7 @@ function project_issue_query_result_links($project_arg = NULL) {
       $links['subscribe'] = array(
         'title' => t('Subscribe'),
         'href' => "project/issues/subscribe-mail/$uri",
-        'attributes' => array('title' => t('Receive email updates about @project issues.', array('@project' => $uri))),
+        'attributes' => array('title' => t('Receive e-mail updates about @project issues.', array('@project' => $uri))),
       );
     }
   }

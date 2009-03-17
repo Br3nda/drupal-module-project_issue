@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.339 2009-02-22 01:01:46 dww Exp $
+// $Id: issue.inc,v 1.340 2009-03-17 07:44:57 dww Exp $
 
 
 /**
@@ -1292,8 +1292,7 @@ function project_issue_admin_states_form_submit($form, &$form_state) {
   }
 }
 
-function project_issue_delete_state_confirm($sid) {
-  $sid = arg(4);
+function project_issue_delete_state_confirm(&$form_state, $sid) {
   $states = project_issue_state();
   $name = $states[$sid];
 

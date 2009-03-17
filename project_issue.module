@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.146 2009-02-26 23:05:48 dww Exp $
+// $Id: project_issue.module,v 1.147 2009-03-17 07:44:57 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -112,7 +112,7 @@ function project_issue_menu() {
   $items['admin/project/project-issue-status/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('project_issue_delete_state_confirm'),
+    'page arguments' => array('project_issue_delete_state_confirm', 5),
     'access arguments' => array('administer projects'),
     'type' => MENU_CALLBACK,
   );

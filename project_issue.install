@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.58 2009/01/26 12:27:14 dww Exp $
+// $Id: project_issue.install,v 1.59 2009/03/17 23:32:30 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -330,12 +330,12 @@ function project_issue_install() {
     project_issue_init_state(2, 'fixed', 1, 0, 1);
     project_issue_init_state(3, 'duplicate', 4, 0, 0);
     project_issue_init_state(4, 'postponed', 6, 0, 1);
-    project_issue_init_state(5, 'won\'t fix', 9, 0, 0);
+    project_issue_init_state(5, "won't fix", 9, 0, 0);
     project_issue_init_state(6, 'by design', 11, 0, 0);
     project_issue_init_state(7, 'closed', 13, 1, 0);
-    project_issue_init_state(8, 'patch (code needs review)', -8, 0, 0);
-    project_issue_init_state(13, 'patch (code needs work)', -6, 0, 0);
-    project_issue_init_state(14, 'patch (ready to commit)', -2, 0, 0);
+    project_issue_init_state(8, 'needs review', -8, 0, 0);
+    project_issue_init_state(13, 'needs work', -6, 0, 0);
+    project_issue_init_state(14, 'ready to commit', -2, 0, 0);
 
     // Since we're hacking in auto-increment values here,
     // update the sequence value for Postgres -- ugly but necessary for now.

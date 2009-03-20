@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.9 2009/01/20 18:38:03 dww Exp $
+// $Id: project_issue_generate.inc,v 1.10 2009/03/20 02:45:48 thehunmonkgroup Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -14,6 +14,7 @@ if (!ini_get('safe_mode')) {
  */
 function project_issue_generate_issues($number) {
   module_load_include('inc', 'devel', 'devel_generate');
+  module_load_include('inc', 'node', 'node.pages');
 
   $empty_variables = array();
   // After retrieving the possible values for each of these variables, we
@@ -42,7 +43,7 @@ function project_issue_generate_issues($number) {
     $components = unserialize($project->components);
     $releases = project_release_get_releases($project_node, FALSE);
     $issue = array();
-    $issue['pid'] = $project->nid;
+    $issue['project_issue']['pid'] = $project->nid;
     $issue['category'] = $categories[array_rand($categories)];
     $issue['component'] = $components[array_rand($components)];
     $issue['priority'] = array_rand($priorities);
@@ -66,8 +67,17 @@ function project_issue_generate_issues($number) {
     // the user creating the comment).
     $possible_assignments = array(0, $account->uid);
     $issue['assigned'] = $possible_assignments[array_rand($possible_assignments)];
+    $issue['type'] = 'project_issue';
 
-    drupal_execute('project_issue_node_form', $issue, array('type' => 'project_issue', 'pid' => $issue['pid'], 'assigned' => $issue['assigned']));
+    // Have to wrangle $form_state a bit to get drupal_execute() to work
+    // in this case:
+    //  - extra passing of pid avoids form error in project_issue_form().
+    //  - executing project_issue_node_form() directly doesn't trigger
+    //    the regular node form submission.
+    $form_state['values'] = $issue;
+    $form_state['values']['project_info']['pid'] = $project->nid;
+    $form_state['submit_handlers'] = array('node_form_submit');
+    drupal_execute('project_issue_node_form', $form_state, $issue);
   }
 }
 
@@ -162,10 +172,12 @@ function project_issue_generate_issue_comments($number) {
     }
     $comment['format'] = 1;
     $comment['cid'] = '';
+    $comment['nid'] = $issues[$k]->nid;
 
     // Unfortunately, we can't specify a user for the comment, so we have to
     // create it as the current user and then change the owner as needed.
-    drupal_execute('comment_form', $comment, array('nid' => $issues[$k]->nid));
+    $form_state['values'] = $comment;
+    drupal_execute('comment_form', $form_state, $comment);
     $result = db_query("SELECT MAX(cid) AS cid FROM {comments}");
     $newres = db_fetch_object($result);
     $newcid = $newres->cid;

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.module,v 1.6 2009-03-20 02:45:48 thehunmonkgroup Exp $
+// $Id: project_issue_generate.module,v 1.7 2009-03-20 22:43:49 thehunmonkgroup Exp $
 
 /**
  * Implementation of hook_menu().
@@ -23,12 +23,28 @@ function project_issue_generate_issues_form($form_state) {
     '#default_value' => 100,
     '#size' => 4,
   );
-  $form['comments'] = array(
-    '#type' => 'textfield',
-    '#title' => t('How many issue comments would you like to generate?'),
-    '#default_value' => 200,
-    '#size' => 4,
-  );
+  // To leverage the followup creation API, an auto-followup user must be
+  // configured, so only allow comment creation if it is.
+  if (_project_issue_followup_get_user()) {
+    $form['comments'] = array(
+      '#type' => 'textfield',
+      '#title' => t('How many issue comments would you like to generate?'),
+      '#default_value' => 200,
+      '#size' => 4,
+    );
+  }
+  else {
+    $form['no_comments_message'] = array(
+      '#type' => 'item',
+      '#title' => t('Comment creation disabled'),
+      '#value' => t('You must <a href="!project_issue_settings">configure an Auto-followup user</a> to generate issue comments', array('!project_issue_settings' => url('admin/project/project-issue-settings', array('query' => drupal_get_destination())))),
+    );
+    $form['comments'] = array(
+      '#type' => 'value',
+      '#value' => 0,
+    );
+  }
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Do it!'),
@@ -41,4 +57,3 @@ function project_issue_generate_issues_form_submit($form, &$form_state) {
   project_issue_generate_issues($form_state['values']['issues']);
   project_issue_generate_issue_comments($form_state['values']['comments']);
 }
-

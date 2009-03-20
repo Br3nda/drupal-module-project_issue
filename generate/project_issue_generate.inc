@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.11 2009-03-20 06:10:38 thehunmonkgroup Exp $
+// $Id: project_issue_generate.inc,v 1.12 2009-03-20 22:43:48 thehunmonkgroup Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -72,6 +72,8 @@ function project_issue_generate_issues($number) {
 
     node_save($issue);
   }
+
+  drupal_set_message(format_plural($number, 'Your issue has been created.', '@count issues have been created.'));
 }
 
 /**
@@ -81,6 +83,14 @@ function project_issue_generate_issues($number) {
  *  Number of comments to generate.
  */
 function project_issue_generate_issue_comments($number) {
+
+  // To leverage the followup creation API, an auto-followup user must be
+  // configured, so toss a warning and exit if it's not.
+  if ((int) $number && !_project_issue_followup_get_user()) {
+    drupal_set_message(t('No comments created -- you must <a href="!project_issue_settings">configure an Auto-followup user</a> to generate issue comments', array('!project_issue_settings' => url('admin/project/project-issue-settings', array('query' => drupal_get_destination())))), 'error');
+    return;
+  }
+
   $empty_variables = array();
   // After retrieving the possible values for each of these variables, we
   // need to check and make sure that at least one value was returned. If
@@ -121,7 +131,7 @@ function project_issue_generate_issue_comments($number) {
       $issues[$k]->rid = array_rand($releases);
 
       // And so must the component.
-      $components = $project_node->components;
+      $components = $project_node->project_issue['components'];
       $issues[$k]->component = $components[array_rand($components)];
     }
     elseif (rand(0, 1)) {
@@ -167,18 +177,7 @@ function project_issue_generate_issue_comments($number) {
     $comment['cid'] = '';
     $comment['nid'] = $issues[$k]->nid;
 
-    // Clear the form error cache -- if it was triggered at any time
-    // time before then all subsequent submissions fail.
-    form_set_error(NULL, '', TRUE);
-
-    // Unfortunately, we can't specify a user for the comment, so we have to
-    // create it as the current user and then change the owner as needed.
-    $form_state['values'] = $comment;
-    drupal_execute('comment_form', $form_state, $comment);
-    $result = db_query("SELECT MAX(cid) AS cid FROM {comments}");
-    $newres = db_fetch_object($result);
-    $newcid = $newres->cid;
-    db_query("UPDATE {comments} SET uid = %d WHERE cid = %d", $comment['uid'], $newcid);
+    project_issue_add_followup($comment);
   }
   drupal_set_message(format_plural($number, 'Your comment has been created.', '@count comments have been created.'));
 }
@@ -255,4 +254,3 @@ function _project_issue_generate_get_permitted_sids($user) {
   }
   return array();
 }
-

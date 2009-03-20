@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.10 2009-03-20 02:45:48 thehunmonkgroup Exp $
+// $Id: project_issue_generate.inc,v 1.11 2009-03-20 06:10:38 thehunmonkgroup Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -42,22 +42,22 @@ function project_issue_generate_issues($number) {
     $project_node = node_load($project->nid);
     $components = unserialize($project->components);
     $releases = project_release_get_releases($project_node, FALSE);
-    $issue = array();
-    $issue['project_issue']['pid'] = $project->nid;
-    $issue['category'] = $categories[array_rand($categories)];
-    $issue['component'] = $components[array_rand($components)];
-    $issue['priority'] = array_rand($priorities);
-    $issue['title'] = devel_create_greeking(rand(2, 15), true);
-    $issue['body'] = devel_create_content();
-    $issue['rid'] = array_rand($releases);
+    $issue = new stdClass();
+    $issue->pid = $project->nid;
+    $issue->category = $categories[array_rand($categories)];
+    $issue->component = $components[array_rand($components)];
+    $issue->priority = array_rand($priorities);
+    $issue->title = devel_create_greeking(rand(2, 15), true);
+    $issue->body = devel_create_content();
+    $issue->rid = array_rand($releases);
 
     // The user must be chosen before status (sid) so that we can make sure
     // that the status is set such that the user would have permission to
     // set the status as such.
     $account = user_load(array('uid' => $users[array_rand($users)]->uid));
-    $issue['name'] = $account->name;
-    $issue['sid'] = array_rand(_project_issue_generate_get_permitted_sids($account));
-    if (!isset($issue['sid'])) {
+    $issue->name = $account->uid;
+    $issue->sid = array_rand(_project_issue_generate_get_permitted_sids($account));
+    if (!isset($issue->sid)) {
       unset($issue);
       continue;
     }
@@ -66,18 +66,11 @@ function project_issue_generate_issues($number) {
     // to the user creating the project_issue node (or in the case of comments
     // the user creating the comment).
     $possible_assignments = array(0, $account->uid);
-    $issue['assigned'] = $possible_assignments[array_rand($possible_assignments)];
-    $issue['type'] = 'project_issue';
+    $issue->assigned = $possible_assignments[array_rand($possible_assignments)];
+    $issue->type = 'project_issue';
+    $issue->comment = COMMENT_NODE_READ_WRITE;
 
-    // Have to wrangle $form_state a bit to get drupal_execute() to work
-    // in this case:
-    //  - extra passing of pid avoids form error in project_issue_form().
-    //  - executing project_issue_node_form() directly doesn't trigger
-    //    the regular node form submission.
-    $form_state['values'] = $issue;
-    $form_state['values']['project_info']['pid'] = $project->nid;
-    $form_state['submit_handlers'] = array('node_form_submit');
-    drupal_execute('project_issue_node_form', $form_state, $issue);
+    node_save($issue);
   }
 }
 
@@ -173,6 +166,10 @@ function project_issue_generate_issue_comments($number) {
     $comment['format'] = 1;
     $comment['cid'] = '';
     $comment['nid'] = $issues[$k]->nid;
+
+    // Clear the form error cache -- if it was triggered at any time
+    // time before then all subsequent submissions fail.
+    form_set_error(NULL, '', TRUE);
 
     // Unfortunately, we can't specify a user for the comment, so we have to
     // create it as the current user and then change the owner as needed.

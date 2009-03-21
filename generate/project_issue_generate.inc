@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.12 2009-03-20 22:43:48 thehunmonkgroup Exp $
+// $Id: project_issue_generate.inc,v 1.13 2009-03-21 18:50:17 thehunmonkgroup Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -83,13 +83,6 @@ function project_issue_generate_issues($number) {
  *  Number of comments to generate.
  */
 function project_issue_generate_issue_comments($number) {
-
-  // To leverage the followup creation API, an auto-followup user must be
-  // configured, so toss a warning and exit if it's not.
-  if ((int) $number && !_project_issue_followup_get_user()) {
-    drupal_set_message(t('No comments created -- you must <a href="!project_issue_settings">configure an Auto-followup user</a> to generate issue comments', array('!project_issue_settings' => url('admin/project/project-issue-settings', array('query' => drupal_get_destination())))), 'error');
-    return;
-  }
 
   $empty_variables = array();
   // After retrieving the possible values for each of these variables, we

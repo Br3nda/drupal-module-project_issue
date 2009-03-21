@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.149 2009/03/21 17:28:55 dww Exp $
+// $Id: project_issue.module,v 1.150 2009/03/21 18:50:17 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -640,17 +640,53 @@ function theme_project_issue_auto_close_message($auto_close_days) {
 }
 
 /**
- * Add a followup to a project issue.
+ * Add a followup to a project issue using the auto-followup user.
  *
  * @param $changes
  *   An associative array specifying what should change in the issue. Every key
  *   corresponds to a database field and the value is what it should be changed
- *   to. nid is a required key and it specifies the issue being changed.
- *   'comment' is also a required key and it contains the text of the followup
- *   changing the issue.
- *   You can specify the following fields of the comment table: uid, subject,
- *   hostname, timestamp, score, status, format, thread, users, name, mail,
- *   homepage. You can also specify the following fields from project_issues
+ *   to. Required keys are:
+ *     - nid: Specifies the issue being changed.
+ *     - comment: Contains the text of the followup changing the issue.
+ *   See project_issue_add_followup() for a full list of possible keys.
+ *
+ * @return
+ *   TRUE if the comment was successfully added, FALSE if either there's no
+ *   auto-followup user configured or if the requested issue wasn't found.
+ *
+ * @see project_issue_add_followup().
+ */
+function project_issue_add_auto_followup($changes) {
+  // If a user for automatic followups exists, use that uid and proceed.
+  if ($auto_user = _project_issue_followup_get_user()) {
+    $changes['uid'] = $auto_user->uid;
+    return project_issue_add_followup($changes);
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Saves a comment to the database.
+ *
+ * TODO: Ideally this should die as soon as core's comment_save() becomes more
+ *       abstracted.
+ *
+ * @param $changes
+ *   An associative array specifying what should change in the issue. Every key
+ *   corresponds to a database field and the value is what it should be changed
+ *   to.  Required keys are:
+ *     - nid: Specifies the issue being changed.
+ *     - comment: Contains the text of the followup changing the issue.
+ *
+ *   'uid' and 'name' are optional keys -- if not specified then the values
+ *   from the currently logged in user will be used, though it's generally
+ *   safer to specify the uid explicitly.
+ *
+ *   You can specify the following fields of the comment table: subject,
+ *   hostname, timestamp, score, status, format, thread, mail, homepage.
+ *    You can also specify the following fields from project_issues
  *   table: category, priority, assigned, sid, title. There is a special,
  *   optional key called 'project_info', its value is another associative
  *   array with the following fields from project_issues: pid, rid, component.
@@ -661,75 +697,74 @@ function theme_project_issue_auto_close_message($auto_close_days) {
  *      'sid' => 4,
  *      'comment' => t('This issue was automatically closed after 2 weeks of no activity.'),
  *     );
+ *
+ * @return
+ *   TRUE if the comment was successfully added to the requested issue, 
+ *   otherwise FALSE.
  */
 function project_issue_add_followup($changes) {
-  global $user;
-
-  if ($auto_user = _project_issue_followup_get_user()) {
-    // If a user exists for followups, load them into
-    // the global user object temporarily. We use session_save_session()
-    // to provide safe user impersonation.
-    $original_user = $user;
-    session_save_session(FALSE);
-    $user = $auto_user;
-
-    $result = db_query('SELECT pi.nid, pi.rid, pi.component, pi.category, pi.priority, pi.assigned, pi.sid, pi.pid, n.title FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE n.nid = %d', $changes['nid']);
-
-    if ($issue = db_fetch_object($result)) {
-      // Build vancode
-      $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $changes['nid']));
-      // Strip the "/" from the end of the thread.
-      $max = rtrim($max, '/');
-      // Finally, build the thread field for this new comment.
-      $thread = int2vancode(vancode2int($max) + 1) .'/';
-
-      // These two are not allowed to be set in changes.
-      unset($changes['cid'], $changes['pid']);
-      $comment = $changes + array(
-        'pid' => 0,
-        'uid' => $user->uid,
-        // The correct subject (#number) is supplied during the save cycle.
-        'subject' => '--project followup subject--',
-        'hostname' => ip_address(),
-        'timestamp' => time(),
-        'status' => COMMENT_PUBLISHED,
-        'format' => FILTER_FORMAT_DEFAULT,
-        'thread' => $thread,
-        'name' => $user->name,
-        'mail' => '',
-        'homepage' => '',
-        'category' => $issue->category,
-        'priority' => $issue->priority,
-        'assigned' => $issue->assigned,
-        'sid' => $issue->sid,
-        'title' => $issue->title,
-      );
-
-      if (!isset($comment['project_info'])) {
-        $comment['project_info'] = array();
-      }
-      $comment['project_info'] += array(
-        'pid' => $issue->pid,
-        'rid' => $issue->rid,
-        'component' => $issue->component,
-        'assigned' => $issue->assigned,
-      );
-
-      db_query("INSERT INTO {comments} (pid, nid, uid, subject, comment, hostname, timestamp, status, format, thread, name, mail, homepage) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, %d, %d, '%s', '%s', '%s', '%s')", $comment['pid'], $comment['nid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['hostname'], $comment['timestamp'], $comment['status'], $comment['format'], $comment['thread'], $comment['name'], $comment['mail'], $comment['homepage']);
-
-      $comment['cid'] = db_last_insert_id('comments', 'cid');
-
-      _comment_update_node_statistics($comment['nid']);
-
-      // Tell the other modules a new comment has been submitted.
-      comment_invoke_comment($comment, 'insert');
-      cache_clear_all();
-    }
-
-    // Load the original user back in.
-    $user = $original_user;
-    session_save_session(TRUE);
+  if (isset($changes['uid'])) {
+    $account = user_load(array('uid' => $changes['uid']));
   }
+  else {
+    global $user;
+    $account = $user;
+  }
+
+  $result = db_query('SELECT pi.nid, pi.rid, pi.component, pi.category, pi.priority, pi.assigned, pi.sid, pi.pid, n.title FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE n.nid = %d', $changes['nid']);
+
+  if ($issue = db_fetch_object($result)) {
+    // Build vancode
+    $max = db_result(db_query('SELECT MAX(thread) FROM {comments} WHERE nid = %d', $changes['nid']));
+    // Strip the "/" from the end of the thread.
+    $max = rtrim($max, '/');
+    // Finally, build the thread field for this new comment.
+    $thread = int2vancode(vancode2int($max) + 1) .'/';
+
+    // These two are not allowed to be set in changes.
+    unset($changes['cid'], $changes['pid']);
+    $comment = $changes + array(
+      'pid' => 0,
+      'uid' => $account->uid,
+      // The correct subject (#number) is supplied during the save cycle.
+      'subject' => '--project followup subject--',
+      'hostname' => ip_address(),
+      'timestamp' => time(),
+      'status' => COMMENT_PUBLISHED,
+      'format' => FILTER_FORMAT_DEFAULT,
+      'thread' => $thread,
+      'name' => $account->name,
+      'mail' => '',
+      'homepage' => '',
+      'category' => $issue->category,
+      'priority' => $issue->priority,
+      'assigned' => $issue->assigned,
+      'sid' => $issue->sid,
+      'title' => $issue->title,
+    );
+
+    if (!isset($comment['project_info'])) {
+      $comment['project_info'] = array();
+    }
+    $comment['project_info'] += array(
+      'pid' => $issue->pid,
+      'rid' => $issue->rid,
+      'component' => $issue->component,
+      'assigned' => $issue->assigned,
+    );
+
+    db_query("INSERT INTO {comments} (pid, nid, uid, subject, comment, hostname, timestamp, status, format, thread, name, mail, homepage) VALUES (%d, %d, %d, '%s', '%s', '%s', %d, %d, %d, '%s', '%s', '%s', '%s')", $comment['pid'], $comment['nid'], $comment['uid'], $comment['subject'], $comment['comment'], $comment['hostname'], $comment['timestamp'], $comment['status'], $comment['format'], $comment['thread'], $comment['name'], $comment['mail'], $comment['homepage']);
+
+    $comment['cid'] = db_last_insert_id('comments', 'cid');
+
+    _comment_update_node_statistics($comment['nid']);
+
+    // Tell the other modules a new comment has been submitted.
+    comment_invoke_comment($comment, 'insert');
+    cache_clear_all();
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**

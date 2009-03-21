@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.342 2009-03-21 16:23:02 dww Exp $
+// $Id: issue.inc,v 1.343 2009-03-21 16:23:24 thehunmonkgroup Exp $
 
 
 /**
@@ -1296,7 +1296,7 @@ function project_issue_admin_states_form_submit($form, &$form_state) {
       db_query("INSERT INTO {project_issue_state} (name, weight, author_has, default_query) VALUES ('%s', %d, %d, %d)", $form_state['values']['status_add']['name'], $form_state['values']['status_add']['weight'], $form_state['values']['status_add']['author_has'], $form_state['values']['status_add']['default_query']);
     }
     else {
-      drupal_set_message(t('Status %status already exists.', array ('%status' => $form_state['values']['status_add']['name'])));
+      drupal_set_message(t('Status %status already exists.', array ('%status' => $form_state['values']['status_add']['name'])), 'error');
     }
   }
 }

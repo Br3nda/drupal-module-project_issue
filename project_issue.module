@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.148 2009/03/20 02:33:44 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.149 2009/03/21 17:28:55 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -525,6 +525,19 @@ function project_issue_settings_form(&$form_state) {
     '#size' => 4,
     '#maxlength' => 10,
     '#description' => t('Issues being in "fixed" state for the specified number of days will be closed by the followup user specified above. For example, if this is 14, and an issue is set to fixed on January 1, then it will be closed on January 15.'),
+  );
+  
+  $defaults = array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface'));
+  $components = variable_get('project_issue_default_components', implode("\n", $defaults));
+
+  $form['project_issue_default_components'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Default components'),
+    '#default_value' => $components,
+    '#cols' => 20,
+    '#rows' => 6,
+    '#required' => TRUE,
+    '#description' => t("Enter the default list of components that new projects will have.  The project owner will be able to change this list on the project's edit/issues page.")
   );
 
   if (module_exists('mailhandler')) {
@@ -1197,7 +1210,16 @@ function project_issue_project_insert($node) {
   // they'd use the "issues" subtab of the project edit tab (since none
   // of these fields are present on the initial project add form).
   $node->project_issue['issues'] = 1;
-  $node->project_issue['components'] = serialize(array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface')));
+
+  // Default components are saved in the variables table as a plain
+  // string instead of as a serialized array since they come out of
+  // a textarea on a system settings form.  Convert here to the more
+  // desirable serialized array for storage per-project.
+  $defaults = array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface'));
+  $components = variable_get('project_issue_default_components', implode("\n", $defaults));  
+  $default_components = explode("\n", str_replace("\r", '', $components));
+
+  $node->project_issue['components'] = serialize($default_components);
   db_query("INSERT INTO {project_issue_projects} (nid, issues, components) VALUES (%d, %d, '%s')", $node->nid, $node->project_issue['issues'], $node->project_issue['components']);
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.341 2009-03-20 02:33:44 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.342 2009-03-21 16:23:02 dww Exp $
 
 
 /**
@@ -1163,6 +1163,7 @@ function project_issue_count($pid) {
 }
 
 function theme_project_issue_admin_states_form($form) {
+  drupal_add_tabledrag('project-issue-status-admin-table', 'order', 'self', 'project-issue-status-weight');
   $header = array(
     array('data' => t('ID')),
     array('data' => t('Name')),
@@ -1174,24 +1175,30 @@ function theme_project_issue_admin_states_form($form) {
   );
   foreach (element_children($form['status']) as $key) {
     $rows[] = array(
-      drupal_render($form['status'][$key]['sid']),
-      drupal_render($form['status'][$key]['name']),
-      drupal_render($form['status'][$key]['weight']),
-      drupal_render($form['status'][$key]['author_has']),
-      drupal_render($form['status'][$key]['default_query']),
-      drupal_render($form['default_state'][$key]),
-      drupal_render($form['delete'][$key])
+      'class' => 'draggable',
+      'data' => array(
+        drupal_render($form['status'][$key]['sid']),
+        drupal_render($form['status'][$key]['name']),
+        drupal_render($form['status'][$key]['weight']),
+        drupal_render($form['status'][$key]['author_has']),
+        drupal_render($form['status'][$key]['default_query']),
+        drupal_render($form['default_state'][$key]),
+        drupal_render($form['delete'][$key]),
+      ),
     );
   }
   $rows[] = array(
-    NULL,
-    drupal_render($form['status_add']['name']),
-    drupal_render($form['status_add']['weight']),
-    drupal_render($form['status_add']['author_has']),
-    drupal_render($form['status_add']['default_query']),
-    NULL, NULL,
+    'class' => 'draggable',
+    'data' => array(
+      NULL,
+      drupal_render($form['status_add']['name']),
+      drupal_render($form['status_add']['weight']),
+      drupal_render($form['status_add']['author_has']),
+      drupal_render($form['status_add']['default_query']),
+      NULL, NULL,
+    ),
   );
-  $output = '<div>' . theme('table', $header, $rows) . '</div>';
+  $output = '<div>' . theme('table', $header, $rows, array('id' => 'project-issue-status-admin-table')) . '</div>';
   $output .= drupal_render($form);
   return $output;
 }
@@ -1217,6 +1224,7 @@ function project_issue_admin_states_form(&$form_state) {
       '#type' => 'weight',
       '#default_value' => $state->weight,
       '#delta' => 15,
+      '#attributes' => array('class' => 'project-issue-status-weight'),
     );
     $form['status'][$state->sid]['author_has'] = array(
       '#type' => 'checkbox',
@@ -1246,6 +1254,7 @@ function project_issue_admin_states_form(&$form_state) {
     '#type' => 'weight',
     '#default_value' => 0,
     '#delta' => 15,
+    '#attributes' => array('class' => 'project-issue-status-weight'),
   );
   $form['status_add']['author_has'] = array(
     '#type' => 'checkbox',

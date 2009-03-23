@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.41 2009/02/27 06:56:20 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.42 2009/03/23 17:24:53 dww Exp $
 
 
 /**
@@ -1256,7 +1256,8 @@ function project_issue_views_default_views() {
   }
   $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'project_issue_access_per_user_queue',
+    'project_issue_user_argument' => 'uid_touch',
   ));
   $handler->override_option('title', 'My issues');
   $handler->override_option('empty', 'No issues match your criteria.');
@@ -1715,7 +1716,8 @@ function project_issue_views_default_views() {
   }
   $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
-    'type' => 'none',
+    'type' => 'project_issue_access_per_user_queue',
+    'project_issue_user_argument' => 'uid',
   ));
   $handler->override_option('empty', 'No issues match your criteria.');
   $handler->override_option('empty_format', '1');

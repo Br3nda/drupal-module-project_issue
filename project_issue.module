@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.150 2009-03-21 18:50:17 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.151 2009-03-23 17:24:53 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1848,5 +1848,31 @@ function project_issue_get_projects($constraint = 'all', $uid = NULL) {
     $options[$project->nid] = $project->title;
   }
   return $options;
+}
+
+/**
+ * Menu access callback for the project_issue_plugin_access_user_list plugin.
+ */
+function project_issue_views_user_access($view_name, $display_id, $argument_name) {
+  $view = views_get_view($view_name);
+  $view->set_display($display_id);
+  $view->init_handlers();
+  // Find the values for any arguments embedded in the path via '%'.
+  $i = 0;
+  foreach (explode('/', $view->display_handler->get_option('path')) as $element) {
+    if ($element == '%') {
+      $view->args[] = arg($i);
+    }
+    $i++;
+  }
+  // Now handle any implicit arguments from the end of the path.
+  $num_arguments = count($view->argument);
+  while (count($view->args) < $num_arguments) {
+    $view->args[] = arg($i);
+    $i++;
+  }
+
+  $arg_uid = $view->argument[$argument_name]->get_value();
+  return !empty($arg_uid);
 }
 

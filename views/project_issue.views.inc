@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.7 2009-02-16 20:38:24 dww Exp $
+// $Id: project_issue.views.inc,v 1.8 2009-03-23 17:24:53 dww Exp $
 
 /**
  * @file
@@ -225,7 +225,7 @@ function project_issue_views_handlers() {
 }
 
 function project_issue_views_plugins() {
-  $path = drupal_get_path('module', 'project_issue');
+  $path = drupal_get_path('module', 'project_issue') . '/views/plugins';
   $views_path = drupal_get_path('module', 'views');
   return array(
     'style' => array(
@@ -234,7 +234,7 @@ function project_issue_views_plugins() {
         'help' => t('Table with colored rows depending on issue status.'),
         'handler' => 'project_issue_table_plugin_style',
         'parent' => 'table',
-        'path' => "$path/views/plugins",
+        'path' => $path,
         'theme' => 'views_view_table',
         'theme file' => 'theme.inc',
         'theme path' => "$views_path/views/theme",
@@ -244,5 +244,15 @@ function project_issue_views_plugins() {
         'type' => 'normal',
       ),
     ),
+    'access' => array(
+      'project_issue_access_per_user_queue' => array(
+        'title' => t('View per-user issue queues'),
+        'help' => t('Access will be granted if the user is requested in the URL or for users viewing their own per-user issue queues.'),
+        'handler' => 'project_issue_plugin_access_per_user_queue',
+        'uses options' => TRUE,
+        'path' => $path,
+      ),
+    ),
   );
 }
+

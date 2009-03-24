@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.151 2009/03/23 17:24:53 dww Exp $
+// $Id: project_issue.module,v 1.152 2009/03/24 00:19:11 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1674,8 +1674,13 @@ function project_issue_alter_views_exposed_form(&$form, &$form_state) {
     case 'project_issue_user_projects':
       $user_filters = array('assigned', 'submitted', 'participant');
       foreach (element_children($form) as $element) {
-        if ($form[$element]['#type'] == 'textfield' && $form_state['view']->name != 'project_issue_user_projects') {
-          $form[$element]['#size'] = 32;
+        if ($form[$element]['#type'] == 'textfield') {
+          if ($form_state['view']->name == 'project_issue_user_projects') {
+            $form[$element]['#size'] = 16;
+          }
+          else {
+            $form[$element]['#size'] = 32;
+          }
         }
         elseif ($form[$element]['#type'] == 'select' && $form[$element]['#multiple']) {
           $form[$element]['#size'] = 5;
@@ -1874,5 +1879,12 @@ function project_issue_views_user_access($view_name, $display_id, $argument_name
 
   $arg_uid = $view->argument[$argument_name]->get_value();
   return !empty($arg_uid);
+}
+
+/**
+ * Return the views filter identifier for a given project issue vocabulary.
+ */
+function project_issue_views_filter_identifier($name) {
+  return drupal_strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', check_plain($name)));
 }
 

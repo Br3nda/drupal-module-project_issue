@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.42 2009-03-23 17:24:53 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.43 2009-03-24 00:19:12 dww Exp $
 
 
 /**
@@ -2204,6 +2204,7 @@ function project_issue_views_default_views() {
     );
     $filters = $search_filter + $filters;
   }
+  _project_issue_views_add_taxonomy_filters($filters);
   $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
     'type' => 'none',
@@ -2758,6 +2759,7 @@ function project_issue_views_default_views() {
     );
     $filters = $search_filter + $filters;
   }
+  _project_issue_views_add_taxonomy_filters($filters);
   $handler->override_option('filters', $filters);
   $handler->override_option('access', array(
     'type' => 'none',
@@ -2895,5 +2897,47 @@ function project_issue_views_default_views() {
   $views[$view->name] = $view;
 
   return $views;
+}
+
+/**
+ * Add exposed filters for every taxonomy vocabulary for project_issue nodes.
+ */
+function _project_issue_views_add_taxonomy_filters(&$filters) {
+  if (!module_exists('taxonomy')) {
+    return;
+  }
+  $issue_vocabularies = taxonomy_get_vocabularies('project_issue');
+  $i = 0;
+  foreach ($issue_vocabularies as $vid => $vocab) {
+    $view_key = 'tid';
+    if ($i) {
+      $view_key .= "_$i";
+    }
+    $i++;
+    $identifier = project_issue_views_filter_identifier($vocab->name);
+    $filters[$view_key] = array(
+      'operator' => 'or',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'tid_op',
+        'identifier' => $identifier,
+        'label' => check_plain($vocab->name),
+        'optional' => 1,
+        'single' => 1,
+        'remember' => 0,
+      ),
+      'type' => 'textfield',
+      'vid' => $vid,
+      'id' => 'tid',
+      'table' => 'term_node',
+      'field' => 'tid',
+      'hierarchy' => 0,
+      'relationship' => 'none',
+      'reduce_duplicates' => 1,
+    );
+  }
 }
 

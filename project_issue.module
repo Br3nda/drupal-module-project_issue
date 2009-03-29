@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.152 2009/03/24 00:19:11 dww Exp $
+// $Id: project_issue.module,v 1.153 2009/03/29 23:00:57 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -537,7 +537,8 @@ function project_issue_settings_form(&$form_state) {
     '#cols' => 20,
     '#rows' => 6,
     '#required' => TRUE,
-    '#description' => t("Enter the default list of components that new projects will have.  The project owner will be able to change this list on the project's edit/issues page.")
+    '#description' => t("Enter the default list of components that new projects will have.  The project owner will be able to change this list on the project's edit/issues page."),
+    '#element_validate' => array('project_issue_validate_default_components'),
   );
 
   if (module_exists('mailhandler')) {
@@ -570,6 +571,40 @@ function project_issue_settings_form(&$form_state) {
   );
 
   return system_settings_form($form);
+}
+
+/**
+ * Helper to trim all elements in an array.
+ */
+function project_issue_trim(&$item, $key) {
+  $item = trim($item);  
+}
+
+function project_issue_validate_default_components($form, &$form_state) {
+  // If the list of default components has changed (other than whitespace),
+  // warn the admin that the change will only affect new projects.
+  $value = trim($form['#value']);
+
+  // If it's empty and required, the user will get a message that the
+  // field is required, so don't bother warning them that the component
+  // list has changed.
+  if ($form['#required'] && !empty($value)) {
+    $old = explode("\n", str_replace("\r", '', $form['#default_value']));
+    $new = explode("\n", str_replace("\r", '', $value));
+
+    // Trim whitespace on each entry in the array.
+    array_walk($old, 'project_issue_trim');
+    array_walk($new, 'project_issue_trim');
+    // Filter out blank lines and reindex the arrays from 0.
+    $old = array_values(array_filter($old));
+    $new = array_values(array_filter($new));
+
+    if ($old != $new) {
+      drupal_set_message(t("The list of default components for new projects has changed. This will not affect existing projects."), 'warning');
+    }
+    // Regardless, now that we've trimmed everything, save those values.
+    $form_state['values']['project_issue_default_components'] = implode("\n", $new);
+  }
 }
 
 function project_issue_validate_issues_per_page($form) {
@@ -939,7 +974,9 @@ function project_issue_project_edit_form_validate($form, &$form_state) {
  * @see project_issue_project_edit_issues
  */
 function project_issue_project_edit_form_submit($form, &$form_state) {
-  $components = serialize(explode("\n", str_replace("\r", '', $form_state['values']['components'])));
+  $components = explode("\n", str_replace("\r", '', $form_state['values']['components']));
+  array_walk($components, 'project_issue_trim');
+  $components = serialize(array_values(array_filter($components)));
   $mail_copy_filter = serialize($form_state['values']['mail_copy_filter']);
   $mail_copy_filter_state = serialize($form_state['values']['mail_copy_filter_state']);
 

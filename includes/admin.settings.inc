@@ -1,5 +1,5 @@
 <?php
-// $Id: admin.settings.inc,v 1.1 2009/04/04 06:28:20 dww Exp $
+// $Id: admin.settings.inc,v 1.2 2009/04/04 06:30:21 dww Exp $
 
 /**
  * @file
@@ -130,15 +130,6 @@ function project_issue_validate_default_components($form, &$form_state) {
     }
     // Regardless, now that we've trimmed everything, save those values.
     $form_state['values']['project_issue_default_components'] = implode("\n", $new);
-  }
-}
-
-function project_issue_validate_issues_per_page($form) {
-  if (!is_numeric($form['#value'])) {
-    form_error($form, t('%setting must be a number.', array('%setting' => t('Issues per page'))));
-  }
-  if ($form['#value'] <= 0) {
-    form_error($form, t('%setting must be greater than 0.', array('%setting' => t('Issues per page'))));
   }
 }
 

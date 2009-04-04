@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.156 2009/04/04 06:28:19 dww Exp $
+// $Id: project_issue.module,v 1.157 2009/04/04 07:03:28 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -109,6 +109,7 @@ function project_issue_menu() {
     'access arguments' => array('administer projects'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 1,
+    'file' => 'includes/admin.issue_status.inc'
   );
   $items['admin/project/project-issue-status/delete'] = array(
     'title' => 'Delete',
@@ -116,6 +117,7 @@ function project_issue_menu() {
     'page arguments' => array('project_issue_delete_state_confirm', 4),
     'access arguments' => array('administer projects'),
     'type' => MENU_CALLBACK,
+    'file' => 'includes/admin.issue_status.inc'
   );
 
   // Issues subtab on project node edit tab.
@@ -320,7 +322,7 @@ function project_issue_theme() {
       ),
     ),
     'project_issue_admin_states_form' => array(
-      'file' => 'issue.inc',
+      'file' => 'includes/admin.issue_status.inc',
       'arguments' => array(
         'form' => NULL,
       ),

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.343 2009/03/21 16:23:24 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.344 2009/04/04 00:56:33 dww Exp $
 
 
 /**
@@ -1332,17 +1332,19 @@ function project_issue_delete_state_confirm(&$form_state, $sid) {
   );
 }
 
-function project_issue_delete_state_confirm_submit($form, &$form_state) {
-  if($form_state['values']['new_sid'] == $form_state['values']['sid']) {
-      form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_state['values']['name'])));
-  } else {
-    if ($form_state['values']['new_sid']) {
-      db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_state['values']['new_sid'], $form_state['values']['sid']);
-    }
-    db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_state['values']['sid']);
-    drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_state['values']['name'])));
-    $form_state['redirect'] ='admin/project/project-issue-status';
+function project_issue_delete_state_confirm_validate($form, &$form_state) {
+  if ($form_state['values']['new_sid'] == $form_state['values']['sid']) {
+    form_set_error('new_sid', t('Choose a new issue status for existing issues of status %name.', array('%name' => $form_state['values']['name'])));
   }
+}
+
+function project_issue_delete_state_confirm_submit($form, &$form_state) {
+  if ($form_state['values']['new_sid']) {
+    db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_state['values']['new_sid'], $form_state['values']['sid']);
+  }
+  db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_state['values']['sid']);
+  drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_state['values']['name'])));
+  $form_state['redirect'] ='admin/project/project-issue-status';
 }
 
 /**

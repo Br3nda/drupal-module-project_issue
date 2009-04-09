@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_status.inc,v 1.4 2009/02/25 10:31:14 dww Exp $
+// $Id: project_issue_handler_filter_issue_status.inc,v 1.5 2009/04/09 18:32:58 dww Exp $
 
 
 /**
@@ -33,51 +33,23 @@ class project_issue_handler_filter_issue_status extends views_handler_filter_in_
   }
 
   /**
-   * Accept the input to the exposed filter and map it to the right values.
+   * Generate the query based on this filter.
    *
    * This is where the special logic for the "- Open issues -" choice is
    * converted back into the real status values for the underlying query.
-   * First, we invoke the parent method to try to handle the input.  Then, we
-   * see if the input includes a value for this filter.  If the value is an
-   * array we know we're a multi-select filter, and we need to more carefully
-   * handle the "open issues" choice (since someone might have selected that
-   * and a few other individual issue statuses).
    */
-  function accept_exposed_input($input) {
-    $rc = parent::accept_exposed_input($input);
-    if ($rc) {
-      if (!empty($this->options['expose']['identifier'])) {
-        $identifier = $this->options['expose']['identifier'];
-        if (isset($input[$identifier])) {
-          if (is_array($input[$identifier])) {
-            $this->value = array();
-            foreach ($input[$identifier] as $value) {
-              if ($value == 'Open') {
-                $this->value += $this->get_open_states();
-              }
-              else {
-                $this->value[] = $value;
-              }
-            }
-          }
-          else {
-            // Input is not an array (we're configured as "force single").
-            switch ($input[$identifier]) {
-              case 'All':
-                // Work-around a bug in Views that doesn't handle 'All'
-                // correctly if the view already has a default value.
-                return FALSE;
-
-              case 'Open':
-                $this->value = $this->get_open_states();
-                break;
-            }
-          }
-        }
+  function query() {
+    $values = array();
+    foreach ($this->value as $key => $value) {
+      if ($value == 'Open') {
+        $values += $this->get_open_states();
+      }
+      else {
+        $values[$key] = $value;
       }
     }
-    return $rc;
+    $this->value = $values;
+    parent::query();
   }
-
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.7 2009/02/25 11:21:05 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.8 2009/04/09 18:32:58 dww Exp $
 
 
 /**
@@ -93,44 +93,24 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
   }
 
   /**
-   * Accept the input to the exposed filter and map it to the right values.
+   * Generate the query based on this filter.
    *
    * This is where the special logic for the "- $series issues -" choices is
    * converted back into the real release nid values for the underlying query.
-   * First, we invoke the parent method to try to handle the input.  Then, we
-   * see if the input includes a value for this filter.  If the value is an
-   * array we know we're a multi-select filter, and we need to more carefully
-   * handle the choices.
    */
-  function accept_exposed_input($input) {
-    $rc = parent::accept_exposed_input($input);
-    if ($rc) {
-      if (!empty($this->options['expose']['identifier'])) {
-        $this->init_version_info();        
-        $identifier = $this->options['expose']['identifier'];
-        if (isset($input[$identifier])) {
-          if (is_array($input[$identifier])) {
-            $this->value = array();
-            foreach ($input[$identifier] as $value) {
-              if (!empty($this->project_version_series[$value])) {
-                $this->value = array_merge($this->value, $this->project_version_series[$value]);
-              }
-              else {
-                $this->value[] = $value;
-              }
-            }
-          }
-          else {
-            // Input is not an array (we're configured as "force single").
-            $value = $input[$identifier];
-            if (!empty($this->project_version_series[$value])) {
-              $this->value = $this->project_version_series[$value];
-            }
-          }
-        }
+  function query() {
+    $this->init_version_info();
+    $values = array();
+    foreach ($this->value as $key => $value) {
+      if (!empty($this->project_version_series[$value])) {
+        $values += $this->project_version_series[$value];
+      }
+      else {
+        $values[$key] = $value;
       }
     }
-    return $rc;
+    $this->value = $values;
+    parent::query();
   }
 
 }

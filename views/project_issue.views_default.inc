@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.43 2009-03-24 00:19:12 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.44 2009-04-09 00:05:59 dww Exp $
 
 
 /**
@@ -917,6 +917,89 @@ function project_issue_views_default_views() {
     'default' => 0,
   ));
   $handler->override_option('sitename_title', FALSE);
+  $handler = $view->new_display('block', 'Block', 'block_1');
+  $handler->override_option('title', 'Recent issues');
+  $handler->override_option('relationships', array());
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 1,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+      'override' => array(
+        'button' => 'Use default',
+      ),
+    ),
+    'timestamp' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'comments' => 0,
+      'exclude' => 0,
+      'id' => 'timestamp',
+      'table' => 'history_user',
+      'field' => 'timestamp',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'last_comment_timestamp' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'last_comment_timestamp',
+      'table' => 'node_comment_statistics',
+      'field' => 'last_comment_timestamp',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('arguments', array(
+    'pid' => array(
+      'default_action' => 'default',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => '',
+      'wildcard_substitution' => '',
+      'default_argument_type' => 'node',
+      'default_argument' => '',
+      'validate_type' => 'project_nid',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'pid',
+      'table' => 'project_issues',
+      'field' => 'pid',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'status_extra' => array(
+      'operator' => '=',
+      'value' => '',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'status_extra',
+      'table' => 'node',
+      'field' => 'status_extra',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('items_per_page', 4);
+  $handler->override_option('use_pager', '0');
+  $handler->override_option('style_plugin', 'list');
+  $handler->override_option('style_options', array(
+    'grouping' => '',
+    'type' => 'ul',
+  ));
+  $handler->override_option('block_description', 'Project: recent issues');
+  $handler->override_option('block_caching', -1);
 
   $views[$view->name] = $view;
 

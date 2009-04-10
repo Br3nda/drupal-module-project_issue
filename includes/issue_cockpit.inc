@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_cockpit.inc,v 1.1 2009-04-10 22:15:24 dww Exp $
+// $Id: issue_cockpit.inc,v 1.2 2009-04-10 22:18:50 dww Exp $
 
 /**
  * Form builder for the search box in the issue cockpit block.
@@ -30,7 +30,7 @@ function project_issue_issue_cockpit_searchbox(&$form_state, $node) {
 }
 
 /**
- * Theme template preprocess
+ * Theme template preprocess to declare variables for the issue cockpit.
  */
 function template_preprocess_project_issue_issue_cockpit(&$vars) {
   $node = $vars['node'];

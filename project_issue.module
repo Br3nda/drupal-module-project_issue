@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.157 2009-04-04 07:03:28 dww Exp $
+// $Id: project_issue.module,v 1.158 2009-04-10 22:15:24 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -371,6 +371,13 @@ function project_issue_theme() {
         'include_assigned' => FALSE,
       ),
     ),
+    'project_issue_issue_cockpit' => array(
+      'arguments' => array(
+        'node' => NULL,
+      ),
+      'file' => 'includes/issue_cockpit.inc',
+      'template' => 'project-issue-issue-cockpit',
+    ),
   );
 }
 
@@ -448,6 +455,14 @@ function project_issue_form_alter(&$form, &$form_state, $form_id) {
 
     case 'views_exposed_form':
       project_issue_alter_views_exposed_form($form, $form_state);
+      break;
+
+    case 'project_issue_issue_cockpit_searchbox':
+      // Since we're using a GET #action for this searchbox, unset the FAPI
+      // cruft we don't want to see in the URL.
+      unset($form['form_build_id']);
+      unset($form['form_id']);
+      unset($form['form_token']);
       break;
   }
 }
@@ -1601,3 +1616,22 @@ function project_issue_views_filter_identifier($name) {
   return drupal_strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', check_plain($name)));
 }
 
+/**
+ * Implementation of hook_block().
+ */
+function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks['issue_cockpit'] = array(
+      'info' => t('Issue cockpit'),
+      'cache' => BLOCK_CACHE_PER_ROLE | BLOCK_CACHE_PER_PAGE,
+    );
+    return $blocks;
+  }
+  elseif ($op == 'view' && ($node = menu_get_object()) && $node->type == 'project_project' && !empty($node->project_issue['issues']) && node_access('view', $node)) {
+    module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
+    return array(
+      'subject' => t('Issues'),
+      'content' => theme('project_issue_issue_cockpit', $node),
+    );
+  }
+}

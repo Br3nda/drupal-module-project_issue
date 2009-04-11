@@ -1,10 +1,10 @@
 <?php
-// $Id: project-issue-issue-cockpit.tpl.php,v 1.1 2009-04-10 22:15:24 dww Exp $
+// $Id: project-issue-issue-cockpit.tpl.php,v 1.2 2009-04-11 00:14:23 dww Exp $
 ?>
 
 <?php if ($make_issues): ?>
   <p>
-    <?php print t("To avoid duplicates, please check the queues for your issue before submitting a new one. As you search or browse you will find a '<strong>Create a new issue</strong>' link."); ?>
+    <?php print t("To avoid duplicates, please search before submitting a new issue."); ?>
   </p>
 <?php endif; ?>
 
@@ -19,8 +19,11 @@
   <div class="issue-cockpit-categories">
     <?php foreach($categories as $key => $category): ?>
       <div class="issue-cockpit-<?php print $key; ?>">
-        <?php print l(t('!category: !open open', array('!open' => $category['open'], '!category' => ucfirst($category['name']))), $path, array('query' => 'categories='. $key)); ?>
-        <?php print l(t('(!total total)', array('!total' => $category['total'])), $path, array('query' => 'status=All&categories='. $key)); ?>
+      <strong><?php print ucfirst($category['name']); ?></strong>
+        <div>
+        <?php print l(t('!open open', array('!open' => $category['open'])), $path, array('query' => 'categories='. $key)); ?>,
+        <?php print l(t('!total total', array('!total' => $category['total'])), $path, array('query' => 'status=All&categories='. $key)); ?>
+        </div>
       </div>
     <?php endforeach; ?>
   </div>

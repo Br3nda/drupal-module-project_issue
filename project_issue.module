@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.158 2009/04/10 22:15:24 dww Exp $
+// $Id: project_issue.module,v 1.159 2009/04/11 01:58:10 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1635,3 +1635,16 @@ function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
     );
   }
 }
+
+/**
+ * Implemenation of hook_project_page_link_alter().
+ *
+ * Add project_issue-specific links to the array of project links.
+ */
+function project_issue_project_page_link_alter(&$links, $node) {
+  // TODO: Assumes "patch" issue status values (http://drupal.org/node/27865).
+  // Prepend a link to the development section to view pending patches.
+  $patches['pending_patches'] = l(t('View pending patches'), 'project/issues/search/'. $node->project['uri'], array('query' => 'status[]=8&status[]=13&status[]=14'));
+  $links['development']['links'] = $patches + $links['development']['links'];
+}
+

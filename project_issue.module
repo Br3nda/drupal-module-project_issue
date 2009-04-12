@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.159 2009-04-11 01:58:10 dww Exp $
+// $Id: project_issue.module,v 1.160 2009-04-12 22:18:11 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1627,7 +1627,7 @@ function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
     );
     return $blocks;
   }
-  elseif ($op == 'view' && ($node = menu_get_object()) && $node->type == 'project_project' && !empty($node->project_issue['issues']) && node_access('view', $node)) {
+  elseif ($op == 'view' && ($node = project_get_project_from_menu()) && !empty($node->project_issue['issues']) && node_access('view', $node)) {
     module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
     return array(
       'subject' => t('Issues'),

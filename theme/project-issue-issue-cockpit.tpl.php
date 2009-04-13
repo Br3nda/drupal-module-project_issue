@@ -1,5 +1,5 @@
 <?php
-// $Id: project-issue-issue-cockpit.tpl.php,v 1.2 2009/04/11 00:14:23 dww Exp $
+// $Id: project-issue-issue-cockpit.tpl.php,v 1.3 2009/04/13 09:20:49 dww Exp $
 ?>
 
 <?php if ($make_issues): ?>
@@ -20,7 +20,7 @@
     <?php foreach($categories as $key => $category): ?>
       <div class="issue-cockpit-<?php print $key; ?>">
       <strong><?php print ucfirst($category['name']); ?></strong>
-        <div>
+        <div class="issue-cockpit-totals">
         <?php print l(t('!open open', array('!open' => $category['open'])), $path, array('query' => 'categories='. $key)); ?>,
         <?php print l(t('!total total', array('!total' => $category['total'])), $path, array('query' => 'status=All&categories='. $key)); ?>
         </div>
@@ -28,11 +28,14 @@
     <?php endforeach; ?>
   </div>
 
-  <div class="issue-cockpit-oldest">
-    <?php print t('Oldest open issue: @date', array('@date' => format_date($oldest, 'custom', 'j M y'))); ?>
-  </div>
   <div class="issue-cockpit-subscribe">
     <?php print $issue_subscribe; ?>
+  </div>
+  <div class="issue-cockpit-statistics">
+    <?php print $issue_statistics; ?>
+  </div>
+  <div class="issue-cockpit-oldest">
+    <?php print t('Oldest open issue: @date', array('@date' => format_date($oldest, 'custom', 'j M y'))); ?>
   </div>
 
 <?php endif; ?>

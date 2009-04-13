@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_cockpit.inc,v 1.2 2009/04/10 22:18:50 dww Exp $
+// $Id: issue_cockpit.inc,v 1.3 2009/04/13 09:20:49 dww Exp $
 
 /**
  * Form builder for the search box in the issue cockpit block.
@@ -71,9 +71,9 @@ function template_preprocess_project_issue_issue_cockpit(&$vars) {
       }
     }
 
-    $vars['oldest'] = db_result(db_query(db_rewrite_sql('SELECT min(n.created) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
-
     $vars['issue_subscribe'] = l(t('Subcribe via e-mail'), 'project/issues/subscribe-mail/'. $node->project['uri'], array('query' => drupal_get_destination()));
+    $vars['issue_statistics'] = l(t('Issue statistics'), 'project/issues/statistics/'. $node->project['uri']);
+    $vars['oldest'] = db_result(db_query(db_rewrite_sql('SELECT min(n.created) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
   }
 }
 

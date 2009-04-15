@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.160 2009/04/12 22:18:11 dww Exp $
+// $Id: project_issue.module,v 1.161 2009/04/15 22:21:26 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -376,7 +376,7 @@ function project_issue_theme() {
         'node' => NULL,
       ),
       'file' => 'includes/issue_cockpit.inc',
-      'template' => 'project-issue-issue-cockpit',
+      'template' => 'theme/project-issue-issue-cockpit',
     ),
   );
 }

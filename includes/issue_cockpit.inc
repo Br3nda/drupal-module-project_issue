@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_cockpit.inc,v 1.3 2009-04-13 09:20:49 dww Exp $
+// $Id: issue_cockpit.inc,v 1.4 2009-04-15 22:21:27 dww Exp $
 
 /**
  * Form builder for the search box in the issue cockpit block.
@@ -34,9 +34,6 @@ function project_issue_issue_cockpit_searchbox(&$form_state, $node) {
  */
 function template_preprocess_project_issue_issue_cockpit(&$vars) {
   $node = $vars['node'];
-
-  // Explicitly set the template file since it's not in the same directory.
-  $vars['template_files'][] = 'theme/project-issue-issue-cockpit';
 
   // Flags that indicate what kind of access to project issues to allow.
   $has_issues = !empty($node->project_issue['issues']);

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.59 2009-03-17 23:32:30 dww Exp $
+// $Id: project_issue.install,v 1.60 2009-04-20 19:24:42 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -370,6 +370,7 @@ function project_issue_uninstall() {
     'project_directory_issues',
     'project_reply_to',
     'project_issue_digest_last',
+    'project_issue_cockpit_categories',
     'project_issue_digest_interval',
     'project_issue_reminder_last',
     'project_issue_reminder_interval',

@@ -1,28 +1,21 @@
 <?php
-// $Id: project-issue-issue-cockpit.tpl.php,v 1.3 2009-04-13 09:20:49 dww Exp $
+// $Id: project-issue-issue-cockpit.tpl.php,v 1.4 2009-04-20 19:11:35 dww Exp $
 ?>
 
 <?php if ($make_issues): ?>
-  <p>
-    <?php print t("To avoid duplicates, please search before submitting a new issue."); ?>
-  </p>
+  <?php print t('To avoid duplicates, please search before submitting a new issue.'); ?>
 <?php endif; ?>
 
 <?php if ($view_issues): ?>
-  <div class="issue-cockpit-all">
-    <?php print l(t('All Issues: !open open', array('!open' => $open)), $path); ?>
-    <?php print l(t('(!total total)', array('!total' => $total)), $path, array('query' => 'status=All')); ?>
-  </div>
-
   <?php print $form; ?>
 
   <div class="issue-cockpit-categories">
     <?php foreach($categories as $key => $category): ?>
       <div class="issue-cockpit-<?php print $key; ?>">
-      <strong><?php print ucfirst($category['name']); ?></strong>
+        <span class="category-header"><?php print ucfirst($categories[$key]['name']); ?></span>
         <div class="issue-cockpit-totals">
-        <?php print l(t('!open open', array('!open' => $category['open'])), $path, array('query' => 'categories='. $key)); ?>,
-        <?php print l(t('!total total', array('!total' => $category['total'])), $path, array('query' => 'status=All&categories='. $key)); ?>
+          <?php print l(t('!open open', array('!open' => $categories[$key]['open'])), $path, array('query' => 'categories='. $key)); ?>,
+          <?php print l(t('!total total', array('!total' => $categories[$key]['total'])), $path, array('query' => 'status=All&categories='. $key)); ?>
         </div>
       </div>
     <?php endforeach; ?>

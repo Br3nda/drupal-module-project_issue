@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_cockpit.inc,v 1.4 2009/04/15 22:21:27 dww Exp $
+// $Id: issue_cockpit.inc,v 1.5 2009/04/20 19:11:34 dww Exp $
 
 /**
  * Form builder for the search box in the issue cockpit block.
@@ -20,11 +20,11 @@ function project_issue_issue_cockpit_searchbox(&$form_state, $node) {
     ),
     'submit' => array(
       '#type' => 'submit',
-      '#value' => t('search'),
+      '#value' => t('Search'),
       '#name' => '',
     ),
     'advanced' => array(
-      '#value' => l(t('advanced search'), $adv_search_path),
+      '#value' => l(t('Advanced search'), $adv_search_path),
     ),
   );
 }
@@ -43,15 +43,20 @@ function template_preprocess_project_issue_issue_cockpit(&$vars) {
   if ($vars['view_issues']) {
     $open_states = '('. implode(',', array_keys(project_issue_state(0, FALSE, FALSE, 0, TRUE))) .')';
 
-    $vars['open'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
-    $vars['total'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d'), $node->nid));
-
     $vars['path'] = 'project/issues/'. $node->project['uri'];
     $vars['form'] = drupal_get_form('project_issue_issue_cockpit_searchbox', $node);
 
     $vars['categories'] = array();
-    foreach (project_issue_category(0, 1) as $category => $name) {
+    $categories = array('All' => t('All issues')) + project_issue_category();
+    $setting = variable_get('project_issue_cockpit_categories', array('All' => 'All', 'bug' => 'bug'));
+    $active_categories = array_intersect_key($categories, array_filter($setting));
+    foreach ($active_categories as $category => $name) {
       $vars['categories'][$category] = array('name' => $name, 'open' => 0, 'total' => 0);
+    }
+
+    if (isset($vars['categories']['All'])) {
+      $vars['categories']['All']['open'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
+      $vars['categories']['All']['total'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d'), $node->nid));
     }
 
     $result = db_query(db_rewrite_sql('SELECT count(*) AS open, i.category FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states .' GROUP BY i.category'), $node->nid);

@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.8 2009/04/09 18:32:58 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.9 2009/04/22 17:09:48 dww Exp $
 
 
 /**
@@ -63,13 +63,15 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
       $this->project_versions = project_release_get_releases($project, FALSE);
       if (!empty($this->project_versions)) {
         $active_tids = array_keys(project_release_compatibility_list());
-        $tid_placeholders = db_placeholders($active_tids);
-        $nids = array_keys($this->project_versions);
-        $nid_placeholders = db_placeholders($nids);
-        $query_args = array_merge($active_tids, $nids);
-        $query = db_query("SELECT td.name, td.tid, tn.nid FROM {term_data} td INNER JOIN {term_node} tn ON td.tid = tn.tid WHERE tn.tid IN ($tid_placeholders) AND tn.nid IN ($nid_placeholders) ORDER BY td.weight", $query_args);
-        while ($release = db_fetch_object($query)) {
-          $this->project_version_series[$release->name][] = $release->nid;
+        if (!empty($active_tids)) {
+          $tid_placeholders = db_placeholders($active_tids);
+          $nids = array_keys($this->project_versions);
+          $nid_placeholders = db_placeholders($nids);
+          $query_args = array_merge($active_tids, $nids);
+          $query = db_query("SELECT td.name, td.tid, tn.nid FROM {term_data} td INNER JOIN {term_node} tn ON td.tid = tn.tid WHERE tn.tid IN ($tid_placeholders) AND tn.nid IN ($nid_placeholders) ORDER BY td.weight", $query_args);
+          while ($release = db_fetch_object($query)) {
+            $this->project_version_series[$release->name][] = $release->nid;
+          }
         }
       }
     }
@@ -99,18 +101,20 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
    * converted back into the real release nid values for the underlying query.
    */
   function query() {
-    $this->init_version_info();
-    $values = array();
-    foreach ($this->value as $key => $value) {
-      if (!empty($this->project_version_series[$value])) {
-        $values += $this->project_version_series[$value];
+    if (isset($this->value)) {
+      $this->init_version_info();
+      $values = array();
+      foreach ($this->value as $key => $value) {
+        if (!empty($this->project_version_series[$value])) {
+          $values += $this->project_version_series[$value];
+        }
+        else {
+          $values[$key] = $value;
+        }
       }
-      else {
-        $values[$key] = $value;
-      }
+      $this->value = $values;
+      parent::query();
     }
-    $this->value = $values;
-    parent::query();
   }
 
 }

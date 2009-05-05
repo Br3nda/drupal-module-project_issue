@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.152 2009-02-20 07:14:15 dww Exp $
+// $Id: comment.inc,v 1.153 2009-05-05 17:44:30 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -18,6 +18,11 @@ function project_issue_comment(&$arg, $op) {
   $original_node = drupal_clone($node);
   $old_data = (object) $original_node->project_issue;
   $old_data->title = $original_node->title;
+
+  // Maintain an array of project ids that are affected by this comment
+  // operation. We'll use this to invalidate the "Issue cockpit" block cache
+  // for any of these projects.
+  $affected_projects = array();
 
   switch ($op) {
     case 'insert':
@@ -44,6 +49,8 @@ function project_issue_comment(&$arg, $op) {
         db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $rid, $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['project_info']['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
         db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['cid']);
         project_issue_update_by_comment($arg, 'insert');
+        $affected_projects[$old_data->pid] = 1;
+        $affected_projects[$arg['project_info']['pid']] = 1;
       }
       else {
         drupal_set_message(t('There was an error submitting your comment -- please try again. If the problem persists, contact the system administrator.'), 'error');
@@ -60,11 +67,23 @@ function project_issue_comment(&$arg, $op) {
 
     case 'update':
       project_issue_update_by_comment($arg, 'update');
+      // Updating a comment can't change anything relevant about the issue for
+      // the purposes of the issue blocks, so we don't need to touch
+      // $affected_projects here.
       break;
 
     case 'delete':
+      // Save the project that's specified in this comment so we can
+      // invalidate its issue block cache.
+      $deleted_comment_project_id = db_result(db_query("SELECT pid FROM {project_issue_comments} WHERE cid = %d", $arg->cid));
+      $affected_projects[$deleted_comment_project_id] = 1;
+      // Actually delete the comment
       db_query("DELETE FROM {project_issue_comments} WHERE cid = %d", $arg->cid);
-      project_issue_update_by_comment($arg, 'delete');
+      $current_data = project_issue_update_by_comment($arg, 'delete');
+      // We should also invalidate the block cache for whatever project is now
+      // used for this issue, since we might be deleting a comment that moved
+      // an issue from one project to another.
+      $affected_projects[$current_data->pid] = 1;      
       break;
 
     case 'view':
@@ -87,6 +106,13 @@ function project_issue_comment(&$arg, $op) {
       }
       break;
 
+  }
+  // If there are any affected projects, invalidate the block cache for those.
+  if (!empty($affected_projects)) {
+    foreach ($affected_projects as $pid => $value) {
+      $cid = 'project_issue_cockpit_block:'. $pid;
+      cache_clear_all($cid, 'cache');
+    }
   }
 }
 
@@ -508,6 +534,8 @@ function project_issue_comment_view(&$node, $comment = NULL) {
  *  The comment data that's been submitted.
  * @param $op
  *  The comment operation performed, 'insert', 'update', 'delete'.
+ * @return
+ *   An object representing the comment data used to update the issue.
  */
 function project_issue_update_by_comment($comment_data, $op) {
   switch ($op) {
@@ -542,6 +570,9 @@ function project_issue_update_by_comment($comment_data, $op) {
 
   // This also updates the changed date of the issue.
   node_save($node);
+
+  // Return the object of comment data we used to update the issue.
+  return $comment_data;
 }
 
 /**

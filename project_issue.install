@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.60 2009/04/20 19:24:42 dww Exp $
+// $Id: project_issue.install,v 1.61 2009/05/05 19:15:57 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -26,6 +26,12 @@ function project_issue_schema() {
         'description' => t('A serialized array defining the components for this project.'),
         'type' => 'text',
         'not null' => FALSE,
+      ),
+      'default_component' => array(
+        'description' => t('The default component for new issues of this project, or an empty string if the user needs to select a component.'),
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
       ),
       'help' => array(
         'description' => t('Submission guidelines for issues added to this project.'),
@@ -414,5 +420,14 @@ function project_issue_add_missing_projects() {
 function project_issue_update_6000() {
   variable_del('project_issues_per_page');
   return array();
+}
+
+/**
+ * Add the 'default_component' field to {project_issue_projects}.
+ */
+function project_issue_update_6001() {
+  $ret = array();
+  db_add_field($ret, 'project_issue_projects', 'default_component', array('type' => 'text', 'not null' => TRUE, 'default' => ''));
+  return $ret;
 }
 

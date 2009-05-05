@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.162 2009/04/20 19:11:34 dww Exp $
+// $Id: project_issue.module,v 1.163 2009/05/05 17:44:30 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1640,13 +1640,23 @@ function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
   }
   elseif ($op == 'save' && $delta == 'issue_cockpit') {
     variable_set('project_issue_cockpit_categories', $edit['project_issue_cockpit_categories']);
+    // Invalidate the cache for this block since the categories might change.
+    cache_clear_all('project_issue_cockpit_block:', 'cache', TRUE);
   }
   elseif ($op == 'view' && ($node = project_get_project_from_menu()) && !empty($node->project_issue['issues']) && node_access('view', $node)) {
-    module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
-    return array(
-      'subject' => t('Issues'),
-      'content' => theme('project_issue_issue_cockpit', $node),
-    );
+    $cid = 'project_issue_cockpit_block:'. $node->nid;
+    if (($cache = cache_get($cid))) {
+      $block = $cache->data;
+    }
+    else {
+      module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
+      $block = array(
+        'subject' => t('Issues'),
+        'content' => theme('project_issue_issue_cockpit', $node),
+      );
+      cache_set($cid, $block);
+    }
+    return $block;
   }
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.345 2009/04/04 07:03:28 dww Exp $
+// $Id: issue.inc,v 1.346 2009/05/05 17:44:30 dww Exp $
 
 
 /**
@@ -1025,6 +1025,10 @@ function project_issue_insert($node) {
   }
 
   db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, serialize($original_issue_data), 0, 0);
+
+  // Invalidate the "Issue cockpit" block cache for this project, since the
+  // new issue will have altered the summary totals.
+  cache_clear_all('project_issue_cockpit_block:'. $node->pid, 'cache');
 }
 
 function project_issue_delete($node) {

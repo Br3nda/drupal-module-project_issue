@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.164 2009-05-05 17:47:26 dww Exp $
+// $Id: project_issue.module,v 1.165 2009-05-05 19:15:57 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -128,6 +128,16 @@ function project_issue_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('update', 1),
     'type' => MENU_LOCAL_TASK,
+    'file' => 'includes/project_edit_issues.inc',
+  );
+  $items['node/%project_node/edit/component/delete/%'] = array(
+    'title' => 'Delete component',
+    'description' => 'Delete component',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('project_issue_component_delete_form', 1, 5),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 1),
+    'type' => MENU_CALLBACK,
     'file' => 'includes/project_edit_issues.inc',
   );
 
@@ -323,6 +333,12 @@ function project_issue_theme() {
     ),
     'project_issue_admin_states_form' => array(
       'file' => 'includes/admin.issue_status.inc',
+      'arguments' => array(
+        'form' => NULL,
+      ),
+    ),
+    'project_issue_project_edit_form' => array(
+      'file' => 'includes/project_edit_issues.inc',
       'arguments' => array(
         'form' => NULL,
       ),
@@ -967,6 +983,7 @@ function project_issue_project_load(&$node, $arg) {
   }
   $node->project_issue = array();
   $node->project_issue['components'] = unserialize($project->components);
+  $node->project_issue['default_component'] = $project->default_component;
   $node->project_issue['mail_copy_filter'] = unserialize($project->mail_copy_filter);
   $node->project_issue['mail_copy_filter_state'] = unserialize($project->mail_copy_filter_state);
   foreach (array('issues', 'help', 'mail_digest', 'mail_copy', 'mail_reminder') as $field) {

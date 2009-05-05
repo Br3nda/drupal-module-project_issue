@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.346 2009-05-05 17:44:30 dww Exp $
+// $Id: issue.inc,v 1.347 2009-05-05 19:15:57 dww Exp $
 
 
 /**
@@ -554,9 +554,15 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
     foreach (variable_get('project_issue_invalid_releases', array()) as $rid) {
       unset($releases[$rid]);
     }
-    $components = array();
+    // Setup components and default component.
+    if (!empty($node->project_issue['component'])) {
+      $default_component = $node->project_issue['component'];
+    }
+    else {
+      $default_component = $project->project_issue['default_component'];
+    }
+    $components = empty($default_component) ? array(t('<none>')) : array();
     if ($project->project_issue['components']) {
-      $components = array(t('<none>'));
       foreach ($project->project_issue['components'] as $component) {
         $component = check_plain($component);
         $components[$component] = $component;
@@ -614,7 +620,7 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
     $form['project_info']['component'] = array(
       '#type' => 'select',
       '#title' => t('Component'),
-      '#default_value' => $node->project_issue['component'],
+      '#default_value' => $default_component,
       '#options' => $components,
       '#required' => TRUE,
     );

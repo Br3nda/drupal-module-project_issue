@@ -1,5 +1,5 @@
 <?php
-// $Id: project-issue-issue-cockpit.tpl.php,v 1.4 2009/04/20 19:11:35 dww Exp $
+// $Id: project-issue-issue-cockpit.tpl.php,v 1.5 2009/05/06 23:43:34 dww Exp $
 ?>
 
 <?php if ($make_issues): ?>
@@ -27,8 +27,10 @@
   <div class="issue-cockpit-statistics">
     <?php print $issue_statistics; ?>
   </div>
-  <div class="issue-cockpit-oldest">
-    <?php print t('Oldest open issue: @date', array('@date' => format_date($oldest, 'custom', 'j M y'))); ?>
-  </div>
+  <?php if ($oldest): ?>
+    <div class="issue-cockpit-oldest">
+      <?php print t('Oldest open issue: @date', array('@date' => format_date($oldest, 'custom', 'j M y'))); ?>
+    </div>
+  <?php endif; ?>
 
 <?php endif; ?>

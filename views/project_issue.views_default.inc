@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.45 2009-04-09 18:35:42 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.46 2009-05-06 06:38:39 dww Exp $
 
 
 /**
@@ -1001,12 +1001,19 @@ function project_issue_views_default_views() {
       'relationship' => 'none',
     ),
   ));
-  $handler->override_option('items_per_page', 4);
+  $handler->override_option('items_per_page', 5);
   $handler->override_option('use_pager', '0');
   $handler->override_option('style_plugin', 'list');
   $handler->override_option('style_options', array(
     'grouping' => '',
     'type' => 'ul',
+  ));
+  $handler->override_option('row_options', array(
+    'inline' => array(
+      'title' => 'title',
+      'timestamp' => 'timestamp',
+    ),
+    'separator' => ' ',
   ));
   $handler->override_option('block_description', 'Project: recent issues');
   $handler->override_option('block_caching', -1);

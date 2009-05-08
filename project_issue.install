@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.61 2009/05/05 19:15:57 dww Exp $
+// $Id: project_issue.install,v 1.62 2009/05/08 18:54:09 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -29,7 +29,8 @@ function project_issue_schema() {
       ),
       'default_component' => array(
         'description' => t('The default component for new issues of this project, or an empty string if the user needs to select a component.'),
-        'type' => 'text',
+        'type' => 'varchar',
+        'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -427,7 +428,8 @@ function project_issue_update_6000() {
  */
 function project_issue_update_6001() {
   $ret = array();
-  db_add_field($ret, 'project_issue_projects', 'default_component', array('type' => 'text', 'not null' => TRUE, 'default' => ''));
+  db_add_field($ret, 'project_issue_projects', 'default_component',
+  array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
   return $ret;
 }
 

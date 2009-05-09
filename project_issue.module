@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.165 2009-05-05 19:15:57 dww Exp $
+// $Id: project_issue.module,v 1.166 2009-05-09 18:16:30 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1668,7 +1668,7 @@ function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
     else {
       module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
       $block = array(
-        'subject' => t('Issues'),
+        'subject' => t('Issues for @project', array('@project' => $node->title)),
         'content' => theme('project_issue_issue_cockpit', $node),
       );
       cache_set($cid, $block);

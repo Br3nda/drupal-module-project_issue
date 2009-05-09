@@ -1,10 +1,8 @@
 <?php
-// $Id: project-issue-issue-cockpit.tpl.php,v 1.5 2009-05-06 23:43:34 dww Exp $
+// $Id: project-issue-issue-cockpit.tpl.php,v 1.6 2009-05-09 18:07:30 dww Exp $
 ?>
 
-<?php if ($make_issues): ?>
-  <?php print t('To avoid duplicates, please search before submitting a new issue.'); ?>
-<?php endif; ?>
+<?php print t('To avoid duplicates, please search before submitting a new issue.'); ?>
 
 <?php if ($view_issues): ?>
   <?php print $form; ?>

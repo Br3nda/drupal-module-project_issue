@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.347 2009/05/05 19:15:57 dww Exp $
+// $Id: issue.inc,v 1.348 2009/06/08 23:08:29 thehunmonkgroup Exp $
 
 
 /**
@@ -684,6 +684,12 @@ function project_issue_form($node, $form_state, $include_metadata_fields = FALSE
       '#size' => 60,
       '#maxlength' => 128,
       '#required' => TRUE,
+    );
+  }
+  else {
+    $form['issue_details']['title'] = array(
+      '#type' => 'value',
+      '#value' => $node->title,
     );
   }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.22 2009/03/21 16:26:37 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.304.2.23 2009/06/08 23:23:21 thehunmonkgroup Exp $
 
 function project_issue_page() {
   global $user;
@@ -874,6 +874,12 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
       '#size' => 60,
       '#maxlength' => 128,
       '#required' => TRUE,
+    );
+  }
+  else {
+    $form['issue_details']['title'] = array(
+      '#type' => 'value',
+      '#value' => $node->title,
     );
   }
 

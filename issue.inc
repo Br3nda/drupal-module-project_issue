@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.349 2009-06-15 03:53:04 dww Exp $
+// $Id: issue.inc,v 1.350 2009-06-15 04:14:00 dww Exp $
 
 
 /**
@@ -1020,7 +1020,7 @@ function project_issue_insert($node) {
   );
   foreach ($fields as $field => $default) {
     // Some of the incoming data may not have the correct default.
-    if (!$node->$field) {
+    if (empty($node->$field)) {
       $node->$field = $default;
     }
     $original_issue_data->$field = $node->$field;

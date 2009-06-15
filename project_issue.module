@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.166 2009/05/09 18:16:30 dww Exp $
+// $Id: project_issue.module,v 1.167 2009/06/15 03:53:05 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -508,6 +508,33 @@ function project_issue_perm() {
   return $perms;
 }
 
+function project_issue_access($op, $node, $account) {
+
+  if (user_access('administer projects', $account)) {
+    return TRUE;
+  }
+  switch ($op) {
+    case 'view':
+      if (user_access('access own project issues', $account) && $node->uid == $account->uid) {
+        return TRUE;
+      }
+      if (!user_access('access project issues', $account)) {
+        return FALSE;
+      }
+      break;
+    case 'create':
+      return user_access('create project issues', $account);
+    case 'update':
+      if (user_access('edit own project issues', $account) && $node->uid == $account->uid) {
+        return TRUE;
+      }
+      break;
+    case 'delete':
+      // Admin case already handled, no one else should be able to delete.
+      break;
+  }
+}
+
 /**
  * Helper to trim all elements in an array.
  */
@@ -743,6 +770,19 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
       project_issue_set_mail_notify($node->nid);
       break;
   }
+}
+
+/**
+ * Implement hook_load() for project issue nodes.
+ */
+function project_issue_load($node) {
+  $additions = db_fetch_array(db_query(db_rewrite_sql('SELECT pi.* FROM {project_issues} pi WHERE pi.nid = %d', 'pi'), $node->nid));
+
+  // TODO: This need to be ripped out in D6.
+  $additions['comment_form_location'] = variable_get('project_issue_comment_form_location', NULL);
+  $issue = new stdClass;
+  $issue->project_issue = $additions;
+  return $issue;
 }
 
 /**

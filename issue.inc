@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.348 2009/06/08 23:08:29 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.349 2009/06/15 03:53:04 dww Exp $
 
 
 /**
@@ -992,16 +992,6 @@ function project_issue_internal_links($node) {
   return $links;
 }
 
-function project_issue_load($node) {
-  $additions = db_fetch_array(db_query(db_rewrite_sql('SELECT pi.* FROM {project_issues} pi WHERE pi.nid = %d', 'pi'), $node->nid));
-
-  // TODO: This need to be ripped out in D6.
-  $additions['comment_form_location'] = variable_get('project_issue_comment_form_location', NULL);
-  $issue = new stdClass;
-  $issue->project_issue = $additions;
-  return $issue;
-}
-
 /**
  * Implementation of hook_insert().
  *
@@ -1046,33 +1036,6 @@ function project_issue_insert($node) {
 function project_issue_delete($node) {
   db_query('DELETE FROM {project_issues} WHERE nid = %d', $node->nid);
   db_query('DELETE FROM {project_issue_comments} WHERE nid = %d', $node->nid);
-}
-
-function project_issue_access($op, $node, $account) {
-
-  if (user_access('administer projects', $account)) {
-    return TRUE;
-  }
-  switch ($op) {
-    case 'view':
-      if (user_access('access own project issues', $account) && $node->uid == $account->uid) {
-        return TRUE;
-      }
-      if (!user_access('access project issues', $account)) {
-        return FALSE;
-      }
-      break;
-    case 'create':
-      return user_access('create project issues', $account);
-    case 'update':
-      if (user_access('edit own project issues', $account) && $node->uid == $account->uid) {
-        return TRUE;
-      }
-      break;
-    case 'delete':
-      // Admin case already handled, no one else should be able to delete.
-      break;
-  }
 }
 
 // Support stuff

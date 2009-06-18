@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.171 2009-06-18 03:27:57 dww Exp $
+// $Id: project_issue.module,v 1.172 2009-06-18 03:28:55 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -313,7 +313,7 @@ function project_issue_theme() {
       ),
     ),
     'project_issue_summary' => array(
-      'file' => 'issue.inc',
+      'file' => 'includes/issue_node_view.inc',
       'arguments' => array(
         'current_data' => NULL,
         'summary_links' => NULL,
@@ -803,6 +803,14 @@ function project_issue_validate($node) {
 function project_issue_insert($node) {
   module_load_include('inc', 'project_issue', 'includes/issue_node_form');
   return _project_issue_insert($node);
+}
+
+/**
+ * Implement hook_view() for project issue nodes.
+ */
+function project_issue_view($node, $teaser = FALSE, $page = FALSE) {
+  module_load_include('inc', 'project_issue', 'includes/issue_node_view');
+  return _project_issue_view($node, $teaser, $page);
 }
 
 /**

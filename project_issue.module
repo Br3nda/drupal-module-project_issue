@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.168 2009-06-18 03:23:04 dww Exp $
+// $Id: project_issue.module,v 1.169 2009-06-18 03:24:02 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -43,7 +43,7 @@ function project_issue_menu() {
     'access callback' => 'project_issue_menu_access',
     'access arguments' => array('any'),
     'type' => MENU_NORMAL_ITEM,
-    'file' => 'issue.inc',
+    'file' => 'includes/statistics.inc',
   );
   $items['project/issues/statistics/%project_node'] = array(
     'title' => 'Statistics',
@@ -52,7 +52,7 @@ function project_issue_menu() {
     'access callback' => 'project_issue_menu_access',
     'access arguments' => array('any'),
     'type' => MENU_NORMAL_ITEM,
-    'file' => 'issue.inc',
+    'file' => 'includes/statistics.inc',
   );
   $path = 'project/issues/subscribe-mail';
   if (!variable_get('project_issue_global_subscribe_page', TRUE)) {

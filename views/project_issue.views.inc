@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views.inc,v 1.8 2009/03/23 17:24:53 dww Exp $
+// $Id: project_issue.views.inc,v 1.9 2009/06/18 03:48:53 dww Exp $
 
 /**
  * @file
@@ -237,7 +237,7 @@ function project_issue_views_plugins() {
         'path' => $path,
         'theme' => 'views_view_table',
         'theme file' => 'theme.inc',
-        'theme path' => "$views_path/views/theme",
+        'theme path' => "$views_path/theme",
         'uses row plugin' => FALSE,
         'uses fields' => TRUE,
         'uses options' => TRUE,

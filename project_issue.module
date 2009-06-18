@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.167 2009-06-15 03:53:05 dww Exp $
+// $Id: project_issue.module,v 1.168 2009-06-18 03:23:04 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -16,8 +16,9 @@ define('PROJECT_ISSUE_STATE_CLOSED', 7);
  */
 function project_issue_init() {
   /// @TODO: we need a real page split instead of this.
-  foreach (array('issue', 'comment', 'mail') as $file) {
-    module_load_include('inc', 'project_issue', $file);
+  module_load_include('inc', 'project_issue', 'issue');
+  foreach (array('comment', 'mail') as $file) {
+    module_load_include('inc', 'project_issue', "includes/$file");
   }
   /// @TODO: this should only be done on pages that need it.
   $path = drupal_get_path('module', 'project_issue');
@@ -306,13 +307,13 @@ function project_issue_help($path, $arg) {
 function project_issue_theme() {
   return array(
     'project_issue_comment_table' => array(
-      'file' => 'comment.inc',
+      'file' => 'includes/comment.inc',
       'arguments' => array(
         'comment_changes' => NULL,
       ),
     ),
     'project_issue_comment_table_row' => array(
-      'file' => 'comment.inc',
+      'file' => 'includes/comment.inc',
       'arguments' => array(
         'field' => NULL,
         'change' => NULL,
@@ -356,7 +357,7 @@ function project_issue_theme() {
       ),
     ),
     'project_issue_mail_summary' => array(
-      'file' => 'mail.inc',
+      'file' => 'includes/mail.inc',
       'arguments' => array(
         'entry' => NULL,
         'node' => NULL,
@@ -365,7 +366,7 @@ function project_issue_theme() {
       ),
     ),
     'project_issue_mail_summary_field' => array(
-      'file' => 'mail.inc',
+      'file' => 'includes/mail.inc',
       'arguments' => array(
         'node' => NULL,
         'field_name' => NULL,

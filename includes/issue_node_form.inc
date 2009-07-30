@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_node_form.inc,v 1.1 2009-06-18 03:27:57 dww Exp $
+// $Id: issue_node_form.inc,v 1.2 2009-07-30 08:07:07 dww Exp $
 
 /**
  * @file
@@ -34,15 +34,19 @@ function project_issue_pick_project_form(&$form_state) {
 
   // Fetch a list of all projects.
   $uris = NULL;
-  $projects = array(t('<none>')) + project_projects_select_options($uris);
-  if (count($projects) == 1) {
+  $projects = project_projects_select_options($uris);
+  if (!$projects) {
     drupal_set_message(t('You do not have access to any projects.'), 'error');
+  }
+  elseif (count($projects) == 1) {
+    $project = node_load(key($projects));
+    drupal_goto('node/add/project-issue/' . $project->project['uri']);
   }
 
   $form['pid'] = array(
     '#type' => 'select',
     '#title' => t('Project'),
-    '#options' => $projects,
+    '#options' => array(t('<none>')) + $projects,
     '#required' => TRUE,
   );
   $form['submit'] = array(

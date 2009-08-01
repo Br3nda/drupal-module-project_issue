@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_field_issue_queue_link.inc,v 1.2 2009/01/31 02:46:17 dww Exp $
+// $Id: project_issue_handler_field_issue_queue_link.inc,v 1.3 2009/08/01 03:43:47 dww Exp $
 
 
 /**
@@ -22,7 +22,7 @@ class project_issue_handler_field_issue_queue_link extends views_handler_field {
   }
 
   function options_form(&$form, &$form_state) {
-    parent::option_definition();
+    parent::options_form($form, $form_state);
     $form['link_type'] = array(
       '#type' => 'radios',
       '#title' => t('Type of link to display'),

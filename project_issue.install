@@ -1,74 +1,74 @@
 <?php
-// $Id: project_issue.install,v 1.62 2009/05/08 18:54:09 dww Exp $
+// $Id: project_issue.install,v 1.63 2009/08/03 19:16:36 dww Exp $
 
 /**
  * Implementation of hook_schema().
  */
 function project_issue_schema() {
   $schema['project_issue_projects'] = array(
-    'description' => t('Table containing per-project issue-related settings.'),
+    'description' => 'Table containing per-project issue-related settings.',
     'fields' => array(
       'nid' => array(
-        'description' => t('Primary Key: The {project_projects}.nid of the project.'),
+        'description' => 'Primary Key: The {project_projects}.nid of the project.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'issues' => array(
-        'description' => t('Boolean value indicating whether or not issue-tracking is enabled for this project.'),
+        'description' => 'Boolean value indicating whether or not issue-tracking is enabled for this project.',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
       ),
       'components' => array(
-        'description' => t('A serialized array defining the components for this project.'),
+        'description' => 'A serialized array defining the components for this project.',
         'type' => 'text',
         'not null' => FALSE,
       ),
       'default_component' => array(
-        'description' => t('The default component for new issues of this project, or an empty string if the user needs to select a component.'),
+        'description' => 'The default component for new issues of this project, or an empty string if the user needs to select a component.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'help' => array(
-        'description' => t('Submission guidelines for issues added to this project.'),
+        'description' => 'Submission guidelines for issues added to this project.',
         'type' => 'text',
         'not null' => FALSE,
       ),
       'mail_digest' => array(
-        'description' => t('E-mail address for the weekly critical issues report.'),
+        'description' => 'E-mail address for the weekly critical issues report.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'mail_copy' => array(
-        'description' => t('E-mail address to send a copy of all issues to.'),
+        'description' => 'E-mail address to send a copy of all issues to.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'mail_copy_filter' => array(
-        'description' => t('A serialized array containing the types of issues to include in the e-mail sent to {project_projects}.mail_copy.'),
+        'description' => 'A serialized array containing the types of issues to include in the e-mail sent to {project_projects}.mail_copy.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'mail_copy_filter_state' => array(
-        'description' => t('A serialized array containing the statuses to include in the e-mail sent to {project_projects}.mail_copy.'),
+        'description' => 'A serialized array containing the statuses to include in the e-mail sent to {project_projects}.mail_copy.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'mail_reminder' => array(
-        'description' => t('Boolean indicating whether or not users with open issues should receive a monthly reminder.'),
+        'description' => 'Boolean indicating whether or not users with open issues should receive a monthly reminder.',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
@@ -79,38 +79,38 @@ function project_issue_schema() {
   );
 
   $schema['project_issues'] = array(
-    'description' => t('The base table for issues.'),
+    'description' => 'The base table for issues.',
     'fields' => array(
       'nid' => array(
-        'description' => t('Primary Key: The {node}.nid of this project_issue node.'),
+        'description' => 'Primary Key: The {node}.nid of this project_issue node.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'pid' => array(
-        'description' => t('The {project_projects}.nid of the project to which this issue belongs.'),
+        'description' => 'The {project_projects}.nid of the project to which this issue belongs.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'category' => array(
-        'description' => t('Category of the issue.'),
+        'description' => 'Category of the issue.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'component' => array(
-        'description' => t('Component of the issue as defined per-project in {project_issue_projects}.components.'),
+        'description' => 'Component of the issue as defined per-project in {project_issue_projects}.components.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'priority' => array(
-        'description' => t('The priority for this issue.'),
+        'description' => 'The priority for this issue.',
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => 1,
@@ -118,39 +118,39 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'rid' => array(
-        'description' => t('The {project_release_nodes}.rid (version identifier) for this issue (only used in conjunction with the project_release module).'),
+        'description' => 'The {project_release_nodes}.rid (version identifier) for this issue (only used in conjunction with the project_release module).',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'assigned' => array(
-        'description' => t('The {users}.uid of the user to which this issue is currently assigned.'),
+        'description' => 'The {users}.uid of the user to which this issue is currently assigned.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'sid' => array(
-        'description' => t('Current {project_issue_state}.sid of this issue.'),
+        'description' => 'Current {project_issue_state}.sid of this issue.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'original_issue_data' => array(
-        'description' => t('A serialized object containing the original metadata values that were used when this issue was created.'),
+        'description' => 'A serialized object containing the original metadata values that were used when this issue was created.',
         'type' => 'text',
         'not null' => TRUE,
       ),
       'last_comment_id' => array(
-        'description' => t('{comments}.cid of the most recent comment added to the issue. 0 if no comment has been added yet.'),
+        'description' => '{comments}.cid of the most recent comment added to the issue. 0 if no comment has been added yet.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'db_lock' => array(
-        'description' => t('Row-lock indicator to prevent race conditions when determining sequential comment number (http://drupal.org/node/180866).'),
+        'description' => 'Row-lock indicator to prevent race conditions when determining sequential comment number (http://drupal.org/node/180866).',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
@@ -166,77 +166,77 @@ function project_issue_schema() {
   );
 
   $schema['project_issue_comments'] = array(
-    'description' => t('The base table for comments added to issues.'),
+    'description' => 'The base table for comments added to issues.',
     'fields' => array(
       'nid' => array(
-        'description' => t('References {project_issues}.nid, the issue to which this comment was added.'),
+        'description' => 'References {project_issues}.nid, the issue to which this comment was added.',
         'type' => 'int',
         'not null' => FALSE,
       ),
       'cid' => array(
-        'description' => t('The {comments}.cid for this comment.'),
+        'description' => 'The {comments}.cid for this comment.',
         'type' => 'int',
         'not null' => FALSE,
       ),
       'rid' => array(
-        'description' => t('The {project_release_nodes}.rid (version identifier) after this comment was made (only used in conjunction with the project_release module).'),
+        'description' => 'The {project_release_nodes}.rid (version identifier) after this comment was made (only used in conjunction with the project_release module).',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'component' => array(
-        'description' => t('Component of the issue after this comment was made. Components are defined per-project in {project_issue_projects}.components.'),
+        'description' => 'Component of the issue after this comment was made. Components are defined per-project in {project_issue_projects}.components.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'category' => array(
-        'description' => t('Category of this issue after this comment was made.'),
+        'description' => 'Category of this issue after this comment was made.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'priority' => array(
-        'description' => t('The priority for this issue after this comment was made.'),
+        'description' => 'The priority for this issue after this comment was made.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'assigned' => array(
-        'description' => t('The {users}.uid of the user to which this issue was assigned after this comment was made.'),
+        'description' => 'The {users}.uid of the user to which this issue was assigned after this comment was made.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'sid' => array(
-        'description' => t('The {project_issue_state}.sid of this issue after this comment was made.'),
+        'description' => 'The {project_issue_state}.sid of this issue after this comment was made.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'pid' => array(
-        'description' => t('The {project_projects}.nid of the project to which this issue belongs after this comment was made.'),
+        'description' => 'The {project_projects}.nid of the project to which this issue belongs after this comment was made.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'title' => array(
-        'description' => t('The title of the issue after this comment was made.'),
+        'description' => 'The title of the issue after this comment was made.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
       ),
       'timestamp' => array(
-        'description' => t('Timestamp for this comment.'),
+        'description' => 'Timestamp for this comment.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
       ),
       'comment_number' => array(
-        'description' => t('The sequential number for this comment in the issue.'),
+        'description' => 'The sequential number for this comment in the issue.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -249,24 +249,24 @@ function project_issue_schema() {
   );
 
   $schema['project_subscriptions'] = array(
-    'description' => t('Table keeping track of per-user project_issue subscriptions.'),
+    'description' => 'Table keeping track of per-user project_issue subscriptions.',
     'fields' => array(
       'nid' => array(
-        'description' => t('{project_projects}.nid of the project to which the user is subscribed.'),
+        'description' => '{project_projects}.nid of the project to which the user is subscribed.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'uid' => array(
-        'description' => t('The {users}.uid for this subscriber.'),
+        'description' => 'The {users}.uid for this subscriber.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
         'default' => 0,
       ),
       'level' => array(
-        'description' => t('The type of subscription for the project. Possible values are: 0 = not subscribed, 1 = subscribed to own issues or 2 = subscribed to all issues.'),
+        'description' => 'The type of subscription for the project. Possible values are: 0 = not subscribed, 1 = subscribed to own issues or 2 = subscribed to all issues.',
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => 1,
@@ -280,37 +280,37 @@ function project_issue_schema() {
   );
 
   $schema['project_issue_state'] = array(
-    'description' => t('Table that holds all possible values for issue statuses.'),
+    'description' => 'Table that holds all possible values for issue statuses.',
     'fields' => array(
       'sid' => array(
-        'description' => t('Primary Key: Unique id for this status.'),
+        'description' => 'Primary Key: Unique id for this status.',
         'type' => 'serial',
         'unsigned' => 1,
         'not null' => TRUE,
       ),
       'name' => array(
-        'description' => t('Display-friendly name for this status.'),
+        'description' => 'Display-friendly name for this status.',
         'type' => 'varchar',
         'length' => 64,
         'not null' => TRUE,
         'default' => '',
       ),
       'weight' => array(
-        'description' => t('Weight for this status, used when ordering statuses'),
+        'description' => 'Weight for this status, used when ordering statuses',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
       ),
       'author_has' => array(
-        'description' => t('Boolean indicating whether or not the author of an issue may use this issue status in that issue, regardless of the permissions controlling site-wide use of this status.'),
+        'description' => 'Boolean indicating whether or not the author of an issue may use this issue status in that issue, regardless of the permissions controlling site-wide use of this status.',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
       ),
       'default_query' => array(
-        'description' => t('Boolean indicating whether or not issues with this status are included in default queries.'),
+        'description' => 'Boolean indicating whether or not issues with this status are included in default queries.',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,

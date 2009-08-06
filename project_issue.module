@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.173 2009-06-18 03:30:22 dww Exp $
+// $Id: project_issue.module,v 1.174 2009-08-06 23:35:34 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1248,6 +1248,75 @@ function project_issue_requirements($phase) {
 
   }
   return $requirements;
+}
+
+/**
+ * Implement hook_token_list() (from token.module).
+ */
+function project_issue_token_list($type) {
+  if ($type == 'node') {
+    $tokens['node'] = array(
+      'project_issue_pid' => t("The issue's project nid"),
+      'project_issue_project_title' => t("The issue's project title"),
+      'project_issue_project_title-raw' => t("The issue's project title raw"),
+      'project_issue_project_shortname' => t("The issue's project short name"),
+      'project_issue_category' => t("The issue's category (bug, feature)"),
+      'project_issue_component' => t("The issue's component"),
+      'project_issue_priority' => t("The issue's priority"),
+      'project_issue_version' => t("The issue's version (if any)"),
+      'project_issue_assigned' => t("The name of the user an issue is assigned to"),
+      'project_issue_status' => t("The issue's status"),
+    );
+    return $tokens;
+  }
+}
+
+/**
+ * Implement hook_token_values() (from token.module).
+ */
+function project_issue_token_values($type = 'all', $object = NULL) {
+  if ($type == 'node') {
+    // Defaults in case it's not an issue or we can't load its parent project.
+    $values = array(
+      'project_issue_pid' => '',
+      'project_issue_project_title' => '',
+      'project_issue_project_title-raw' => '',
+      'project_issue_project_shortname' => '',
+      'project_issue_category' => '',
+      'project_issue_component' => '',
+      'project_issue_priority' => '',
+      'project_issue_version' => '',
+      'project_issue_assigned' => '',
+      'project_issue_status' => '',
+    );
+    if ($object->type == 'project_issue') {
+      if (!empty($object->project_issue)) {
+        // If $node->project_issue exists, use it.
+        $issue = (object)$object->project_issue;
+      }
+      else {
+        $issue = $object;
+      }
+      if ($project = node_load($issue->pid)) {
+        $values['project_issue_pid'] = intval($issue->pid);
+        $values['project_issue_project_title'] = check_plain($project->title);
+        $values['project_issue_project_title-raw'] = $project->title;
+        $values['project_issue_project_shortname'] = check_plain($project->project['uri']);
+      }
+      if (module_exists('project_release') && !empty($issue->rid) && $release = node_load($issue->rid)) {
+        $values['project_issue_version'] = check_plain($release->project_release['version']);
+      }
+      if (!empty($issue->assigned)) {
+        $account = user_load($issue->assigned);
+        $values['project_issue_assigned'] = check_plain($account->name);
+      }
+      $values['project_issue_category'] = project_issue_category($issue->category, FALSE);
+      $values['project_issue_component'] = check_plain($issue->component);
+      $values['project_issue_priority'] = project_issue_priority($issue->priority);
+      $values['project_issue_status'] = check_plain(project_issue_state($issue->sid));
+    }
+    return $values;
+  }
 }
 
 /**

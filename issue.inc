@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.304.2.23 2009/06/08 23:23:21 thehunmonkgroup Exp $
+// $Id: issue.inc,v 1.304.2.24 2009/08/11 17:13:41 dww Exp $
 
 function project_issue_page() {
   global $user;
@@ -769,7 +769,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
   if (!empty($site_help)) {
     $form['project_help']['site'] = array(
       '#prefix' => '<div class="messages status site">',
-      '#value' => filter_xss($site_help),
+      '#value' => check_markup($site_help),
       '#suffix' => '</div>',
     );
   }
@@ -777,7 +777,7 @@ function project_issue_form($node, $include_metadata_fields = FALSE) {
   if (!empty($project_help)) {
     $form['project_help']['project'] = array(
       '#prefix' => '<div class="messages status project">',
-      '#value' => filter_xss($project_help),
+      '#value' => check_markup($project_help),
       '#suffix' => '</div>',
     );
   }

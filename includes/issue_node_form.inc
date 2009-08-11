@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_node_form.inc,v 1.3 2009/08/06 23:31:23 dww Exp $
+// $Id: issue_node_form.inc,v 1.4 2009/08/11 17:13:57 dww Exp $
 
 /**
  * @file
@@ -218,7 +218,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
   if (!empty($site_help)) {
     $form['project_help']['site'] = array(
       '#prefix' => '<div class="messages status site">',
-      '#value' => filter_xss($site_help),
+      '#value' => check_markup($site_help),
       '#suffix' => '</div>',
     );
   }
@@ -226,7 +226,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
   if (!empty($project_help)) {
     $form['project_help']['project'] = array(
       '#prefix' => '<div class="messages status project">',
-      '#value' => filter_xss($project_help),
+      '#value' => check_markup($project_help),
       '#suffix' => '</div>',
     );
   }

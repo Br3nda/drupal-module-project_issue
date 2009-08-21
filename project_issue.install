@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.63 2009/08/03 19:16:36 dww Exp $
+// $Id: project_issue.install,v 1.64 2009/08/21 22:51:31 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -174,7 +174,7 @@ function project_issue_schema() {
         'not null' => FALSE,
       ),
       'cid' => array(
-        'description' => 'The {comments}.cid for this comment.',
+        'description' => 'Primary Key: The {comments}.cid for this comment.',
         'type' => 'int',
         'not null' => FALSE,
       ),
@@ -242,6 +242,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
     ),
+    'primary key' => array('cid'),
     'indexes' => array(
       'nid_timestamp' => array('nid', 'timestamp'),
       'comment_number' => array('comment_number'),
@@ -430,6 +431,18 @@ function project_issue_update_6001() {
   $ret = array();
   db_add_field($ret, 'project_issue_projects', 'default_component',
   array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
+  return $ret;
+}
+
+/**
+ * Make {project_issue_comments}.cid the primary key for that table.
+ */
+function project_issue_update_6002() {
+  $ret = array();
+  db_add_primary_key($ret, 'project_issue_comments', array('cid'));
+  if (empty($ret[0]['success'])) {
+    return array(array('success' => TRUE, 'query' => '<strong>' . t("It is safe to ignore warnings about 'Multiple primary key defined'.") . '</strong>'));
+  }
   return $ret;
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.154 2009/06/18 03:05:20 dww Exp $
+// $Id: comment.inc,v 1.155 2009/09/23 00:27:05 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -189,7 +189,16 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
 
   // We need to ask for almost the same metadata as project issue itself
   // so let's reuse the form.
-  $form += drupal_retrieve_form('project_issue_form', $node, $form_state, TRUE);
+  $form += project_issue_form($node, $form_state, TRUE);
+
+  // comment.module is basically still FAPI v1. It sets the preview button to
+  // #type 'button', so FAPI doesn't really consider that a form submission.
+  // However, we depend on the form being rebuilt on preview to do our magic.
+  // Thanks to a change in 6.14 core, form.inc will only rebuild the form if
+  // $form_state['submitted'] is TRUE. So, we set the preview button to
+  // actually be a 'submit' button so that the form is rebuilt on preview and
+  // our comment preview code can kick in.
+  $form['preview']['#type'] = 'submit';
 
   // We need this otherwise pid collides with comment.
   $form['project_info']['#tree'] = TRUE;

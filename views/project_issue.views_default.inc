@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.47 2009/06/18 03:38:42 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.48 2009/09/23 00:21:36 dww Exp $
 
 
 /**
@@ -48,8 +48,8 @@ function _project_issue_views_add_taxonomy_filters(&$filters) {
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
-        'use_operator' => 0,
-        'operator' => 'tid_op',
+        'use_operator' => 1,
+        'operator' => $identifier . '_op',
         'identifier' => $identifier,
         'label' => check_plain($vocab->name),
         'optional' => 1,

@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_node_form.inc,v 1.4 2009/08/11 17:13:57 dww Exp $
+// $Id: issue_node_form.inc,v 1.5 2009/10/08 23:36:16 dww Exp $
 
 /**
  * @file
@@ -32,17 +32,24 @@ function project_issue_pick_project_page() {
 function project_issue_pick_project_form(&$form_state) {
   $form = array();
 
-  // Fetch a list of all projects.
-  $uris = NULL;
-  $projects = project_projects_select_options($uris);
-  if (!$projects) {
+  // Fetch a list of all projects (nid => title, grouped by project type
+  // categories if any), and also get an array of project shortnames.
+  $short_names = array();
+  $projects = project_projects_select_options($short_names);
+  if (empty($projects)) {
     drupal_set_message(t('You do not have access to any projects.'), 'error');
-  }
-  elseif (count($projects) == 1) {
-    $project = node_load(key($projects));
-    drupal_goto('node/add/project-issue/' . $project->project['uri']);
+    // No reason to return a project selector form with no elements, so just
+    // return an empty array for the form.
+    return array();
   }
 
+  // See if there's only one project the user has access to, and if so,
+  // redirect directly to the issue form for that project.
+  if (count($short_names) == 1) {
+    drupal_goto('node/add/project-issue/' . key($short_names));
+  }
+
+  // Otherwise, return a form to select which project to submit an issue for.
   $form['pid'] = array(
     '#type' => 'select',
     '#title' => t('Project'),

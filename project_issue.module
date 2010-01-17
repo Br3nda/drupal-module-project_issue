@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.175 2010/01/17 00:10:23 dww Exp $
+// $Id: project_issue.module,v 1.176 2010/01/17 00:38:19 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1199,18 +1199,13 @@ function project_issue_requirements($phase) {
   if ($phase == 'runtime') {
 
     $grants = module_implements('node_grants');
-    if (!empty($grants)) {
-      $conflict_grants = TRUE;
-    }
     $allowed_roles = user_roles(FALSE, 'access project issues');
-    if (!isset($allowed_roles[DRUPAL_ANONYMOUS_RID])) {
-      $conflict_anonymous = TRUE;
-    }
+    $conflict_anonymous = empty($allowed_roles[DRUPAL_ANONYMOUS_RID]);
 
     foreach (filter_formats() as $format => $input_format) {
       $filters = filter_list_format($format);
       if (isset($filters['project_issue/0'])) {
-        if ($conflict_grants && filter_format_allowcache($format)) {
+        if (!empty($grants) && filter_format_allowcache($format)) {
           $requirements[] = array(
             'title' => t('Project Issue to link filter'),
             'value' => t('Some module conflicts were detected.'),

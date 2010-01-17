@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.155 2009-09-23 00:27:05 dww Exp $
+// $Id: comment.inc,v 1.156 2010-01-17 00:26:58 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -434,7 +434,7 @@ function theme_project_issue_comment_table($comment_changes) {
       $rows[] = theme('project_issue_comment_table_row', $field, $change);
     }
   }
-  return theme('table', array(), $rows);
+  return $rows ? theme('table', array(), $rows) : '';
 }
 
 /**

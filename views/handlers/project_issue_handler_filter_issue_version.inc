@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.10 2009-04-22 17:24:18 dww Exp $
+// $Id: project_issue_handler_filter_issue_version.inc,v 1.11 2010-01-17 00:22:44 dww Exp $
 
 
 /**
@@ -23,7 +23,7 @@ class project_issue_handler_filter_issue_version extends views_handler_filter_in
       // always acts as if it's a "force single" filter, even if it's not.
       // Therefore, it's (sometimes?) setting its own value to to 'All', when
       // GET is empty, which gives an invalid choice when you load the form.
-      unset($this->value);
+      $this->value = NULL;
     }
     $this->get_value_options();
     if (!empty($this->value_options)) {

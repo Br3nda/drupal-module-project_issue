@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.122 2009/06/18 03:05:25 dww Exp $
+// $Id: mail.inc,v 1.123 2010/01/17 00:16:15 dww Exp $
 
 function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
@@ -245,7 +245,7 @@ function project_mail_notify($nid) {
     $anon_auth_access = TRUE;
   }
   $grants = module_implements('node_grants');
-  $check_node_access = $node->status != 1 || !$anon_auth_access || !empty($grants);
+  $check_node_access = $node->status != 1 || empty($anon_auth_access) || !empty($grants);
 
   $params['node']    = $node;
   $params['project'] = $project;

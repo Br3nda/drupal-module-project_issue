@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_handler_filter_issue_component.inc,v 1.1 2009/01/27 23:40:35 dww Exp $
+// $Id: project_issue_handler_filter_issue_component.inc,v 1.2 2010/01/17 00:22:44 dww Exp $
 
 
 /**
@@ -19,7 +19,7 @@ class project_issue_handler_filter_issue_component extends views_handler_filter_
       // always acts as if it's a "force single" filter, even if it's not.
       // Therefore, it's (sometimes?) setting its own value to to 'All', when
       // GET is empty, which gives an invalid choice when you load the form.
-      unset($this->value);
+      $this->value = NULL;
     }
     parent::value_form($form, $form_state);
     if (empty($form_state['exposed'])) {

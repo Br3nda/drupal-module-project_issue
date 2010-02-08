@@ -1,7 +1,15 @@
 <?php
-// $Id: mail.inc,v 1.123 2010-01-17 00:16:15 dww Exp $
+// $Id: mail.inc,v 1.124 2010-02-08 18:02:59 bdragon Exp $
 
-function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
+/**
+ * @file
+ * Project issue tracking email notifications system.
+ */
+
+/**
+ * Implementation of hook_mailhandler().
+ */
+function _project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   if ($node->type == 'project') {
     if (node_access('create', 'project_issue')) {
       $node->nid = preg_replace('/@.+/', '', $node->nid);
@@ -123,32 +131,46 @@ function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
   }
 }
 
-function project_mail_urls($url = 0) {
+/**
+ * preg_replace_callback() callback used for capturing URLs and transforming links
+ * into footer links.
+ */
+function _project_issue_mail_url_callback($match = FALSE) {
   static $urls = array();
-  if ($url) {
-    // If $url is an internal link (eg. '/project/project'), such
-    // as might be returned from the url() function with the
-    // $absolute parameter set to FALSE, we must remove
-    // the leading slash before passing this path through the url()
-    // function again, or otherwise we'll get two slashes in a row
-    // and thus a bad URL.
-    if (substr($url, 0, 1) == '/') {
-      $url = substr($url, 1);
+  if (!empty($match) && is_array($match)) {
+    $url = $match[2];
+
+    // If $url was an internal link, we need to strip the base_path
+    // off before passing it to url(), to avoid doubling up on the base_path.
+    // @todo Check that this actually works when using language specific url rewriting.
+    $base_path = base_path();
+    $base_length = strlen($base_path);
+    if (substr($url, 0, $base_length) == $base_path) {
+      $url = substr($url, $base_length);
     }
-    $urls[] = strpos($url, '://') ? $url : url($url, array('absolute' => TRUE));
-    return count($urls);
+
+    $urls[] = url($url, array('absolute' => TRUE));
+    return $match[3] .' ['. count($urls) .']';
   }
   return $urls;
 }
 
-function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT) {
+/**
+ * Add a section to the email body.
+ * Note: URL link numbers are not reset between calls to this function.
+ */
+function project_issue_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT) {
   static $i = 0;
 
   if ($html) {
     $body = check_markup($body, $format, FALSE);
-    $pattern = '@<a +([^ >]+ )*?href *= *"([^>"]+?)"[^>]*>([^<]+?)</a>@ei';
-    $body = preg_replace($pattern, "'\\3 ['. project_mail_urls('\\2') .']'", $body);
-    $urls = project_mail_urls();
+
+    // Convert inline links into footer links.
+    //$pattern = '@<a +([^ >]+ )*?href *= *"([^>"]+?)"[^>]*>([^<]+?)</a>@i';
+    $pattern = '@<a[^>]*\shref\s*=\s*([\'"])([^>]+?)\1[^>]*>(.+?)</a>@is';
+    $body = preg_replace_callback($pattern, '_project_issue_mail_url_callback', $body);
+    $urls = _project_issue_mail_url_callback();
+
     if (count($urls)) {
       $body .= "\n";
       for ($max = count($urls); $i < $max; $i++) {
@@ -172,7 +194,10 @@ function project_mail_output(&$body, $html = 1, $format = FILTER_FORMAT_DEFAULT)
   }
 }
 
-function project_mail_notify($nid) {
+/**
+ * Send mail notifications.
+ */
+function project_issue_mail_notify($nid) {
   global $user;
 
   if (defined('PROJECT_NOMAIL')) {
@@ -290,15 +315,15 @@ function project_mail_notify($nid) {
   if (!empty($project->project_issue['mail_copy'])) {
     $params['display_files'] = TRUE;
     $message['body'][] = $links;
-    $message['body'][] = project_mail_generate_followup_mail_body($node, $history, TRUE);
+    $message['body'][] = project_issue_mail_generate_followup_mail_body($node, $history, TRUE);
     drupal_mail('project_issue', 'project_issue_update_notification', $project->project_issue['mail_copy'], language_default(), $params, $from);
   }
 }
 
-/*
- * Implementation of hook_mail()
+/**
+ * Implementation of hook_mail().
  */
-function project_issue_mail($key, &$message, $params) {
+function _project_issue_mail($key, &$message, $params) {
   global $base_url;
 
   switch ($key) {
@@ -337,14 +362,14 @@ function project_issue_mail($key, &$message, $params) {
         $message['headers']['Message-Id'] = "<type=project&nid=$node->nid&host=@$domain>";
       }
 
-      project_mail_output($node->title, 0);
+      project_issue_mail_output($node->title, 0);
       $message['subject'] = t('[!short_name] [!category] !title', array('!short_name' => $project->project['uri'], '!category' => $node->project_issue['category'], '!title' => $node->title));
 
       // Create link to related node
       $links = t('Issue status update for !link', array('!link' => "\n". url("node/$node->nid", array('absolute' => TRUE)))) ."\n";
       $links .= t('Post a follow up: !link', array('!link' => "\n". url("comment/reply/$node->nid", array('fragment' => 'comment-form', 'absolute' => TRUE)))) ."\n";
       $message['body'][] = $links;
-      $message['body'][] = project_mail_generate_followup_mail_body($node, $history, $params['display_files']);
+      $message['body'][] = project_issue_mail_generate_followup_mail_body($node, $history, $params['display_files']);
 
       break;
 
@@ -389,7 +414,7 @@ function project_issue_mail($key, &$message, $params) {
  * @return
  *   A string of the email body.
  */
-function project_mail_generate_followup_mail_body($node, $history, $display_files) {
+function project_issue_mail_generate_followup_mail_body($node, $history, $display_files) {
   global $user;
   static $output_with_files =  NULL, $output_without_files = NULL;
 
@@ -450,7 +475,7 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
   $summary = theme('project_issue_mail_summary', $entry, $node, $comment_changes, $display_files);
 
   // Create main body content
-  project_mail_output($content, 1, $entry->format);
+  project_issue_mail_output($content, 1, $entry->format);
   $body = "$content\n$entry->name\n";
 
   $hr = str_repeat('-', 72);
@@ -459,11 +484,11 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
 
     $body .= "\n\n";
     $body .= t('Original issue:') ."\n";
-    $body .= project_mail_format_entry(array_shift($history), $display_files, TRUE);
+    $body .= project_issue_mail_format_entry(array_shift($history), $display_files, TRUE);
     if (count($history)) {
       $body .= "\n". t('Previous comments (!count):', array('!count' => count($history))) ."\n";
       foreach ($history as $entry) {
-        $body .= project_mail_format_entry($entry, $display_files);
+        $body .= project_issue_mail_format_entry($entry, $display_files);
       }
     }
   }
@@ -483,7 +508,7 @@ function project_mail_generate_followup_mail_body($node, $history, $display_file
 
 /**
  * Themes the display of the issue metadata summary
- * that is shown at the top of an issue emai.
+ * that is shown at the top of an issue email.
  *
  * @param $entry
  *  The object representing the current entry.  This will be a node object
@@ -507,7 +532,7 @@ function theme_project_issue_mail_summary($entry, $node, $changes, $display_file
     $summary .= theme('project_issue_mail_summary_field', $node, $field, $change);
   }
 
-  $summary .= project_mail_format_attachments($entry, $display_files);
+  $summary .= project_issue_mail_format_attachments($entry, $display_files);
   return $summary;
 }
 
@@ -595,7 +620,7 @@ function theme_project_issue_mail_summary_field($node, $field_name, $change) {
  * @return
  *   A formatted string of file attachments.
  */
-function project_mail_format_attachments($entry, $display_files) {
+function project_issue_mail_format_attachments($entry, $display_files) {
   $output = '';
   if ($display_files && is_array($entry->files)) {
     foreach ($entry->files as $file) {
@@ -621,7 +646,7 @@ function project_mail_format_attachments($entry, $display_files) {
  * @return
  *   Formatted text for the entry.
  */
-function project_mail_format_entry($entry, $display_files, $is_original = FALSE) {
+function project_issue_mail_format_entry($entry, $display_files, $is_original = FALSE) {
   static $history_count = 1;
   $hr = str_repeat('-', 72);
   $output = "$hr\n";
@@ -639,7 +664,7 @@ function project_mail_format_entry($entry, $display_files, $is_original = FALSE)
     $output .= url("node/$entry->nid", array('fragment' => "comment-$entry->cid", 'absolute' => TRUE)) ."\n";
   }
 
-  $output .= project_mail_format_attachments($entry, $display_files);
+  $output .= project_issue_mail_format_attachments($entry, $display_files);
 
   // Must distinguish between nodes and comments -- here we do it
   // by looking for a revision ID.
@@ -650,11 +675,10 @@ function project_mail_format_entry($entry, $display_files, $is_original = FALSE)
     $content = $entry->body;
   }
 
-  project_mail_output($content, 1, $entry->format);
+  project_issue_mail_output($content, 1, $entry->format);
 
   if ($content) {
     $output .= "\n$content";
   }
   return $output;
 }
-

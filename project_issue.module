@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.177 2010/01/30 19:01:33 dww Exp $
+// $Id: project_issue.module,v 1.178 2010/02/08 18:02:59 bdragon Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -17,9 +17,7 @@ define('PROJECT_ISSUE_STATE_CLOSED', 7);
 function project_issue_init() {
   /// @TODO: we need a real page split instead of this.
   module_load_include('inc', 'project_issue', 'issue');
-  foreach (array('comment', 'mail') as $file) {
-    module_load_include('inc', 'project_issue', "includes/$file");
-  }
+  module_load_include('inc', 'project_issue', 'includes/comment');
   /// @TODO: this should only be done on pages that need it.
   $path = drupal_get_path('module', 'project_issue');
   drupal_add_css($path .'/project_issue.css');
@@ -762,6 +760,22 @@ function project_issue_issue_nodeapi(&$node, $op, $arg) {
 }
 
 /**
+ * Implementation of hook_mail(). (stub function)
+ */
+function project_issue_mail($key, &$message, $params) {
+  module_load_include('inc', 'project_issue', 'includes/mail');
+  return _project_issue_mail($key, $message, $params);
+}
+
+/**
+ * Implementation of hook_mailhandler(). (stub function)
+ */
+function project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
+  module_load_include('inc', 'project_issue', 'includes/mail');
+  return _project_issue_mailhandler($node, $result, $i, $header, $mailbox);
+}
+
+/**
  * Implement hook_load() for project issue nodes.
  */
 function project_issue_load($node) {
@@ -852,8 +866,9 @@ function project_issue_exit() {
   // loaded. Since the cached pages won't have any new mail notifications,
   // we can safely test for this case.
   if (!empty($nids)) {
+    module_load_include('inc', 'project_issue', 'includes/mail');
     foreach ($nids as $nid) {
-      project_mail_notify($nid);
+      project_issue_mail_notify($nid);
     }
   }
 }

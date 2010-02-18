@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.156 2010/01/17 00:26:58 dww Exp $
+// $Id: comment.inc,v 1.157 2010/02/18 00:19:27 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -315,6 +315,12 @@ function project_issue_form_comment_validate($form, &$form_state) {
   if (!empty($form_state['rebuild'])) {
     return;
   }
+
+  // Only validate metadata changes on new followups.
+  if (isset($form_state['values']['cid'])) {
+    return;
+  }
+
   $values = $form_state['values'];
   $project_info = $form_state['values']['project_info'];
   $nid = $values['nid'];
@@ -331,11 +337,6 @@ function project_issue_form_comment_validate($form, &$form_state) {
   // adjusting the filename before comment upload saves it (module weighting)
   // TODO: is this still true?
   project_issue_change_comment_upload_path($values);
-
-  // Only validate metadata changes on new followups.
-  if (isset($values['cid'])) {
-    return;
-  }
 
   // Make sure project is current here -- it may have changed when posted.
   if (isset($project_info['pid'])) {

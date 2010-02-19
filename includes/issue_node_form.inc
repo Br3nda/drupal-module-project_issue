@@ -319,39 +319,8 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     // If we're not allowing issue metadata changes, add all of these values
     // into the form so they show up in the $node->project_issue array during
     // validation and submit, so we're consistent with where they live.
-    $form['project_issue'] = array('#tree' => TRUE);
-    $form['project_issue']['pid'] = array(
-      '#type' => 'value',
-      '#value' => $node->project_issue['pid'],
-    );
-    if (isset($node->project_issue['rid'])) {
-      $form['project_issue']['rid'] = array(
-        '#type' => 'value',
-        '#value' => $node->project_issue['rid'],
-      );
-    }
-    $form['project_issue']['component'] = array(
-      '#type' => 'value',
-      '#value' => $node->project_issue['component'],
-    );
-    $form['project_issue']['category'] = array(
-      '#type' => 'value',
-      '#value' => $node->project_issue['category'],
-    );
-    $form['project_issue']['priority'] = array(
-      '#type' => 'value',
-      '#value' => $node->project_issue['priority'],
-    );
-    $form['project_issue']['assigned'] = array(
-      '#type' => 'value',
-      '#value' => $node->project_issue['assigned'],
-    );
-    $form['project_issue']['sid'] = array(
-      '#type' => 'value',
-      '#value' => $node->project_issue['sid'],
-    );
+    $form['project_issue'] = _project_issue_node_form_values($node);
   }
-
   $form['issue_details'] = array(
     '#type' => 'fieldset',
     '#title' => t('Issue details'),
@@ -396,6 +365,55 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     drupal_set_message($msg, 'error');
   }
   return $form;
+}
+
+/**
+ * Internal helper to save project issue properties from a node into a form.
+ *
+ * @param $node
+ *   The project issue node.
+ * @param $element_type
+ *   What kind of form element to use, defaults to 'value'.
+ * @param $value_key
+ *   Which form property to put the project issue properties into.
+ *
+ * @return
+ *   Nested Form API array of project issue values with the following keys:
+ *   pid, rid, component, category, priority, assigned, and sid.
+ */
+function _project_issue_node_form_values($node, $element_type = 'value', $value_key = '#value') {
+  $form_array = array('#tree' => TRUE);
+  $form_array['pid'] = array(
+    '#type' => $element_type,
+    $value_key => $node->project_issue['pid'],
+  );
+  if (isset($node->project_issue['rid'])) {
+    $form_array['rid'] = array(
+      '#type' => $element_type,
+      $value_key => $node->project_issue['rid'],
+    );
+  }
+  $form_array['component'] = array(
+    '#type' => $element_type,
+    $value_key => $node->project_issue['component'],
+  );
+  $form_array['category'] = array(
+    '#type' => $element_type,
+    $value_key => $node->project_issue['category'],
+  );
+  $form_array['priority'] = array(
+    '#type' => $element_type,
+    $value_key => $node->project_issue['priority'],
+  );
+  $form_array['assigned'] = array(
+    '#type' => $element_type,
+    $value_key => $node->project_issue['assigned'],
+  );
+  $form_array['sid'] = array(
+    '#type' => $element_type,
+    $value_key => $node->project_issue['sid'],
+  );
+  return $form_array;
 }
 
 /**

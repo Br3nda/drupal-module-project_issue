@@ -16,8 +16,8 @@ function project_issue_comment(&$arg, $op) {
   // Make a copy here so we have all the original metadata, since some
   // of it can change below.
   $original_node = drupal_clone($node);
-  $old_data = (object) $original_node->project_issue;
-  $old_data->title = $original_node->title;
+  $current_values_pre_comment = (object) $original_node->project_issue;
+  $current_values_pre_comment->title = $original_node->title;
 
   // Maintain an array of project ids that are affected by this comment
   // operation. We'll use this to invalidate the "Issue cockpit" block cache
@@ -45,11 +45,14 @@ function project_issue_comment(&$arg, $op) {
       }
 
       if (isset($id)) {
+        _project_issue_comment_avoid_crosspost($arg, $current_values_pre_comment);
+        // If the version (rid) is not set in the comment, save it as a 0 so
+        // we don't get a PHP notice about using an undefined value.
         $rid = isset($arg['project_info']['rid']) ? $arg['project_info']['rid'] : 0;
         db_query("INSERT INTO {project_issue_comments} (nid, cid, pid, rid, component, category, priority, assigned, sid, title, timestamp, comment_number) VALUES (%d, %d, %d, %d, '%s', '%s', %d, %d, %d, '%s', %d, %d)", $arg['nid'], $arg['cid'], $arg['project_info']['pid'], $rid, $arg['project_info']['component'], $arg['category'], $arg['priority'], $arg['project_info']['assigned'], $arg['sid'], $arg['title'], $arg['timestamp'], $id);
         db_query("UPDATE {comments} SET subject = '%s' WHERE cid = %d", "#$id", $arg['cid']);
         project_issue_update_by_comment($arg, 'insert');
-        $affected_projects[$old_data->pid] = 1;
+        $affected_projects[$current_values_pre_comment->pid] = 1;
         $affected_projects[$arg['project_info']['pid']] = 1;
       }
       else {
@@ -83,7 +86,7 @@ function project_issue_comment(&$arg, $op) {
       // We should also invalidate the block cache for whatever project is now
       // used for this issue, since we might be deleting a comment that moved
       // an issue from one project to another.
-      $affected_projects[$current_data->pid] = 1;      
+      $affected_projects[$current_data->pid] = 1;
       break;
 
     case 'view':
@@ -93,12 +96,13 @@ function project_issue_comment(&$arg, $op) {
       else {
         // Previewing a comment.
         $test = drupal_clone($arg);
+        _project_issue_comment_avoid_crosspost($test, $current_values_pre_comment);
         $test->pid = $arg->project_info['pid'];
         $test->component = $arg->project_info['component'];
         $test->assigned = $arg->project_info['assigned'];
         // Add a dummy rid if necessary -- prevents incorrect change data.
         $test->rid = isset($arg->project_info['rid']) ? $arg->project_info['rid'] : 0;
-        $comment_changes = project_issue_metadata_changes($node, $old_data, $test, project_issue_field_labels('web'));
+        $comment_changes = project_issue_metadata_changes($node, $current_values_pre_comment, $test, project_issue_field_labels('web'));
         $project_issue_table = theme('project_issue_comment_table', $comment_changes);
       }
       if ($project_issue_table) {
@@ -113,6 +117,44 @@ function project_issue_comment(&$arg, $op) {
       $cid = 'project_issue_cockpit_block:'. $pid;
       cache_clear_all($cid, 'cache');
     }
+  }
+}
+
+function _project_issue_comment_avoid_crosspost(&$arg, $current_values_pre_comment) {
+  if (is_object($arg)) {
+    $cast = TRUE;
+    $arg = (array)$arg;
+  }
+  // If the comment does not change something then we want to keep the current
+  // value for the issue, not what was true when the comment form was built.
+  // This avoids "crossposting" where two people comment on an issue at the
+  // same time, one of them changes some metadata, and the other's comment
+  // unintentionally wipes out those changes. We iterate over all of the saved
+  // values for the issue (at the time the form was build) and compare that
+  // value to what's posted in the current comment. If those match, but the
+  // issue has a different value, preserve the issue's current value.
+  foreach ($arg['project_info']['old_values_pre_comment'] as $key => $pre_comment_value) {
+    // Find where in the comment array (called "$arg", stupid
+    // hook_comment() we hate you) the posted value is. We hold a
+    // reference to this value so we can change it if needed.
+    if (in_array($key, array('category', 'priority', 'sid', 'title'))) {
+      $posted_value = &$arg[$key];
+    }
+    else {
+      $posted_value = &$arg['project_info'][$key];
+    }
+
+    // If the user did not intend to change the value (the posted value
+    // is the same as the value in the issue when the comment form was
+    // built), but the issue now has a different value, keep the issue's
+    // current value.
+    if ($posted_value == $pre_comment_value && $posted_value != $current_values_pre_comment->$key) {
+      $posted_value = $current_values_pre_comment->$key;
+    }
+    unset($posted_value);
+  }
+  if ($cast) {
+    $arg = (object)$arg;
   }
 }
 
@@ -283,6 +325,16 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   // Restructure the UI to de-emphasize the original project form inputs.
   $form['original_issue']['project_info'] = $form['project_info'];
   $form['original_issue']['issue_info'] = $form['issue_info'];
+
+  // We need a bunch of hiddens to record the current state of the issue
+  // before the current comment. We can't use #type value because otherwise
+  // these would contain the state of the issue at submission time. Caching
+  // the form would allow for #type value but I am not keen on trying to cache
+  // the comment form. There is no harm in hidden in this case -- although the
+  // user can tamper them, we don't use them for anything but comparison.
+  $form['original_issue']['project_info']['old_values_pre_comment'] =  _project_issue_node_form_values($node, 'hidden', '#default_value');
+  $form['original_issue']['project_info']['old_values_pre_comment']['title'] = array('#type' => 'hidden', '#default_value' => $node->title);
+
   unset($form['project_info'], $form['issue_info']);
   unset($form['issue_details'], $form['project_help']);
   drupal_add_js(drupal_get_path('module', 'project_issue') .'/project_issue.js');
@@ -329,8 +381,8 @@ function project_issue_form_comment_validate($form, &$form_state) {
   // Make a copy here so we have all the original metadata, since some
   // of it can change below.
   $original_node = drupal_clone($node);
-  $old_data = (object) $original_node->project_issue;
-  $old_data->title = $original_node->title;
+  $current_values_pre_comment = (object) $original_node->project_issue;
+  $current_values_pre_comment->title = $original_node->title;
 
   // Adjust new file attachments to go to the issues directory.
   // We have to do this during validate, otherwise we might miss
@@ -401,7 +453,7 @@ function project_issue_form_comment_validate($form, &$form_state) {
     $comment->component = $component;
     $comment->rid = $rid;
     $comment->assigned = $project_info['assigned'];
-    $comment_changes = project_issue_metadata_changes($node, $old_data, $comment, project_issue_field_labels('web'));
+    $comment_changes = project_issue_metadata_changes($node, $current_values_pre_comment, $comment, project_issue_field_labels('web'));
     // If the PID changed, rebuild the form
     if (isset($comment_changes['pid']['new']) && $comment_changes['pid']['new'] === TRUE) {
       $form_state['rebuild'] = TRUE;

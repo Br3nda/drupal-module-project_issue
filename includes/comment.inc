@@ -120,6 +120,17 @@ function project_issue_comment(&$arg, $op) {
   }
 }
 
+/**
+ * Perform a 3-way diff on submitted comment data.
+ *
+ * The function accepts 3 sets of data, the original data from when a form is
+ * first displayed, the latest data loaded from the database, and the submitted
+ * form values, and performs a 3-way diff to select between the latest database
+ * values and the submitted data.
+ *
+ * @param <type> $arg
+ * @param <type> $current_values_pre_comment
+ */
 function _project_issue_comment_avoid_crosspost(&$arg, $current_values_pre_comment) {
   if (is_object($arg)) {
     $cast = TRUE;

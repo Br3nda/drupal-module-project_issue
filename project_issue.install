@@ -446,3 +446,54 @@ function project_issue_update_6002() {
   return $ret;
 }
 
+/**
+ * Remove empty components that can't be deleted from project_issue_projects.
+ */
+function project_issue_update_6005(&$sandbox) {
+  $ret = array();
+
+  if (!isset($sandbox['min'])) {
+    // Avoid COUNT(*) like hell.
+    $sandbox['max'] = db_result(db_query('SELECT MAX(nid) FROM {project_issue_projects}'));
+    // We will use > so use - 1 when choosing the smallest nid.
+    $sandbox['min'] = db_result(db_query('SELECT MIN(nid) - 1 FROM {project_issue_projects}'));
+    $sandbox['current'] = $sandbox['min'];
+  }
+
+  // MySQL does not support LIMIT & IN/ALL/ANY/SOME subquery so we do the hard
+  // work ourselves: find 100 nids and record the first and the last.
+  $results = db_query_range('SELECT nid, components FROM {project_issue_projects} WHERE nid > %d ORDER BY nid ASC', $sandbox['current'], 0, 100);
+
+  while ($project_settings = db_fetch_object($results)) {
+    $components = unserialize($project_settings->components);
+    $write = FALSE;
+
+    foreach ($components as $key => $value) {
+      if (trim($value) === '') {
+        unset($components[$key]);
+        $write = TRUE;
+      }
+    }
+
+    if ($write == TRUE) {
+      db_query("UPDATE {project_issue_projects} SET components = '%s' WHERE nid = %d", serialize($components), $project_settings->nid);
+    }
+
+    if (!isset($first_nid)) {
+      $first_nid = $project_settings->nid;
+    }
+    $last_nid = $project_settings->nid;
+  }
+
+  // Note that we do not count exactly as there can be holes. That's still
+  // better than running COUNT() on large datasets.
+  if ($last_nid < $sandbox['max']) {
+    $ret['#finished'] = ($last_nid - $sandbox['min']) / ($sandbox['max'] - $sandbox['min']);
+    $sandbox['current'] = $last_nid;
+  }
+  else {
+    $ret['#finished'] = 1;
+  }
+
+  return $ret;
+}

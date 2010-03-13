@@ -221,6 +221,12 @@ function project_issue_project_edit_form_validate($form, &$form_state) {
   if (!empty($form_state['values']['mail_copy']) && ($data = user_validate_mail($form_state['values']['mail_copy']))) {
     form_set_error('mail_copy', $data);
   }
+  foreach ($form_state['values']['component'] as $key => $component) {
+    if (trim($component['name']) === '') {
+      dsm("component[$key][name]");
+      form_set_error("component[$key][name]", t('Component name must not be empty.'));
+    }
+  }
 }
 
 /**

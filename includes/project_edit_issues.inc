@@ -223,7 +223,7 @@ function project_issue_project_edit_form_validate($form, &$form_state) {
   }
   foreach ($form_state['values']['component'] as $key => $component) {
     if (trim($component['name']) === '') {
-      form_set_error('component['. $key .'][name', t('Component name must not be empty.'));
+      form_set_error('component]['. $key .'][name', t('Component name must not be empty.'));
     }
   }
 }

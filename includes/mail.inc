@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.124 2010-02-08 18:02:59 bdragon Exp $
+// $Id: mail.inc,v 1.125 2010-04-17 22:04:49 thehunmonkgroup Exp $
 
 /**
  * @file
@@ -205,6 +205,12 @@ function project_issue_mail_notify($nid) {
   }
 
   $node = node_load($nid, NULL, TRUE);
+
+  // We don't want any notifications for unpublished nodes.
+  if (empty($node) || !$node->status) {
+    return;
+  }
+
   $project = node_load(array('nid' => $node->project_issue['pid'], 'type' => 'project_project'));
 
   // Store a copy of the issue, so we can load the original issue values

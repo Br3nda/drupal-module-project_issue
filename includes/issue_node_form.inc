@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_node_form.inc,v 1.5 2009-10-08 23:36:16 dww Exp $
+// $Id: issue_node_form.inc,v 1.6 2010-04-20 07:05:25 dww Exp $
 
 /**
  * @file
@@ -254,7 +254,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
       '#type' => 'value',
       '#value' => $node->project_issue['pid'],
     );
-    if ($releases) {
+    if (!empty($releases)) {
       $form['project_info']['rid'] = array(
         '#type' => 'select',
         '#title' => t('Version'),

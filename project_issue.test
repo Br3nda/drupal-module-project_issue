@@ -1,0 +1,78 @@
+<?php
+// $Id: project_issue.test,v 1.1 2010/04/20 18:33:06 dww Exp $
+
+include_once drupal_get_path('module', 'project') . '/project.test';
+
+class ProjectIssueWebTestCase extends ProjectWebTestCase {
+
+  function setUp() {
+    // Setup the required modules for all tests.
+    $modules = func_get_args();
+    $modules = array_merge(array('project_issue', 'views', 'comment', 'comment_upload', 'upload'), $modules);
+    // We can't call parent::setUp() with a single array argument, so we need
+    // this ugly call_user_func_array().
+    call_user_func_array(array($this, 'parent::setUp'), $modules);
+  }
+
+  /**
+   * Create an Issue node.
+   *
+   * @param stdClass $project
+   *   A project node.
+   * @param array $edit
+   *   An array of form values, passed to drupalPost. Optional
+   * @return
+   *   An issue node.
+   */
+  function createIssue($project, $edit = array()) {
+    if (empty($edit)) {
+      $edit['title'] = $this->randomName(8);
+      $edit['body'] = $this->randomName(64);
+      $edit['component'] = 'Code';
+      $edit['category'] = 'bug';
+    }
+
+    $this->drupalPost('node/add/project-issue/' . $project->project['uri'], $edit, t('Save'));
+    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Issue', '%title' => $edit["title"])), t('Issue created.'));
+
+    return $this->drupalGetNodeByTitle($edit['title']);
+  }
+
+  function createIssueFollowup() {
+
+  }
+}
+
+class ProjectIssueCreationTestCase extends ProjectIssueWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Project issue creation',
+      'description' => 'Test creating an issue.',
+      'group' => 'Project Issue',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+
+    $maintain_user = $this->drupalCreateUser(array('maintain projects', 'create project issues', 'access project issues', 'access projects'));
+    $this->drupalLogin($maintain_user);
+  }
+
+  /**
+   * Test the creation of project issues and the display of issue properties.
+   */
+  function testProjectIssueCreation() {
+    $project = $this->createProject();
+
+    // Test project issue node form fields.
+    $this->drupalGet('node/add/project-issue/' . $project->project['uri']);
+    $this->assertText(t('Create Issue'));
+
+    $issue = $this->createIssue($project);
+
+    $this->assertText($issue->title, t('Title found'));
+    $this->assertText($issue->body, t('Body found'));
+    /// @todo We need to assert the other issue metadata fields here, too.
+  }
+}

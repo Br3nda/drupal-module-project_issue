@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.test,v 1.2 2010-04-20 18:56:01 dww Exp $
+// $Id: project_issue.test,v 1.3 2010-04-20 22:22:06 dww Exp $
 
 include_once drupal_get_path('module', 'project') . '/project.test';
 
@@ -26,12 +26,14 @@ class ProjectIssueWebTestCase extends ProjectWebTestCase {
    *   An issue node.
    */
   function createIssue($project, $edit = array()) {
-    if (empty($edit)) {
-      $edit['title'] = $this->randomName(8);
-      $edit['body'] = $this->randomName(64);
-      $edit['component'] = 'Code';
-      $edit['category'] = 'bug';
-    }
+    // If people are lazy and don't want to specify any of these, provide a
+    // default.
+    $edit += array(
+      'title' => $this->randomName(8),
+      'body' => $this->randomName(64),
+      'component' => 'Code',
+      'category' => 'bug',
+    );
 
     $this->drupalPost('node/add/project-issue/' . $project->project['uri'], $edit, t('Save'));
     $this->assertRaw(t('!post %title has been created.', array('!post' => 'Issue', '%title' => $edit["title"])), t('Issue created.'));
@@ -40,15 +42,44 @@ class ProjectIssueWebTestCase extends ProjectWebTestCase {
   }
 
   function createIssueComment($issue, $edit = array()) {
-    if (empty($edit)) {
-      $edit['comment'] = $this->randomName(64);
-    }
+    $edit += array('comment' => $this->randomName(64));
     $this->drupalPost('comment/reply/' . $issue->nid, $edit, t('Save'));
     return $edit;
+  }
+
+  /**
+   * Make sure issue metadata matches up to what it's intended to be.
+   *
+   * @param array $metadata
+   *   Associative array of expected issue metadata field names and values.
+   * @param $nid
+   *   Optional integer node ID of the issue to check metadata fields for.
+   */
+  function assertIssueMetadata($metadata, $nid = NULL) {
+    $pass = TRUE;
+    if ($nid) {
+      $this->drupalGet('node/' . $nid);
+    }
+    foreach ($this->xpath("//div[@id='project-issue-summary-table']/table//tr") as $row) {
+      $key = strtolower(trim((string)$row->td[0], ':'));
+      if (isset($metadata[$key])) {
+        if (strtolower($metadata[$key]) != strtolower((string)$row->td[1])) {
+          $pass = FALSE;
+        }
+      }
+    }
+    if ($pass) {
+      $this->pass(t('Issue metadata matches'));
+    }
+    else {
+      $this->fail(t('Issue metadata matches'));
+    }
   }
 }
 
 class ProjectIssueCreationTestCase extends ProjectIssueWebTestCase {
+  protected $maintain_user;
+
   public static function getInfo() {
     return array(
       'name' => 'Project issue creation',
@@ -60,8 +91,8 @@ class ProjectIssueCreationTestCase extends ProjectIssueWebTestCase {
   function setUp() {
     parent::setUp();
 
-    $maintain_user = $this->drupalCreateUser(array('maintain projects', 'create project issues', 'access project issues', 'access projects'));
-    $this->drupalLogin($maintain_user);
+    $this->maintain_user = $this->drupalCreateUser(array('maintain projects', 'create project issues', 'access project issues', 'access projects'));
+    $this->drupalLogin($this->maintain_user);
   }
 
   /**
@@ -74,11 +105,27 @@ class ProjectIssueCreationTestCase extends ProjectIssueWebTestCase {
     $this->drupalGet('node/add/project-issue/' . $project->project['uri']);
     $this->assertText(t('Create Issue'));
 
-    $issue = $this->createIssue($project);
+    $issue = $this->createIssue($project, array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature',
+      'priority' => 1,
+      'assigned' => $this->maintain_user->uid,
+    ));
 
     $this->assertText($issue->title, t('Title found'));
     $this->assertText($issue->body, t('Body found'));
-    /// @todo We need to assert the other issue metadata fields here, too.
+    $issue = $this->createIssue($project, array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature',
+      'priority' => 1,
+      'assigned' => $this->maintain_user->uid,
+    ));
+    $this->assertIssueMetadata(array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature request',
+      'priority' => 'critical',
+      'assigned' => $this->maintain_user->name,
+    ));
   }
 }
 
@@ -133,7 +180,6 @@ class ProjectIssueCommentTestCase extends ProjectIssueWebTestCase {
     // Test project issue node form fields.
     $issue = $this->createIssue($project);
     $comment = $this->createIssueComment($issue);
-
     $this->assertText($comment['comment'], t('Body found'));
   }
 }

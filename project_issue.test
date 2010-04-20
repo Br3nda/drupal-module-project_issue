@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.test,v 1.1 2010-04-20 18:33:06 dww Exp $
+// $Id: project_issue.test,v 1.2 2010-04-20 18:56:01 dww Exp $
 
 include_once drupal_get_path('module', 'project') . '/project.test';
 
@@ -12,6 +12,7 @@ class ProjectIssueWebTestCase extends ProjectWebTestCase {
     // We can't call parent::setUp() with a single array argument, so we need
     // this ugly call_user_func_array().
     call_user_func_array(array($this, 'parent::setUp'), $modules);
+    variable_set('comment_preview_project_issue', FALSE);
   }
 
   /**
@@ -38,8 +39,12 @@ class ProjectIssueWebTestCase extends ProjectWebTestCase {
     return $this->drupalGetNodeByTitle($edit['title']);
   }
 
-  function createIssueFollowup() {
-
+  function createIssueComment($issue, $edit = array()) {
+    if (empty($edit)) {
+      $edit['comment'] = $this->randomName(64);
+    }
+    $this->drupalPost('comment/reply/' . $issue->nid, $edit, t('Save'));
+    return $edit;
   }
 }
 
@@ -74,5 +79,61 @@ class ProjectIssueCreationTestCase extends ProjectIssueWebTestCase {
     $this->assertText($issue->title, t('Title found'));
     $this->assertText($issue->body, t('Body found'));
     /// @todo We need to assert the other issue metadata fields here, too.
+  }
+}
+
+class ProjectIssueCommentTestCase extends ProjectIssueWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Project issue comment',
+      'description' => 'Test commenting on an issue.',
+      'group' => 'Project Issue',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+
+    $maintain_user = $this->drupalCreateUser(array('maintain projects', 'create project issues', 'access project issues', 'access projects'));
+    $this->drupalLogin($maintain_user);
+  }
+
+  /**
+   * Test the creation of issue metadata.
+   */
+  function testProjectIssueMetadata() {
+    $project = $this->createProject();
+    // Test project issue node form fields.
+    $issue = $this->createIssue($project);
+    $html = $this->drupalGet('comment/reply/' . $issue->nid);
+    $this->parse();
+    // Let's iterate over all the forms.
+    $forms = $this->xpath('//form');
+    $form = $forms[0];
+    // We try to set the fields of this form as specified in $edit.
+    $post = $upload = $edit = array();
+    $this->handleForm($post, $edit, $upload, NULL, $form);
+    $map = array(
+      'priority' => 'priority',
+      'category' => 'category',
+      'component' => 'project_info[component]',
+      'assigned' => 'project_info[assigned]',
+      'pid' => 'project_info[pid]',
+    );
+    foreach ($map as $issue_key => $post_key) {
+      $this->assertEqual($issue->project_issue[$issue_key], $post[$post_key], t('Making sure comment form is correct'));
+    }
+  }
+
+  /**
+   * Test the creation of issue comments.
+   */
+  function testProjectIssueComment() {
+    $project = $this->createProject();
+    // Test project issue node form fields.
+    $issue = $this->createIssue($project);
+    $comment = $this->createIssueComment($issue);
+
+    $this->assertText($comment['comment'], t('Body found'));
   }
 }

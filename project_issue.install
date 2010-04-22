@@ -60,7 +60,7 @@ function project_issue_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'mail_copy_filter_state' => array(
+      'mail_copy_filter_status' => array(
         'description' => 'A serialized array containing the statuses to include in the e-mail sent to {project_projects}.mail_copy.',
         'type' => 'varchar',
         'length' => 255,
@@ -132,7 +132,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'sid' => array(
-        'description' => 'Current {project_issue_state}.sid of this issue.',
+        'description' => 'Current {project_issue_status}.sid of this issue.',
         'type' => 'int',
         'unsigned' => 1,
         'not null' => TRUE,
@@ -211,7 +211,7 @@ function project_issue_schema() {
         'default' => 0,
       ),
       'sid' => array(
-        'description' => 'The {project_issue_state}.sid of this issue after this comment was made.',
+        'description' => 'The {project_issue_status}.sid of this issue after this comment was made.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -280,7 +280,7 @@ function project_issue_schema() {
     ),
   );
 
-  $schema['project_issue_state'] = array(
+  $schema['project_issue_status'] = array(
     'description' => 'Table that holds all possible values for issue statuses.',
     'fields' => array(
       'sid' => array(
@@ -327,28 +327,28 @@ function project_issue_schema() {
 function project_issue_install() {
   // We need to check this before we try to create the table, so that
   // if it already exists, we don't attempt to insert our own values.
-  $project_issue_state_existed = db_table_exists('project_issue_state');
+  $project_issue_status_existed = db_table_exists('project_issue_status');
 
   // Create tables.
   drupal_install_schema('project_issue');
 
-  if (!$project_issue_state_existed) {
+  if (!$project_issue_status_existed) {
     // sid, name, weight, author-can-set, in-default-queries
-    project_issue_init_state(1, 'active', -13, 0, 1);
-    project_issue_init_state(2, 'fixed', 1, 0, 1);
-    project_issue_init_state(3, 'duplicate', 4, 0, 0);
-    project_issue_init_state(4, 'postponed', 6, 0, 1);
-    project_issue_init_state(5, "won't fix", 9, 0, 0);
-    project_issue_init_state(6, 'by design', 11, 0, 0);
-    project_issue_init_state(7, 'closed', 13, 1, 0);
-    project_issue_init_state(8, 'needs review', -8, 0, 0);
-    project_issue_init_state(13, 'needs work', -6, 0, 0);
-    project_issue_init_state(14, 'ready to commit', -2, 0, 0);
+    project_issue_init_status(1, 'active', -13, 0, 1);
+    project_issue_init_status(2, 'fixed', 1, 0, 1);
+    project_issue_init_status(3, 'duplicate', 4, 0, 0);
+    project_issue_init_status(4, 'postponed', 6, 0, 1);
+    project_issue_init_status(5, "won't fix", 9, 0, 0);
+    project_issue_init_status(6, 'by design', 11, 0, 0);
+    project_issue_init_status(7, 'closed', 13, 1, 0);
+    project_issue_init_status(8, 'needs review', -8, 0, 0);
+    project_issue_init_status(13, 'needs work', -6, 0, 0);
+    project_issue_init_status(14, 'ready to commit', -2, 0, 0);
 
     // Since we're hacking in auto-increment values here,
     // update the sequence value for Postgres -- ugly but necessary for now.
     if ($GLOBALS['db_type'] == 'pgsql') {
-      db_query("SELECT setval('project_issue_state_sid_seq', 14)");
+      db_query("SELECT setval('project_issue_status_sid_seq', 14)");
     }
   }
 
@@ -374,7 +374,7 @@ function project_issue_uninstall() {
   drupal_uninstall_schema('project_issue');
 
   $variables = array(
-    'project_issue_default_state',
+    'project_issue_default_status',
     'project_directory_issues',
     'project_reply_to',
     'project_issue_digest_last',
@@ -398,10 +398,10 @@ function project_issue_enable() {
 }
 
 /**
- * Initialize a given issue state in the database.
+ * Initialize a given issue status in the database.
  */
-function project_issue_init_state($sid, $name, $weight, $author, $query) {
-  db_query("INSERT INTO {project_issue_state} (sid, name, weight, author_has, default_query) VALUES (%d, '%s', %d, %d, %d)", $sid, $name, $weight, $author, $query);
+function project_issue_init_status($sid, $name, $weight, $author, $query) {
+  db_query("INSERT INTO {project_issue_status} (sid, name, weight, author_has, default_query) VALUES (%d, '%s', %d, %d, %d)", $sid, $name, $weight, $author, $query);
 }
 
 /**
@@ -443,6 +443,20 @@ function project_issue_update_6002() {
   if (empty($ret[0]['success'])) {
     return array(array('success' => TRUE, 'query' => '<strong>' . t("It is safe to ignore warnings about 'Multiple primary key defined'.") . '</strong>'));
   }
+  return $ret;
+}
+
+/**
+ * Rename related tables and variables in the state -> status cleanup.
+ */
+function project_issue_update_6003() {
+  $ret = array();
+  db_rename_table($ret, 'project_issue_state', 'project_issue_status');
+  $project_issue_default_state = variable_get('project_issue_default_state', NULL);
+  if (isset($project_issue_default_state)) {
+    variable_set('project_issue_default_status', $project_issue_default_state);
+  }
+  variable_del('project_issue_default_state');
   return $ret;
 }
 

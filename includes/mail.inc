@@ -77,8 +77,8 @@ function _project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
               }
               break;
             case 'sid':
-              if (($state = array_search($node->project_issue[$text], project_issue_state()))) {
-                $entry->project_issue['sid'] = $state;
+              if (($status = array_search($node->project_issue[$text], project_issue_status()))) {
+                $entry->project_issue['sid'] = $status;
               }
               break;
             case 'component':
@@ -93,7 +93,7 @@ function _project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
       }
 
       if (empty($entry->nid)) {
-        $entry->sid = variable_get('project_issue_default_state', 1);
+        $entry->sid = variable_get('project_issue_default_status', 1);
         $entry->type = 'project_issue';
         $entry = node_validate($entry, $error);
         $error or ($entry->nid = node_save($entry));
@@ -314,7 +314,7 @@ function project_issue_mail_notify($nid) {
     return;
   }
 
-  if (is_array($project->project_issue['mail_copy_filter_state']) && count(array_filter($project->project_issue['mail_copy_filter_state'])) && !$project->project_issue['mail_copy_filter_state'][$node->project_issue['sid']]) {
+  if (is_array($project->project_issue['mail_copy_filter_status']) && count(array_filter($project->project_issue['mail_copy_filter_status'])) && !$project->project_issue['mail_copy_filter_status'][$node->project_issue['sid']]) {
     return;
   }
 

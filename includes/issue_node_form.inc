@@ -134,7 +134,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     drupal_set_breadcrumb($breadcrumb);
   }
 
-  $default_state = variable_get('project_issue_default_state', 1);
+  $default_status = variable_get('project_issue_default_status', 1);
 
   // Fetch a list of all projects to test for access.
   $uris = NULL;
@@ -216,7 +216,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     }
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
     $priorities = project_issue_priority();
-    $states = project_issue_state(0, TRUE, !empty($node->nid) && ($node->uid == $user->uid), $node->project_issue['sid']);
+    $statuses = project_issue_status(0, TRUE, !empty($node->nid) && ($node->uid == $user->uid), $node->project_issue['sid']);
     $assigned = project_issue_assigned_choices($node);
   }
 
@@ -295,23 +295,23 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
       '#default_value' => $node->project_issue['assigned'],
       '#options' => $assigned,
     );
-    if (count($states) > 1) {
+    if (count($statuses) > 1) {
       $form['issue_info']['sid'] = array(
         '#type' => 'select',
         '#title' => t('Status'),
-        '#default_value' => $node->project_issue['sid'] ? $node->project_issue['sid'] : $default_state,
-        '#options' => $states,
+        '#default_value' => $node->project_issue['sid'] ? $node->project_issue['sid'] : $default_status,
+        '#options' => $statuses,
       );
     }
     else {
       $form['issue_info']['sid'] = array(
         '#type' => 'value',
-        '#value' => $default_state,
+        '#value' => $default_status,
       );
       $form['issue_info']['status'] = array(
         '#type' => 'item',
         '#title' => t('Status'),
-        '#value' => check_plain(project_issue_state($default_state)),
+        '#value' => check_plain(project_issue_status($default_status)),
       );
     }
   }
@@ -450,12 +450,12 @@ function _project_issue_validate($node) {
  *   in $node, not in the $node->project_issue array.
  */
 function _project_issue_insert($node) {
-  // Permanently store the original issue states in a serialized array. This
-  // is a bit yucky, but we need them for proper handling of states workflow.
-  // The current states need to be stored in {project_issues} as well for
+  // Permanently store the original issue metadata in a serialized array. This
+  // is a bit yucky, but we need them for proper handling of metadata workflow.
+  // The current metadata needs to be stored in {project_issues} as well for
   // query efficiency in issue queue searches, and it seems too messy to add a
   // bunch of new columns to the {project_issues} table for the original
-  // states.
+  // metadata.
   $original_issue_data = new stdClass();
   $fields = array(
     'pid' => 0,

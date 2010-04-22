@@ -152,7 +152,7 @@ function project_issue_generate_issue_comments($number) {
       $releases = project_release_get_releases($project_node, FALSE);
       $issues[$k]->rid = array_rand($releases);
     }
-    // Construct a comment to put the issue into the state we just decided.
+    // Construct a comment to put the issue into the status we just decided.
     $comment = array();
     $comment['uid'] = $account->uid;
     $comment['project_info'] = array('pid' => $issues[$k]->pid, 'component' => $issues[$k]->component, 'rid' => $issues[$k]->rid);
@@ -229,20 +229,20 @@ function _project_issue_generate_get_field($field, $pool_size = 100) {
 }
 
 function _project_issue_generate_get_permitted_sids($user) {
-  static $permitted_states;
+  static $permitted_statuses;
 
-  if (!isset($permitted_states)) {
-    $permitted_states = array();
+  if (!isset($permitted_statuses)) {
+    $permitted_statuses = array();
   }
 
   if (isset($user->uid)) {
-    if (isset($permitted_states[$user->uid])) {
-      return $permitted_states[$user->uid];
+    if (isset($permitted_statuses[$user->uid])) {
+      return $permitted_statuses[$user->uid];
     }
     else {
-      $states = project_issue_state($sid = 0, TRUE, TRUE, 0, FALSE, $user);
-      $permitted_states[$user->uid] = $states;
-      return $states;
+      $statuses = project_issue_status($sid = 0, TRUE, TRUE, 0, FALSE, $user);
+      $permitted_statuses[$user->uid] = $statuses;
+      return $statuses;
     }
   }
   return array();

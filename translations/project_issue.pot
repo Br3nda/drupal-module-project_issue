@@ -553,7 +553,7 @@ msgid "Auto-close days"
 msgstr ""
 
 #: project_issue.module:456
-msgid "Issues being in \"fixed\" state for the specified number of days will be closed by the followup user specified above. For example, if this is 14, and an issue is set to fixed on January 1, then it will be closed on January 15."
+msgid "Issues being in \"fixed\" status for the specified number of days will be closed by the followup user specified above. For example, if this is 14, and an issue is set to fixed on January 1, then it will be closed on January 15."
 msgstr ""
 
 #: project_issue.module:473
@@ -641,7 +641,7 @@ msgid "States"
 msgstr ""
 
 #: project_issue.module:762
-msgid "Which issue states to e-mail. If none is checked all states will be posted."
+msgid "Which issue statuses to e-mail. If none is checked all statuses will be e-mailed."
 msgstr ""
 
 #: project_issue.module:777
@@ -957,7 +957,7 @@ msgid "The {users}.uid of the user to which this issue is currently assigned."
 msgstr ""
 
 #: project_issue.install:128
-msgid "Current {project_issue_state}.sid of this issue."
+msgid "Current {project_issue_status}.sid of this issue."
 msgstr ""
 
 #: project_issue.install:135
@@ -1005,7 +1005,7 @@ msgid "The {users}.uid of the user to which this issue was assigned after this c
 msgstr ""
 
 #: project_issue.install:207
-msgid "The {project_issue_state}.sid of this issue after this comment was made."
+msgid "The {project_issue_status}.sid of this issue after this comment was made."
 msgstr ""
 
 #: project_issue.install:213

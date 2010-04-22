@@ -104,7 +104,7 @@ function project_mail_reminder() {
         if ($node->assigned) {
           $body .= "  assigned: $node->assigned_name\n";
         }
-        $body .= '  state: '. project_issue_state($node->sid) ."\n";
+        $body .= '  status: '. project_issue_status($node->sid) ."\n";
         $body .= '  age: '. format_interval(time() - $node->created) ."\n";
         $body .= '  url: '. url("node/$node->nid", array('absolute' => TRUE)) ."\n";
         $body .= "\n";

@@ -170,19 +170,19 @@ function project_issue_project_edit_form(&$form_state, $node) {
       '#default_value' => isset($node->project_issue['mail_copy_filter'][$key]) ? $node->project_issue['mail_copy_filter'][$key] : NULL,
     );
   }
-  $options = project_issue_state();
-  $form['email']['states'] = array(
+  $options = project_issue_status();
+  $form['email']['statuses'] = array(
     '#type' => 'item',
     '#title' => t('States'),
-    '#description' => t('Which issue states to e-mail. If none is checked all states will be posted.'),
+    '#description' => t('Which issue statuses to e-mail. If none are checked all statuses will be e-mailed.'),
   );
-  $form['email']['mail_copy_filter_state']['#tree'] = TRUE;
+  $form['email']['mail_copy_filter_status']['#tree'] = TRUE;
   foreach ($options as $key => $choice) {
-    $form['email']['mail_copy_filter_state'][$key] = array(
+    $form['email']['mail_copy_filter_status'][$key] = array(
       '#type' => 'checkbox',
       '#title' => check_plain($choice),
       '#return_value' => $key,
-      '#default_value' => isset($node->project_issue['mail_copy_filter_state'][$key]) ? $node->project_issue['mail_copy_filter_state'][$key] : NULL,
+      '#default_value' => isset($node->project_issue['mail_copy_filter_status'][$key]) ? $node->project_issue['mail_copy_filter_status'][$key] : NULL,
     );
   }
 
@@ -241,9 +241,9 @@ function project_issue_project_edit_form_submit($form, &$form_state) {
   $components = serialize(array_keys($components));
   $default_component = !empty($form_state['values']['default_component']) ? $form_state['values']['default_component'] : '';
   $mail_copy_filter = serialize($form_state['values']['mail_copy_filter']);
-  $mail_copy_filter_state = serialize($form_state['values']['mail_copy_filter_state']);
+  $mail_copy_filter_status = serialize($form_state['values']['mail_copy_filter_status']);
 
-  db_query("UPDATE {project_issue_projects} SET issues = %d, components = '%s',default_component = '%s', mail_digest = '%s', mail_reminder = %d, mail_copy = '%s', mail_copy_filter = '%s', mail_copy_filter_state = '%s', help = '%s' WHERE nid = %d", $form_state['values']['issues'], $components, $default_component, $form_state['values']['mail_digest'], $form_state['values']['mail_reminder'], $form_state['values']['mail_copy'], $mail_copy_filter, $mail_copy_filter_state, $form_state['values']['help'], $form_state['values']['nid']);
+  db_query("UPDATE {project_issue_projects} SET issues = %d, components = '%s',default_component = '%s', mail_digest = '%s', mail_reminder = %d, mail_copy = '%s', mail_copy_filter = '%s', mail_copy_filter_status = '%s', help = '%s' WHERE nid = %d", $form_state['values']['issues'], $components, $default_component, $form_state['values']['mail_digest'], $form_state['values']['mail_reminder'], $form_state['values']['mail_copy'], $mail_copy_filter, $mail_copy_filter_status, $form_state['values']['help'], $form_state['values']['nid']);
   db_query("UPDATE {node} SET changed = %d WHERE nid = %d", time(), $form_state['values']['nid']);
   drupal_set_message(t('Issue settings have been saved.'));
 }

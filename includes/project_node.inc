@@ -32,7 +32,7 @@ function project_issue_project_load(&$node, $arg) {
   $node->project_issue['components'] = unserialize($project->components);
   $node->project_issue['default_component'] = $project->default_component;
   $node->project_issue['mail_copy_filter'] = unserialize($project->mail_copy_filter);
-  $node->project_issue['mail_copy_filter_state'] = unserialize($project->mail_copy_filter_state);
+  $node->project_issue['mail_copy_filter_status'] = unserialize($project->mail_copy_filter_status);
   foreach (array('issues', 'help', 'mail_digest', 'mail_copy', 'mail_reminder') as $field) {
     $node->project_issue[$field] = $project->$field;
   }

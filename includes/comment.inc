@@ -571,7 +571,7 @@ function project_issue_update_by_comment($comment_data, $op) {
   // the updates to the issue with the latest available published comment.
   $comment_data = project_issue_get_newest_comment($comment_data);
 
-  // Update the issue data to reflect the new final states.
+  // Update the issue data to reflect the new final metadata.
   db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $comment_data->nid);
 
   // Update the issue title.

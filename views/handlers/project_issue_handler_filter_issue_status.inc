@@ -9,7 +9,7 @@
  * "open" issue status values as currently configured on the site.
  */
 class project_issue_handler_filter_issue_status extends views_handler_filter_in_operator {
-  var $open_states = array();
+  var $open_statuses = array();
 
   /**
    * Return the values to use for this filter.
@@ -19,17 +19,17 @@ class project_issue_handler_filter_issue_status extends views_handler_filter_in_
    */
   function get_value_options() {
     module_load_include('inc', 'project_issue', 'issue');
-    $this->value_options = array('Open' => t('- Open issues -')) + project_issue_state();
+    $this->value_options = array('Open' => t('- Open issues -')) + project_issue_status();
   }
 
   /**
    * Cache and return an array of status integers for "open" issue statuses.
    */
-  function get_open_states() {
-    if (empty($open_states)) {
-      $open_states = array_keys(project_issue_state(0, FALSE, FALSE, 0, TRUE));
+  function get_open_statuses() {
+    if (empty($open_statuses)) {
+      $open_statuses = array_keys(project_issue_status(0, FALSE, FALSE, 0, TRUE));
     }
-    return $open_states;
+    return $open_statuses;
   }
 
   /**
@@ -42,7 +42,7 @@ class project_issue_handler_filter_issue_status extends views_handler_filter_in_
     $values = array();
     foreach ($this->value as $key => $value) {
       if ($value == 'Open') {
-        $values += $this->get_open_states();
+        $values += $this->get_open_statuses();
       }
       else {
         $values[$key] = $value;

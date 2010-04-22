@@ -57,7 +57,7 @@ function project_issue_settings_form(&$form_state) {
     '#default_value' => (int) variable_get('project_issue_auto_close_days', PROJECT_ISSUE_AUTO_CLOSE_DAYS),
     '#size' => 4,
     '#maxlength' => 10,
-    '#description' => t('Issues being in "fixed" state for the specified number of days will be closed by the followup user specified above. For example, if this is 14, and an issue is set to fixed on January 1, then it will be closed on January 15.'),
+    '#description' => t('Issues being in "fixed" status for the specified number of days will be closed by the followup user specified above. For example, if this is 14, and an issue is set to fixed on January 1, then it will be closed on January 15.'),
   );
   
   $defaults = array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface'));

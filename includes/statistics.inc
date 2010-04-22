@@ -5,7 +5,7 @@
  * Page callback for the issue statistics page.
  */
 function project_issue_statistics($project = NULL) {
-  $states = project_issue_state();
+  $statuses = project_issue_status();
   if ($project->nid) {
     $filter = sprintf(' AND p.pid = %d ', (int)$project->nid);
     project_project_set_breadcrumb($project, TRUE);
@@ -44,7 +44,7 @@ function project_issue_statistics($project = NULL) {
   $total = db_result(db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s', 'p'), $filter));
   $result = db_query(db_rewrite_sql('SELECT COUNT(p.nid) AS total, p.sid FROM {project_issues} p INNER JOIN {node} n ON n.nid = p.nid WHERE n.status = 1%s GROUP BY p.sid', 'p'), $filter);
   while ($stat = db_fetch_object($result)) {
-    $rows[$stat->sid][0] = check_plain(project_issue_state($stat->sid));
+    $rows[$stat->sid][0] = check_plain(project_issue_status($stat->sid));
     $rows[$stat->sid][1] = array('data' => $stat->total, 'class' => 'project-issue-numeric');
     $rows[$stat->sid][2] = array('data' => number_format($stat->total / $total * 100) .'%', 'class' => 'project-issue-numeric-light');
     $rows[$stat->sid][3] = array('data' => '0', 'class' => 'project-issue-numeric');
@@ -64,7 +64,7 @@ function project_issue_statistics($project = NULL) {
     // to build our own tablesorting mechanism.
     $header = array();
     $header['project'] = array('data' => t('Project'), 'field' => 'title');
-    foreach ($states as $key => $value) {
+    foreach ($statuses as $key => $value) {
       $header[$key] = array('data' => check_plain($value), 'field' => $key);
     }
     $header['total'] = array('data' => t('Total'), 'field' => 'total');
@@ -86,8 +86,8 @@ function project_issue_statistics($project = NULL) {
           $where = '';
           break;
         default:
-          if ($state = array_search($_GET['order'], $states)) {
-            $args[] = $state;
+          if ($status = array_search($_GET['order'], $statuses)) {
+            $args[] = $status;
           }
           else {
             $args[] = 1;
@@ -103,7 +103,7 @@ function project_issue_statistics($project = NULL) {
     $rows = array();
     $projects = pager_query(db_rewrite_sql("SELECT pn.nid, pn.title, COUNT(n.nid) AS total FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.nid INNER JOIN {node} pn ON p.pid = pn.nid WHERE n.status = 1 AND pn.status = 1$where GROUP BY pn.nid, pn.title ORDER BY $column $sort"), 15, 0, db_rewrite_sql("SELECT COUNT(DISTINCT(n.nid)) FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.pid INNER JOIN {node} pin ON p.nid = pin.nid WHERE n.status = 1 AND pin.status = 1$where"), $args);
     $orig = array('project' => array('data' => 0));
-    foreach ($states as $key => $value) {
+    foreach ($statuses as $key => $value) {
       $orig[$key] = array('data' => '', 'class' => 'project-issue-numeric');
     }
     $orig['total'] = array('data' => '', 'class' => 'project-issue-numeric');

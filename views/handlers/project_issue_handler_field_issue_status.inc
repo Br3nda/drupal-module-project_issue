@@ -8,7 +8,7 @@
 class project_issue_handler_field_issue_status extends views_handler_field {
   function render($values) {
     module_load_include('inc', 'project_issue', 'issue');
-    return check_plain(project_issue_state($values->{$this->field_alias}));
+    return check_plain(project_issue_status($values->{$this->field_alias}));
   }
 }
 

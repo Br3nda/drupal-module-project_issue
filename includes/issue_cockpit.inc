@@ -41,7 +41,7 @@ function template_preprocess_project_issue_issue_cockpit(&$vars) {
   $vars['make_issues'] = $has_issues && node_access('create', 'project_issue');
 
   if ($vars['view_issues']) {
-    $open_states = '('. implode(',', array_keys(project_issue_state(0, FALSE, FALSE, 0, TRUE))) .')';
+    $open_statuses = '('. implode(',', array_keys(project_issue_status(0, FALSE, FALSE, 0, TRUE))) .')';
 
     $vars['path'] = 'project/issues/'. $node->project['uri'];
     $vars['form'] = drupal_get_form('project_issue_issue_cockpit_searchbox', $node);
@@ -55,11 +55,11 @@ function template_preprocess_project_issue_issue_cockpit(&$vars) {
     }
 
     if (isset($vars['categories']['All'])) {
-      $vars['categories']['All']['open'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
+      $vars['categories']['All']['open'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_statuses), $node->nid));
       $vars['categories']['All']['total'] = db_result(db_query(db_rewrite_sql('SELECT count(*) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d'), $node->nid));
     }
 
-    $result = db_query(db_rewrite_sql('SELECT count(*) AS open, i.category FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states .' GROUP BY i.category'), $node->nid);
+    $result = db_query(db_rewrite_sql('SELECT count(*) AS open, i.category FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_statuses .' GROUP BY i.category'), $node->nid);
     while ($category = db_fetch_object($result)) {
       if (isset($vars['categories'][$category->category])) {
         $vars['categories'][$category->category]['open'] = $category->open;
@@ -75,7 +75,7 @@ function template_preprocess_project_issue_issue_cockpit(&$vars) {
 
     $vars['issue_subscribe'] = l(t('Subscribe via e-mail'), 'project/issues/subscribe-mail/'. $node->project['uri'], array('query' => drupal_get_destination()));
     $vars['issue_statistics'] = l(t('Issue statistics'), 'project/issues/statistics/'. $node->project['uri']);
-    $vars['oldest'] = db_result(db_query(db_rewrite_sql('SELECT min(n.created) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
+    $vars['oldest'] = db_result(db_query(db_rewrite_sql('SELECT min(n.created) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_statuses), $node->nid));
   }
 }
 

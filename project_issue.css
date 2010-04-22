@@ -97,7 +97,7 @@ table.projects .project-project-links a {
 
 /* Issue query bar UI */
 .project-issue .quick-search #edit-projects,
-.project-issue .quick-search #edit-states {
+.project-issue .quick-search #edit-statuses {
   width: 150px;
 }
 
@@ -135,49 +135,49 @@ table.projects .project-project-links a {
 }
 
 /* Coloring based on issue status (issue query results and [#12345] links). */
-.project-issue tr.state-1, .project-issue-status-1 a {
+.project-issue tr.status-1, .project-issue-status-1 a {
   background-color: #fff;
 }
-.project-issue tr.state-1 td.active {
+.project-issue tr.status-1 td.active {
   background-color: #e1e7eb;
 }
-.project-issue tr.state-2, .project-issue-status-2 a {
+.project-issue tr.status-2, .project-issue-status-2 a {
   background-color: #c0ffc0;
 }
-.project-issue tr.state-2 td.active {
+.project-issue tr.status-2 td.active {
   background-color: #cec;
 }
-.project-issue tr.state-3, .project-issue-status-3 a,
-.project-issue tr.state-4, .project-issue-status-4 a,
-.project-issue tr.state-5, .project-issue-status-5 a,
-.project-issue tr.state-6, .project-issue-status-6 a {
+.project-issue tr.status-3, .project-issue-status-3 a,
+.project-issue tr.status-4, .project-issue-status-4 a,
+.project-issue tr.status-5, .project-issue-status-5 a,
+.project-issue tr.status-6, .project-issue-status-6 a {
   background-color: #ddf;
 }
-.project-issue tr.state-3 td.active, .project-issue tr.state-4 td.active, .project-issue tr.state-5 td.active, .project-issue tr.state-6 td.active {
+.project-issue tr.status-3 td.active, .project-issue tr.status-4 td.active, .project-issue tr.status-5 td.active, .project-issue tr.status-6 td.active {
   background-color: #cce;
 }
-.project-issue tr.state-7, .project-issue-status-7 a {
+.project-issue tr.status-7, .project-issue-status-7 a {
   background-color: #ffc9c9;
 }
-.project-issue tr.state-7 td.active {
+.project-issue tr.status-7 td.active {
   background-color: #eeb9b9;
 }
-.project-issue tr.state-8, .project-issue-status-8 a {
+.project-issue tr.status-8, .project-issue-status-8 a {
   background-color: #ffd;
 }
-.project-issue tr.state-8 td.active {
+.project-issue tr.status-8 td.active {
   background-color: #eed;
 }
-.project-issue tr.state-13, .project-issue-status-13 a {
+.project-issue tr.status-13, .project-issue-status-13 a {
   background-color: #ffe7dd;
 }
-.project-issue tr.state-13 td.active {
+.project-issue tr.status-13 td.active {
   background-color: #eed7cc;
 }
-.project-issue tr.state-14, .project-issue-status-14 a {
+.project-issue tr.status-14, .project-issue-status-14 a {
   background-color: #e7ffdd;
 }
-.project-issue tr.state-14 td.active {
+.project-issue tr.status-14 td.active {
   background-color: #d7eecc;
 }
 

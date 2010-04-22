@@ -6,9 +6,9 @@
 
 /// Default age in days of issues to auto close.
 define('PROJECT_ISSUE_AUTO_CLOSE_DAYS', 14);
-/// Project issue state = fixed.
+/// Project issue status = fixed.
 define('PROJECT_ISSUE_STATE_FIXED', 2);
-/// Project issue state = closed.
+/// Project issue status = closed.
 define('PROJECT_ISSUE_STATE_CLOSED', 7);
 
 /**
@@ -104,7 +104,7 @@ function project_issue_menu() {
     'title' => 'Project issue status options',
     'description' => 'Configure what issue status values should be used on your site.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('project_issue_admin_states_form'),
+    'page arguments' => array('project_issue_admin_statuses_form'),
     'access arguments' => array('administer projects'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 1,
@@ -113,7 +113,7 @@ function project_issue_menu() {
   $items['admin/project/project-issue-status/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('project_issue_delete_state_confirm', 4),
+    'page arguments' => array('project_issue_delete_status_confirm', 4),
     'access arguments' => array('administer projects'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/admin.issue_status.inc'
@@ -317,7 +317,7 @@ function project_issue_theme() {
         'summary_links' => NULL,
       ),
     ),
-    'project_issue_admin_states_form' => array(
+    'project_issue_admin_statuses_form' => array(
       'file' => 'includes/admin.issue_status.inc',
       'arguments' => array(
         'form' => NULL,
@@ -487,8 +487,8 @@ function project_issue_perm() {
     'access own project issues',
     'assign and be assigned project issues',
   );
-  $states = project_issue_state();
-  foreach($states as $key => $value) {
+  $statuses = project_issue_status();
+  foreach($statuses as $key => $value) {
     $perms[] = "set issue status ". str_replace("'", "", $value);
   }
   return $perms;
@@ -918,8 +918,8 @@ function project_issue_my_projects_table() {
     ),
     array('data' => t('Issue links'), 'class' => 'project-issue-links'),
   );
-  $default_states = implode(',', project_issue_default_states());
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} pi ON n.nid = pi.pid AND pi.sid IN ($default_states) LEFT JOIN {node} ni ON ni.nid = pi.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $uid);
+  $default_statuses = implode(',', project_issue_default_statuses());
+  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title, COUNT(ni.nid) AS count, MAX(ni.changed) AS max_issue_changed FROM {node} n LEFT JOIN {project_issues} pi ON n.nid = pi.pid AND pi.sid IN ($default_statuses) LEFT JOIN {node} ni ON ni.nid = pi.nid AND ni.status = 1 WHERE n.type = 'project_project' AND n.status = 1 AND n.uid = %d GROUP BY n.nid, n.title") . tablesort_sql($header), $uid);
 
   $any_admin = FALSE;
   $projects = array();
@@ -1118,11 +1118,11 @@ function theme_project_issue_issue_link($node, $comment_id = NULL, $comment_numb
     // We have an assigned user, but we're not going to print it next to the
     // issue link, so include it in title. l() runs $attributes through
     // drupal_attributes() which escapes the value.
-    $attributes = array('title' => t('Status: !status, Assigned to: !username', array('!status' => project_issue_state($node->project_issue['sid']), '!username' => $username)));
+    $attributes = array('title' => t('Status: !status, Assigned to: !username', array('!status' => project_issue_status($node->project_issue['sid']), '!username' => $username)));
   }
   else {
     // Just the status.
-    $attributes = array('title' => t('Status: !status', array('!status' => project_issue_state($node->project_issue['sid']))));
+    $attributes = array('title' => t('Status: !status', array('!status' => project_issue_status($node->project_issue['sid']))));
   }
 
   if (isset($comment_id)) {
@@ -1323,7 +1323,7 @@ function project_issue_token_values($type = 'all', $object = NULL) {
       $values['project_issue_category'] = project_issue_category($issue->category, FALSE);
       $values['project_issue_component'] = check_plain($issue->component);
       $values['project_issue_priority'] = project_issue_priority($issue->priority);
-      $values['project_issue_status'] = check_plain(project_issue_state($issue->sid));
+      $values['project_issue_status'] = check_plain(project_issue_status($issue->sid));
     }
     return $values;
   }
@@ -1526,7 +1526,7 @@ function project_issue_preprocess_views_view_table($variables) {
   $view = $variables['view'];
   if ($view->plugin_name == 'project_issue_table') {
     foreach ($view->result as $num => $result) {
-      $variables['row_classes'][$num][] = "state-$result->project_issues_sid";
+      $variables['row_classes'][$num][] = "status-$result->project_issues_sid";
       $variables['row_classes'][$num][] = "priority-$result->project_issues_priority";
     }
     $variables['class'] .= " project-issue";

@@ -159,78 +159,78 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
 // Support stuff
 
 /**
- * Return information about project issue state values.
+ * Return information about project issue status values.
  *
  * @param $sid
- *   Integer state id to return information about, or 0 for all states.
+ *   Integer status id to return information about, or 0 for all statuses.
  * @param $restrict
- *   Boolean to determine if states should be restricted based on the
+ *   Boolean to determine if statuses should be restricted based on the
  *   permissions of the current user or $account if that parameter
  *   is provided.
  * @param $is_author
  *   Boolean that indicates if the current user is the author of the
- *   issue, which can potentially grant a wider selection of states.
+ *   issue, which can potentially grant a wider selection of statuses.
  * @param $current_sid
- *   The current integer state id for the issue.
+ *   The current integer status id for the issue.
  * @param $defaults
- *   Boolean to request the states used for default issue queries.
+ *   Boolean to request the statuses used for default issue queries.
  * @param $account
  *   Account of a user to pass to user_access() for access checking.
  *   This parameter will have no effect unless $restrict is also
  *   set to TRUE.
  *
  * @return
- *   An array of states (sid as key, name as value) that match the
- *   given filters, or the name of the requested state.
- *   NOTE: The state name returned is raw text, and should be filtered via
+ *   An array of statuses (sid as key, name as value) that match the
+ *   given filters, or the name of the requested status.
+ *   NOTE: The status name returned is raw text, and should be filtered via
  *   check_plain() or filter_xss() before being printed as HTML output.
  */
-function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false, $account = NULL) {
+function project_issue_status($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false, $account = NULL) {
   static $options;
 
   if (!$options) {
-    $result = db_query('SELECT * FROM {project_issue_state} ORDER BY weight');
-    while ($state = db_fetch_object($result)) {
-      $options[] = $state;
+    $result = db_query('SELECT * FROM {project_issue_status} ORDER BY weight');
+    while ($status = db_fetch_object($result)) {
+      $options[] = $status;
     }
   }
 
-  foreach($options as $state) {
+  foreach($options as $status) {
     if ($restrict) {
       // Check if user has access,
       // or if status is default status and therefore available to all,
       // or if user is original issue author and author has access,
-      // or if the issue is already in a state, even if the user doesn't have
-      //   access to that state themselves.
-      if (user_access('set issue status '. str_replace("'", "", $state->name), $account)
+      // or if the issue is already in a status, even if the user doesn't have
+      //   access to that status themselves.
+      if (user_access('set issue status '. str_replace("'", "", $status->name), $account)
           || user_access('administer projects', $account)
-          || ($state->sid == variable_get('project_issue_default_state', 1))
-          || ($state->author_has && $is_author)
-          || ($state->sid == $current_sid) ) {
-        $states[$state->sid] = $state->name;
+          || ($status->sid == variable_get('project_issue_default_status', 1))
+          || ($status->author_has && $is_author)
+          || ($status->sid == $current_sid) ) {
+        $statuses[$status->sid] = $status->name;
       }
     }
     else if ($defaults) {
-      if ($state->default_query) {
-        $states[$state->sid] = $state->name;
+      if ($status->default_query) {
+        $statuses[$status->sid] = $status->name;
       }
     }
     else {
-      $states[$state->sid] = $state->name;
+      $statuses[$status->sid] = $status->name;
     }
   }
 
-  return $sid ? $states[$sid] : $states;
+  return $sid ? $statuses[$sid] : $statuses;
 }
 
 /**
- * Return an array of state ids that should be used for default queries.
+ * Return an array of status ids that should be used for default queries.
  */
-function project_issue_default_states() {
+function project_issue_default_statuses() {
   static $defaults;
   if (empty($defaults)) {
-    $states = project_issue_state(0, false, false, 0, true);
-    $defaults = !empty($states) ? array_keys($states) : array(1, 2, 4);
+    $statuses = project_issue_status(0, false, false, 0, true);
+    $defaults = !empty($statuses) ? array_keys($statuses) : array(1, 2, 4);
   }
   return $defaults;
 }
@@ -251,12 +251,12 @@ function project_issue_category($category = 0, $plural = 1) {
 }
 
 function project_issue_count($pid) {
-  $state = array();
+  $status = array();
   $result = db_query('SELECT p.sid, count(p.sid) AS count FROM {node} n INNER JOIN {project_issues} p ON n.nid = p.nid WHERE n.status = 1 AND p.pid = %d GROUP BY p.sid', $pid);
   while ($data = db_fetch_object($result)) {
-    $state[$data->sid] = $data->count;
+    $status[$data->sid] = $data->count;
   }
-  return $state;
+  return $status;
 }
 
 /**
@@ -344,7 +344,7 @@ function project_issue_change_summary($field, $value) {
       $user = user_load(array('uid' => $value));
       return (int) $value === 0 ? variable_get('anonymous', t('Anonymous')) : $user->name;
     case 'sid':
-      return $value ? project_issue_state($value) : t('<none>');
+      return $value ? project_issue_status($value) : t('<none>');
     default:
       return $value;
   }

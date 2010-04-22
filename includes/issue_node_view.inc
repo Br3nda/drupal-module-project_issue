@@ -53,7 +53,7 @@ function _project_issue_view($node, $teaser = FALSE, $page = FALSE) {
     );
     $current_data['sid'] = array(
       'label' => t('Status'),
-      'current' => project_issue_state($node->project_issue['sid']),
+      'current' => project_issue_status($node->project_issue['sid']),
     );
 
     // Allow modules to alter the metadata displayed in the table on the actual

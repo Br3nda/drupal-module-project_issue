@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.178 2010/02/08 18:02:59 bdragon Exp $
+// $Id: project_issue.module,v 1.179 2010/04/22 09:34:54 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -525,7 +525,7 @@ function project_issue_access($op, $node, $account) {
  * Helper to trim all elements in an array.
  */
 function project_issue_trim(&$item, $key) {
-  $item = trim($item);  
+  $item = trim($item);
 }
 
 /**
@@ -619,7 +619,7 @@ function project_issue_add_auto_followup($changes) {
  *     );
  *
  * @return
- *   TRUE if the comment was successfully added to the requested issue, 
+ *   TRUE if the comment was successfully added to the requested issue,
  *   otherwise FALSE.
  */
 function project_issue_add_followup($changes) {

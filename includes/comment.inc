@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.157 2010/02/18 00:19:27 dww Exp $
+// $Id: comment.inc,v 1.158 2010/04/22 09:34:54 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -83,7 +83,7 @@ function project_issue_comment(&$arg, $op) {
       // We should also invalidate the block cache for whatever project is now
       // used for this issue, since we might be deleting a comment that moved
       // an issue from one project to another.
-      $affected_projects[$current_data->pid] = 1;      
+      $affected_projects[$current_data->pid] = 1;
       break;
 
     case 'view':

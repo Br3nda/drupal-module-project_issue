@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.354 2009-06-18 03:28:55 dww Exp $
+// $Id: issue.inc,v 1.355 2010-04-24 01:58:18 dww Exp $
 
 
 /**
@@ -235,9 +235,39 @@ function project_issue_default_states() {
   return $defaults;
 }
 
-function project_issue_priority($priority = 0) {
-  $priorities = array(1 => t('critical'), t('normal'), t('minor'));
-  return $priority ? $priorities[$priority] : $priorities;
+/**
+ * Return all available issue priorities, sorted by weight.
+ *
+ * @return
+ *   An array of priorities keyed by id.
+ */
+function project_issue_priorities() {
+  static $priorities;
+  if (!isset($priorities)) {
+    $result = db_query('SELECT priority, name FROM {project_issue_priority} ORDER BY weight');
+    while ($object = db_fetch_object($result)) {
+      $priorities[$object->priority] = $object->name;
+    }
+  }
+  return $priorities;
+}
+
+/**
+ * Return the name of a priority for a given id.
+ *
+ * @param $priority
+ *   The id of the priority.
+ * @return
+ *   The name of the priority.
+ */
+function project_issue_priority($priority) {
+  $priorities = project_issue_priorities();
+  if ($priority && array_key_exists($priority, $priorities)) {
+    return $priorities[$priority];
+  }
+  else {
+    return t('[deleted priority]');
+  }
 }
 
 function project_issue_category($category = 0, $plural = 1) {

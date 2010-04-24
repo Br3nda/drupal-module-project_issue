@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.64 2009-08-21 22:51:31 dww Exp $
+// $Id: project_issue.install,v 1.65 2010-04-24 01:58:18 dww Exp $
 
 /**
  * Implementation of hook_schema().
@@ -110,10 +110,17 @@ function project_issue_schema() {
         'default' => '',
       ),
       'priority' => array(
-        'description' => 'The priority for this issue.',
+        'description' => 'Current {project_issue_priority}.priority of this issue.',
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => 1,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'priority_weight' => array(
+        'description' => 'The denormalized weight from {project_issue_priority}.weight.',
+        'type' => 'int',
+        'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
       ),
@@ -199,7 +206,7 @@ function project_issue_schema() {
         'default' => '',
       ),
       'priority' => array(
-        'description' => 'The priority for this issue after this comment was made.',
+        'description' => 'The {project_issue_priority}.priority of this issue after this comment was made.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -247,6 +254,32 @@ function project_issue_schema() {
       'nid_timestamp' => array('nid', 'timestamp'),
       'comment_number' => array('comment_number'),
     ),
+  );
+
+  $schema['project_issue_priority'] = array(
+    'description' => 'The available options for the priority values for issues.',
+    'fields' => array(
+      'priority' => array(
+        'description' => 'Primary Key: Unique id for this priority.',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Display-friendly name for this priority.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'description' => 'Weight for this priority, used when ordering issues by priority. Denormalized into {project_issues}.priority_weight.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('priority'),
   );
 
   $schema['project_subscriptions'] = array(
@@ -364,6 +397,9 @@ function project_issue_install() {
   variable_set('comment_upload_project_issue', 1);
   // Enable file attachments for issues.
   variable_set('upload_project_issue', 1);
+  db_query("INSERT INTO {project_issue_priority} (priority, name, weight) VALUES (1, 'critical', 1)");
+  db_query("INSERT INTO {project_issue_priority} (priority, name, weight) VALUES (2, 'normal', 2)");
+  db_query("INSERT INTO {project_issue_priority} (priority, name, weight) VALUES (3, 'minor', 3)");
 }
 
 /**
@@ -446,3 +482,57 @@ function project_issue_update_6002() {
   return $ret;
 }
 
+/**
+ * Add table for project_issue_priority, and insert default values.
+ */
+function project_issue_update_6003() {
+  $ret = array();
+  $table = array(
+    'description' => 'The issue priorities.',
+    'fields' => array(
+      'priority' => array(
+        'description' => 'Primary Key: Unique id for this priority.',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Display-friendly name for this priority.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'description' => 'Weight for this priority, used when ordering issues by priority. Denormalized into {project_issues}.priority_weight.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('priority'),
+  );
+  db_create_table($ret, 'project_issue_priority', $table);
+  db_query("INSERT INTO {project_issue_priority} (priority, name, weight) VALUES (1, 'critical', 1)");
+  db_query("INSERT INTO {project_issue_priority} (priority, name, weight) VALUES (2, 'normal', 2)");
+  db_query("INSERT INTO {project_issue_priority} (priority, name, weight) VALUES (3, 'minor', 3)");
+
+  db_add_field($ret, 'project_issues', 'priority_weight', array('type' => 'int', 'not null' => TRUE, 'default' => '0', 'size' => 'tiny'));
+  return $ret;
+}
+
+/**
+ * Update {project_issues} with denormalized priority weight.
+ */
+function project_issue_update_6004(&$sandbox) {
+  $ret = array();
+  // Reconstruct a batch context.
+  $context = array('sandbox' => &$sandbox);
+  // Load the include.
+  require_once drupal_get_path('module', 'project_issue') .'/includes/admin.batch_confirm.inc';
+  // Call the batch upgrade which will set its variables in the sandbox.
+  _project_issue_batch_update('UPDATE {project_issues} SET priority_weight = priority WHERE nid BETWEEN %d AND %d', array(), $context);
+  // Pass back progress.
+  $ret['#finished'] = $context['finished'];
+  return $ret;
+}

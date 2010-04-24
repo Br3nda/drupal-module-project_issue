@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.158 2010-04-22 09:34:54 dww Exp $
+// $Id: comment.inc,v 1.159 2010-04-24 01:58:18 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -571,8 +571,10 @@ function project_issue_update_by_comment($comment_data, $op) {
   // the updates to the issue with the latest available published comment.
   $comment_data = project_issue_get_newest_comment($comment_data);
 
+  $priority_weight = db_result(db_query('SELECT weight FROM {project_issue_priority} WHERE priority = %d', $comment_data->priority));
+
   // Update the issue data to reflect the new final states.
-  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $comment_data->nid);
+  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d, priority_weight = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $priority_weight, $comment_data->nid);
 
   // Update the issue title.
   $node = node_load($comment_data->nid, NULL, TRUE);  // Don't use cached since we changed data above.

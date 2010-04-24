@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.179 2010-04-22 09:34:54 dww Exp $
+// $Id: project_issue.module,v 1.180 2010-04-24 01:58:18 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -98,6 +98,27 @@ function project_issue_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'includes/admin.settings.inc',
   );
+
+  // Administrative pages
+  $items['admin/project/project-issue-priority'] = array(
+    'title' => 'Project issue priority options',
+    'description' => 'Configure what issue priorities should be used on your site.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('project_issue_admin_priority_form'),
+    'access arguments' => array('administer projects'),
+    'weight' => 1,
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'includes/admin.issue_priority.inc',
+  );
+  $items['admin/project/project-issue-priority/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('project_issue_delete_priority_confirm', 4),
+    'access arguments' => array('administer projects'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/admin.issue_priority.inc'
+  );
+
 
   // Administer issue status settings
   $items['admin/project/project-issue-status'] = array(
@@ -319,6 +340,12 @@ function project_issue_theme() {
     ),
     'project_issue_admin_states_form' => array(
       'file' => 'includes/admin.issue_status.inc',
+      'arguments' => array(
+        'form' => NULL,
+      ),
+    ),
+    'project_issue_admin_priority_form' => array(
+      'file' => 'includes/admin.issue_priority.inc',
       'arguments' => array(
         'form' => NULL,
       ),
@@ -1770,4 +1797,3 @@ function project_issue_project_page_link_alter(&$links, $node) {
     $links['development']['links'] = $patches + $links['development']['links'];
   }
 }
-

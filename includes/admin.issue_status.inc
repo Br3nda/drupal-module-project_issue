@@ -1,5 +1,5 @@
 <?php
-// $Id: admin.issue_status.inc,v 1.1 2009-04-04 07:03:28 dww Exp $
+// $Id: admin.issue_status.inc,v 1.2 2010-04-24 01:13:33 dww Exp $
 
 /**
  * @file
@@ -156,7 +156,7 @@ function project_issue_delete_state_confirm(&$form_state, $sid) {
       '#title' => t('Reassign status'),
       '#default_value' => $sid,
       '#options' => $states,
-      '#description' => t('There are !total existing issues with the status of @name. Please select a new status for these issues.', array('!total' => $total, '@name' => $name)),
+      '#description' => format_plural($total, 'There is 1 existing issue assigned to @name status. Please select a new status for this issue.', 'There are @count existing issues assigned to @name status. Please select a new status for these issues.', array('@name' => $name)),
     );
   }
   $form['sid'] = array(

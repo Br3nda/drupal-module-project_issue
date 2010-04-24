@@ -1,5 +1,5 @@
 <?php
-// $Id: admin.issue_status.inc,v 1.2 2010/04/24 01:13:33 dww Exp $
+// $Id: admin.issue_status.inc,v 1.3 2010/04/24 01:58:18 dww Exp $
 
 /**
  * @file
@@ -183,11 +183,25 @@ function project_issue_delete_state_confirm_validate($form, &$form_state) {
 }
 
 function project_issue_delete_state_confirm_submit($form, &$form_state) {
-  if ($form_state['values']['new_sid']) {
-    db_query('UPDATE {project_issues} SET sid = %d WHERE sid = %d', $form_state['values']['new_sid'], $form_state['values']['sid']);
-  }
   db_query('DELETE FROM {project_issue_state} WHERE sid = %d', $form_state['values']['sid']);
-  drupal_set_message(t('Project issue status %issue deleted.', array('%issue' => $form_state['values']['name'])));
-  $form_state['redirect'] ='admin/project/project-issue-status';
+  $form_state['redirect'] = 'admin/project/project-issue-status';
+  drupal_set_message(t('Project issue status %name deleted.', array('%name' => $form_state['values']['name'])));
+  if ($form_state['values']['new_sid']) {
+    $arguments = array($form_state['values']['new_sid'], $form_state['values']['sid']);
+    $update_sql = "UPDATE {project_issues} SET sid = %d WHERE sid = %d AND nid BETWEEN %d AND %d";
+    $batch = array(
+      'operations' => array(
+        array('_project_issue_batch_update', array($update_sql, $arguments)),
+      ),
+      'title' => t('Processing'),
+      // We use a single multi-pass operation, so the default
+      // 'Remaining x of y operations' message will be confusing here.
+      'progress_message' => '',
+      'error_message' => t('The update has encountered an error.'),
+      // The operations do not live in the .module file, so we need to
+      // tell the batch engine which file to load before calling them.
+      'file' => drupal_get_path('module', 'project_issue') .'/includes/admin.batch_confirm.inc',
+    );
+    batch_set($batch);
+  }
 }
-

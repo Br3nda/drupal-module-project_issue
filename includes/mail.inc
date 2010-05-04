@@ -1,5 +1,5 @@
 <?php
-// $Id: mail.inc,v 1.125 2010-04-17 22:04:49 thehunmonkgroup Exp $
+// $Id: mail.inc,v 1.126 2010-04-24 01:58:18 dww Exp $
 
 /**
  * @file
@@ -62,7 +62,7 @@ function _project_issue_mailhandler($node, $result, $i, $header, $mailbox) {
               }
               break;
             case 'priority':
-              if (($priority = array_search($node->project_issue[$text], project_issue_priority()))) {
+              if (($priority = array_search($node->project_issue[$text], project_issue_priorities()))) {
                 $entry->project_issue['priority'] = $priority;
               }
               break;

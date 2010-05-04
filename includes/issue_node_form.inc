@@ -1,5 +1,5 @@
 <?php
-// $Id: issue_node_form.inc,v 1.6 2010-04-20 07:05:25 dww Exp $
+// $Id: issue_node_form.inc,v 1.7 2010-04-24 01:58:18 dww Exp $
 
 /**
  * @file
@@ -215,7 +215,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
       }
     }
     $categories = array_merge(array(t('<none>')), project_issue_category(0, 0));
-    $priorities = project_issue_priority();
+    $priorities = project_issue_priorities();
     $states = project_issue_state(0, TRUE, !empty($node->nid) && ($node->uid == $user->uid), $node->project_issue['sid']);
     $assigned = project_issue_assigned_choices($node);
   }
@@ -238,6 +238,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     );
   }
 
+  $priority = $node->project_issue['priority'] ? $node->project_issue['priority'] : variable_get('project_issue_priority_default', 2);
   if ($allow_metadata_changes) {
     $form['project_info'] = array(
       '#type' => 'fieldset',
@@ -286,7 +287,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     $form['issue_info']['priority'] = array(
       '#type' => 'select',
       '#title' => t('Priority'),
-      '#default_value' => $node->project_issue['priority'] ? $node->project_issue['priority'] : 2,
+      '#default_value' => $priority,
       '#options' => $priorities,
     );
     $form['issue_info']['assigned'] = array(
@@ -340,7 +341,7 @@ function _project_issue_form($node, $form_state, $include_metadata_fields = FALS
     );
     $form['project_issue']['priority'] = array(
       '#type' => 'value',
-      '#value' => $node->project_issue['priority'],
+      '#value' => $priority,
     );
     $form['project_issue']['assigned'] = array(
       '#type' => 'value',
@@ -475,10 +476,11 @@ function _project_issue_insert($node) {
     $original_issue_data->$field = $node->$field;
   }
 
-  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, original_issue_data, last_comment_id, db_lock) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, serialize($original_issue_data), 0, 0);
+  $priority_weight = db_result(db_query('SELECT weight FROM {project_issue_priority} WHERE priority = %d', $node->priority));
+
+  db_query("INSERT INTO {project_issues} (nid, pid, category, component, priority, rid, assigned, sid, original_issue_data, last_comment_id, db_lock, priority_weight) VALUES (%d, %d, '%s', '%s', %d, %d, %d, %d, '%s', %d, %d, %d)", $node->nid, $node->pid, $node->category, $node->component, $node->priority, $node->rid, $node->assigned, $node->sid, serialize($original_issue_data), 0, 0, $priority_weight);
 
   // Invalidate the "Issue cockpit" block cache for this project, since the
   // new issue will have altered the summary totals.
   cache_clear_all('project_issue_cockpit_block:'. $node->pid, 'cache');
 }
-

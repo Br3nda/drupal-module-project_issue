@@ -1,5 +1,5 @@
 <?php
-// $Id: project_node.inc,v 1.1 2009-06-18 03:30:22 dww Exp $
+// $Id: project_node.inc,v 1.2 2010-04-22 09:34:54 dww Exp $
 
 /**
  * hook_nodeapi implementation specific to "project_project" nodes
@@ -52,7 +52,7 @@ function project_issue_project_insert($node) {
   // a textarea on a system settings form.  Convert here to the more
   // desirable serialized array for storage per-project.
   $defaults = array(t('Code'), t('Documentation'), t('Miscellaneous'), t('User interface'));
-  $components = variable_get('project_issue_default_components', implode("\n", $defaults));  
+  $components = variable_get('project_issue_default_components', implode("\n", $defaults));
   $default_components = explode("\n", str_replace("\r", '', $components));
 
   $node->project_issue['components'] = serialize($default_components);

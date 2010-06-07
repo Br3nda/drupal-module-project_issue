@@ -1,5 +1,5 @@
 <?php
-// $Id: project_edit_issues.inc,v 1.3 2009/08/21 21:58:23 dww Exp $
+// $Id: project_edit_issues.inc,v 1.4 2010/06/07 22:46:15 dww Exp $
 
 /**
  * @file
@@ -244,6 +244,11 @@ function project_issue_project_edit_form_submit($form, &$form_state) {
   $mail_copy_filter_state = serialize($form_state['values']['mail_copy_filter_state']);
 
   db_query("UPDATE {project_issue_projects} SET issues = %d, components = '%s',default_component = '%s', mail_digest = '%s', mail_reminder = %d, mail_copy = '%s', mail_copy_filter = '%s', mail_copy_filter_state = '%s', help = '%s' WHERE nid = %d", $form_state['values']['issues'], $components, $default_component, $form_state['values']['mail_digest'], $form_state['values']['mail_reminder'], $form_state['values']['mail_copy'], $mail_copy_filter, $mail_copy_filter_state, $form_state['values']['help'], $form_state['values']['nid']);
+  if (!db_affected_rows()) {
+    // It's possible there's no record in {project_issue_projects} if this
+    // particular project was created before project_issue.module was enabled.
+    db_query("INSERT INTO {project_issue_projects} (nid, issues, components, default_component, mail_digest, mail_reminder, mail_copy, mail_copy_filter, mail_copy_filter_state, help) VALUES (%d, %d, '%s', '%s', '%s', %d, '%s', '%s', '%s', '%s')", $form_values['nid'], $form_values['issues'], $components, $default_component, $form_values['mail_digest'], $form_values['mail_reminder'], $form_values['mail_copy'], $mail_copy_filter, $mail_copy_filter_state, $form_values['help']);
+  }
   db_query("UPDATE {node} SET changed = %d WHERE nid = %d", time(), $form_state['values']['nid']);
   drupal_set_message(t('Issue settings have been saved.'));
 }

@@ -1,6 +1,9 @@
 <?php
-// $Id: project_issue.install,v 1.48.2.5 2008/12/28 23:33:26 dww Exp $
+// $Id: project_issue.install,v 1.48.2.6 2010/06/07 22:46:21 dww Exp $
 
+/**
+ * Implementation of hook_install().
+ */
 function project_issue_install() {
   // We need to check this before we try to create the table, so that
   // if it already exists, we don't attempt to insert our own values.
@@ -164,8 +167,6 @@ function project_issue_install() {
     }
   }
 
-  project_issue_add_missing_projects();
-
   db_query("UPDATE {system} SET weight = 2 WHERE name = 'project_issue'");
 
   // Set up future followups to be read/write.
@@ -215,6 +216,9 @@ function project_issue_uninstall() {
   }
 }
 
+/**
+ * Implementation of hook_enable().
+ */
 function project_issue_enable() {
   project_issue_add_missing_projects();
 }
@@ -229,7 +233,6 @@ function project_issue_init_state($sid, $name, $weight, $author, $query) {
 /**
  * Check for existing project nodes that do not have an entry in the
  * {project_issue_projects} table, and add them.
- *
  */
 function project_issue_add_missing_projects() {
   $projects = db_query("SELECT n.nid, pip.nid AS pip_nid FROM {node} n LEFT JOIN {project_issue_projects} pip ON n.nid = pip.nid WHERE n.type = 'project_project' AND pip.nid IS NULL");

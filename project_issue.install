@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.install,v 1.66 2010/06/07 22:46:14 dww Exp $
+// $Id: project_issue.install,v 1.67 2010/07/19 19:00:34 thehunmonkgroup Exp $
 
 /**
  * Implementation of hook_schema().
@@ -168,6 +168,7 @@ function project_issue_schema() {
       'project_issues_pid' => array('pid'),
       'project_issues_sid' => array('sid'),
       'project_issues_nid_assigned' => array('nid', 'assigned'),
+      'project_issues_priority_weight' => array('priority_weight'),
     ),
     'primary key' => array('nid'),
   );
@@ -538,4 +539,15 @@ function project_issue_update_6004(&$sandbox) {
   // Pass back progress.
   $ret['#finished'] = $context['finished'];
   return $ret;
+}
+
+/**
+ * Add an index to {project_issues}.priority_weight.
+ */
+function project_issue_update_6005() {
+  $ret = array();
+
+  db_add_index($ret, 'project_issues', 'project_issues_priority_weight', array('priority_weight'));
+
+ return $ret;
 }

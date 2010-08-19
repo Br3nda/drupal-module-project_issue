@@ -1,5 +1,5 @@
 <?php
-// $Id: issue.inc,v 1.355 2010/04/24 01:58:18 dww Exp $
+// $Id: issue.inc,v 1.356 2010/08/19 16:31:28 dww Exp $
 
 
 /**
@@ -139,6 +139,17 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
     }
     // Always let the person replying assign it to themselves.
     $assigned[$user->uid] = $user->name;
+
+    // See if the current user is an issue maintainer for the current project.
+    $project = node_load($node->project_issue['pid']);
+    $maintainers = $project->project['maintainers'];
+    if (!empty($maintainers[$user->uid]['permissions']['maintain project issues'])) {
+      foreach ($maintainers as $uid => $maintainer) {
+        if (!empty($maintainer['permissions']['maintain project issues'])) {
+          $assigned[$uid] = $maintainer['name'];
+        }        
+      }
+    }
   }
 
   if (user_access('assign and be assigned project issues')) {
@@ -154,6 +165,7 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
       $assigned[$assignee->uid] = $assignee->name;
     }
   }
+
 }
 
 // Support stuff

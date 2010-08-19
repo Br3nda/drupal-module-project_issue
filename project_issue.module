@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.180 2010/04/24 01:58:18 dww Exp $
+// $Id: project_issue.module,v 1.181 2010/08/19 16:31:29 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -545,6 +545,48 @@ function project_issue_access($op, $node, $account) {
     case 'delete':
       // Admin case already handled, no one else should be able to delete.
       break;
+  }
+}
+
+/**
+ * Implement hook_project_permission_info()
+ */
+function project_issue_project_permission_info() {
+  return array(
+    'maintain issues' => array(
+      'title' => t('Maintain issues'),
+      'description' => t('Allows a user to assign issues to other issue maintainers for this project.'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_project_maintainer_save()
+ */
+function project_issue_project_maintainer_save($nid, $uid, $permissions = array()) {
+  db_query("UPDATE {project_issue_project_maintainer} SET maintain_issues = %d WHERE nid = %d AND uid = %d", !empty($permissions['maintain issues']), $nid, $uid);
+  if (!db_affected_rows()) {
+    db_query("INSERT INTO {project_issue_project_maintainer} (nid, uid, maintain_issues) VALUES (%d, %d, %d)", $nid, $uid, !empty($permissions['maintain issues']));
+  }
+}
+
+/**
+ * Implement hook_project_maintainer_remove()
+ */
+function project_issue_project_maintainer_remove($nid, $uid) {
+  db_query("DELETE FROM {project_issue_project_maintainer} WHERE nid = %d and uid = %d", $nid, $uid);
+}
+
+/**
+ * Implement hook_project_maintainer_project_load().
+ */
+function project_issue_project_maintainer_project_load($nid, &$maintainers) {
+  $query = db_query('SELECT u.uid, u.name, pipm.maintain_issues FROM {project_issue_project_maintainer} pipm INNER JOIN {users} u ON pipm.uid = u.uid WHERE pipm.nid = %d', $nid);
+  while ($maintainer = db_fetch_object($query)) {
+    if (empty($maintainers[$maintainer->uid])) {
+      $maintainers[$maintainer->uid]['name'] = $maintainer->name;
+    }
+    $maintainers[$maintainer->uid]['permissions']['maintain issues'] = $maintainer->maintain_issues;
   }
 }
 

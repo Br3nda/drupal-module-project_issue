@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.181 2010/08/19 16:31:29 dww Exp $
+// $Id: project_issue.module,v 1.182 2010/09/14 23:49:06 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1595,8 +1595,12 @@ function project_issue_preprocess_views_view_table($variables) {
   $view = $variables['view'];
   if ($view->plugin_name == 'project_issue_table') {
     foreach ($view->result as $num => $result) {
-      $variables['row_classes'][$num][] = "state-$result->project_issues_sid";
-      $variables['row_classes'][$num][] = "priority-$result->project_issues_priority";
+      if (isset($result->project_issues_sid)) {
+        $variables['row_classes'][$num][] = "state-$result->project_issues_sid";
+      }
+      if (isset($result->project_issues_priority)) {
+        $variables['row_classes'][$num][] = "priority-$result->project_issues_priority";
+      }
     }
     $variables['class'] .= " project-issue";
   }

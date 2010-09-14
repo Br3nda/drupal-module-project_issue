@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_user_issues.view.php,v 1.1 2009/06/18 03:38:43 dww Exp $
+// $Id: project_issue_user_issues.view.php,v 1.2 2010/09/14 23:49:50 dww Exp $
 
 /**
  * @file
@@ -457,4 +457,123 @@ $handler->override_option('displays', array(
   'default' => 0,
 ));
 $handler->override_option('sitename_title', FALSE);
-
+$handler = $view->new_display('block', 'Block', 'block_1');
+$handler->override_option('relationships', array(
+  'pid' => array(
+    'label' => 'Project node',
+    'required' => 1,
+    'id' => 'pid',
+    'table' => 'project_issues',
+    'field' => 'pid',
+  ),
+));
+$handler->override_option('fields', array(
+  'project_issue_queue' => array(
+    'label' => 'Project',
+    'link_type' => 'issues',
+    'exclude' => 0,
+    'id' => 'project_issue_queue',
+    'table' => 'node',
+    'field' => 'project_issue_queue',
+    'relationship' => 'pid',
+  ),
+  'title' => array(
+    'label' => 'Summary',
+    'link_to_node' => 1,
+    'exclude' => 0,
+    'id' => 'title',
+    'table' => 'node',
+    'field' => 'title',
+    'relationship' => 'none',
+  ),
+  'sid' => array(
+    'label' => 'Status',
+    'alter' => array(
+      'alter_text' => 0,
+      'text' => '',
+      'make_link' => 0,
+      'path' => '',
+      'link_class' => '',
+      'alt' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'target' => '',
+      'help' => '',
+      'trim' => 0,
+      'max_length' => '',
+      'word_boundary' => 1,
+      'ellipsis' => 1,
+      'html' => 0,
+      'strip_tags' => 0,
+    ),
+    'empty' => '',
+    'hide_empty' => 0,
+    'empty_zero' => 0,
+    'exclude' => 1,
+    'id' => 'sid',
+    'table' => 'project_issues',
+    'field' => 'sid',
+    'override' => array(
+      'button' => 'Use default',
+    ),
+    'relationship' => 'none',
+  ),
+));
+$handler->override_option('sorts', array(
+  'last_comment_timestamp' => array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'last_comment_timestamp',
+    'table' => 'node_comment_statistics',
+    'field' => 'last_comment_timestamp',
+    'relationship' => 'none',
+  ),
+));
+$handler->override_option('filters', array(
+  'status_extra' => array(
+    'operator' => '=',
+    'value' => '',
+    'group' => '0',
+    'exposed' => FALSE,
+    'expose' => array(
+      'operator' => FALSE,
+      'label' => '',
+    ),
+    'id' => 'status_extra',
+    'table' => 'node',
+    'field' => 'status_extra',
+    'relationship' => 'none',
+  ),
+));
+$handler->override_option('items_per_page', 15);
+$handler->override_option('use_pager', '0');
+$handler->override_option('use_more', 1);
+$handler->override_option('use_more_always', 0);
+$handler->override_option('style_options', array(
+  'grouping' => '',
+  'override' => 1,
+  'sticky' => 1,
+  'order' => 'desc',
+  'columns' => array(
+    'project_issue_queue' => 'project_issue_queue',
+    'title' => 'title',
+    'sid' => 'sid',
+  ),
+  'info' => array(
+    'project_issue_queue' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'title' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'sid' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+  ),
+  'default' => '-1',
+));
+$handler->override_option('block_description', '');
+$handler->override_option('block_caching', -1);

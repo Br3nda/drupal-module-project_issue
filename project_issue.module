@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.182 2010/09/14 23:49:06 dww Exp $
+// $Id: project_issue.module,v 1.183 2010/09/17 17:47:46 thehunmonkgroup Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -21,6 +21,18 @@ function project_issue_init() {
   /// @TODO: this should only be done on pages that need it.
   $path = drupal_get_path('module', 'project_issue');
   drupal_add_css($path .'/project_issue.css');
+}
+
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ */
+function project_issue_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'sampler') {
+    switch ($plugin) {
+      case 'metric':
+        return 'metrics';
+    }
+  }
 }
 
 function project_issue_menu() {

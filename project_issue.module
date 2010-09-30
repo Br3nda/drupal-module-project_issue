@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.183 2010/09/17 17:47:46 thehunmonkgroup Exp $
+// $Id: project_issue.module,v 1.184 2010/09/30 19:32:58 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1825,20 +1825,75 @@ function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
     // Invalidate the cache for this block since the categories might change.
     cache_clear_all('project_issue_cockpit_block:', 'cache', TRUE);
   }
-  elseif ($op == 'view' && ($node = project_get_project_from_menu()) && !empty($node->project_issue['issues']) && node_access('view', $node)) {
-    $cid = 'project_issue_cockpit_block:'. $node->nid;
-    if (($cache = cache_get($cid))) {
-      $block = $cache->data;
+  elseif ($op == 'view') {
+    if (isset($edit['homebox']) && isset($edit['homebox']->nid)) {
+      // Homebox provides stored configuration in $edit.
+      $node = node_load($edit['homebox']->nid);
     }
     else {
-      module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
-      $block = array(
-        'subject' => t('Issues for @project', array('@project' => $node->title)),
-        'content' => theme('project_issue_issue_cockpit', $node),
-      );
-      cache_set($cid, $block);
+      // Otherwise check if we are on a project page.
+      $node = project_get_project_from_menu();
     }
-    return $block;
+    if (!empty($node) && !empty($node->project_issue['issues']) && node_access('view', $node)) {
+      $cid = 'project_issue_cockpit_block:'. $node->nid;
+      if (($cache = cache_get($cid))) {
+        $block = $cache->data;
+      }
+      else {
+        module_load_include('inc', 'project_issue', 'includes/issue_cockpit');
+        $block = array(
+          'subject' => t('Issues for @project', array('@project' => $node->title)),
+          'content' => theme('project_issue_issue_cockpit', $node),
+        );
+        cache_set($cid, $block);
+      }
+      return $block;
+    }
+  }
+}
+
+/**
+ * Provide a list of keys Homebox will store.
+ */
+function project_issue_homebox_block_keys($block) {
+  return array('nid');
+}
+
+/**
+ * Provide an edit form specific to homebox blocks.
+ *
+ * Allows switching what project is used.
+ */
+function project_issue_homebox_block_edit_form($block) {
+  $form = array();
+
+  $node = node_load($block->nid);
+  $form['project_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Project name'),
+    '#size' => 20,
+    '#autocomplete_path' => 'project/autocomplete/project',
+    '#default_value' => empty($node) ? '' : $node->title,
+  );
+  $form['#validate'][] = 'project_issue_homebox_block_edit_form_validate';
+
+  return $form;
+}
+
+/**
+ * Validation callback for editing the project issue cockpit block via homebox.
+ *
+ * Makes sure a valid project title was entered and populates the nid. The nid
+ * is automatically saved by homebox if it's in $form_state['values'] so
+ * there's no need for a submit callback.
+ */
+function project_issue_homebox_block_edit_form_validate($form, &$form_state) {
+  $nid = db_result(db_query("SELECT nid FROM {node} WHERE title = '%s' AND type = '%s'", $form_state['values']['project_title'], 'project_project'));
+  if (empty($nid)) {
+    form_set_error('project_title', t('The name you entered (%title) is not a valid project.', array('%title' => $form_state['values']['project_title'])));
+  }
+  else {
+    $form_state['values']['nid'] = $nid;
   }
 }
 

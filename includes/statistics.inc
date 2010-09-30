@@ -1,17 +1,23 @@
 <?php
-// $Id: statistics.inc,v 1.1 2009/06/18 03:24:03 dww Exp $
+// $Id: statistics.inc,v 1.2 2010/09/30 20:25:27 dww Exp $
 
 /**
  * Page callback for the issue statistics page.
  */
 function project_issue_statistics($project = NULL) {
   $states = project_issue_state();
-  if ($project->nid) {
+  $output = '';
+  if (!empty($project->nid)) {
     $filter = sprintf(' AND p.pid = %d ', (int)$project->nid);
     project_project_set_breadcrumb($project, TRUE);
+    $output .= project_issue_query_result_links($project->project['uri']);
+  }
+  else {
+    $output .= project_issue_query_result_links();
+    $filter = '';
   }
 
-  $output = '<div class="project-issue">';
+  $output .= '<div class="project-issue">';
 
   // Issue lifetime.
   $header = array(t('Category'), t('Overall'), t('Last month'));
@@ -58,7 +64,7 @@ function project_issue_statistics($project = NULL) {
   $output .= theme('table', $header, $rows);
 
   // Project overview.
-  if (!$project->nid) {
+  if (!empty($project->nid)) {
     // Even though we don't use the tablesorting logic in the query itself,
     // we include it anyways because we're going to leverage the $_GET arguments
     // to build our own tablesorting mechanism.

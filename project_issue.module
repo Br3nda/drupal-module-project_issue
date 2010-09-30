@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.184 2010/09/30 19:32:58 dww Exp $
+// $Id: project_issue.module,v 1.185 2010/09/30 20:25:27 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -279,44 +279,7 @@ function project_issue_help($path, $arg) {
         '<dt>'. t('Default status') .'</dt>'.
         '<dd>'. t('The default status option will be used for new issues, and all users with the permission to create issues will automatically have permission to set this status. The default issue status cannot be deleted. If you wish to delete this status, first set a different status to default.') .'</dd>'.
         '</dl>';
-
   }
-
-  // NOTE: This totally sucks, and is a dirty, ugly hack.  Since we don't
-  // want to rely on PHP filtered headers for our views, and defining our
-  // own display plugin breaks other nice things like RSS, we just cheat
-  // and render these links in here.  We'd like to remove this once a
-  // better solution is available that doesn't hard-code the paths.
-  if ($arg[0] == 'project' && $arg[1] == 'user') {
-    return project_issue_my_projects_table();
-  }
-
-  if ($arg[0] == 'project' && $arg[1] == 'issues') {
-    // If there's no other arg, we're done.
-    if (empty($arg[2])) {
-      return project_issue_query_result_links();
-    }
-    // project/issues/user is a special case, since if there's an argument,
-    // it's a username, not a project.  Furthermore, we don't want any links
-    // for anonymous.
-    if ($arg[2] == 'user') {
-      global $user;
-      if (empty($user->uid) && empty($arg[3])) {
-        return;
-      }
-      return project_issue_query_result_links();
-    }
-    switch ($arg[2]) {
-      case 'search':
-      case 'statistics':
-      case 'subscribe-mail':
-        return project_issue_query_result_links($arg[3]);
-
-      default:
-        return project_issue_query_result_links($arg[2]);
-    }
-  }
-
 }
 
 /**
@@ -1908,5 +1871,30 @@ function project_issue_project_page_link_alter(&$links, $node) {
   if (!empty($node->project['uri'])) {
     $patches['pending_patches'] = l(t('View pending patches'), 'project/issues/search/'. $node->project['uri'], array('query' => 'status[]=8&status[]=13&status[]=14'));
     $links['development']['links'] = $patches + $links['development']['links'];
+  }
+}
+
+/**
+ * Implementation of hook_views_post_render().
+ */
+function project_issue_views_post_render(&$view, &$output, &$cache) {
+  // Add links to the top of the project_issue views.
+  $my_projects_views = variable_get('project_issue_my_projects_views', array('project_issue_user_projects'));
+  if (in_array($view->name, $my_projects_views)) {
+    // Tack the "my projects" table onto the user projects view.
+    if ($view->current_display == 'page_1') {
+      $output = project_issue_my_projects_table() . $output;
+    }
+  }
+  // Add links to the issue queue views.
+  $query_link_views = variable_get('project_issue_query_link_views', array('project_issue_all_projects', 'project_issue_project', 'project_issue_search_all', 'project_issue_search_project', 'project_issue_user_issues'));
+  if (in_array($view->name, $query_link_views)) {
+    if ($view->current_display == 'page_1') {
+      $arg = NULL;
+      if (isset($view->argument['pid'])) {
+        $arg = $view->argument['pid']->get_value();
+      }
+      $output = project_issue_query_result_links($arg) . $output;
+    }
   }
 }

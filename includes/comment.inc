@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.159 2010/04/24 01:58:18 dww Exp $
+// $Id: comment.inc,v 1.160 2010/10/01 21:50:24 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -150,11 +150,6 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   else {
     $next_id = db_result(db_query('SELECT last_comment_id FROM {project_issues} WHERE nid = %d', $form['nid']['#value'])) + 1;
     $subject = "#$next_id";
-    // Clobber the comment signature for new followups if necessary.
-    // TODO: Revamp this for Drupal 6.
-    if (!variable_get('project_issue_show_comment_signatures', 0)) {
-      $form['comment_filter']['comment']['#default_value'] = '';
-    }
   }
   $form['subject'] = array(
     '#type' => 'value',

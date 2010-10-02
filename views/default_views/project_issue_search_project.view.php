@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_search_project.view.php,v 1.1 2009/06/18 03:38:43 dww Exp $
+// $Id: project_issue_search_project.view.php,v 1.2 2010/10/02 23:12:12 dww Exp $
 
 /**
  * @file
@@ -453,7 +453,7 @@ $handler->override_option('style_options', array(
   'info' => array(
     'title' => array(
       'sortable' => 1,
-      'separator' => '',
+      'separator' => ' ',
     ),
     'timestamp' => array(
       'separator' => '',

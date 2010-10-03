@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.views_default.inc,v 1.49 2010/02/18 00:34:30 dww Exp $
+// $Id: project_issue.views_default.inc,v 1.50 2010/10/03 22:53:53 dww Exp $
 
 
 /**
@@ -12,7 +12,7 @@
  */
 function project_issue_views_default_views() {
   // Search the "default_views" directory for files ending in .view.php.
-  $files = file_scan_directory(drupal_get_path('module', 'project_issue'). '/views/default_views', 'view.php');
+  $files = file_scan_directory(drupal_get_path('module', 'project_issue'). '/views/default_views', 'view\.php$');
   foreach ($files as $absolute => $file) {
     // This is not require_once because it's possible that
     // hook_views_default_views() gets called more than once.

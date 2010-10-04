@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_user_issues.view.php,v 1.3 2010/10/02 23:12:12 dww Exp $
+// $Id: project_issue_user_issues.view.php,v 1.4 2010/10/04 19:49:51 dww Exp $
 
 /**
  * @file
@@ -129,7 +129,23 @@ $fields = array(
     'field' => 'new_comments',
     'relationship' => 'none',
   ),
-  'last_comment_timestamp' => array(
+);
+if (function_exists('tracker2_views_api')) {
+  $last_update_field = 'changed';
+  $fields['changed'] = array(
+    'label' => 'Last updated',
+    'date_format' => 'raw time ago',
+    'custom_date_format' => '',
+    'exclude' => 0,
+    'id' => 'changed',
+    'table' => 'tracker2_user',
+    'field' => 'changed',
+    'relationship' => 'none',
+  );
+}
+else {
+  $last_update_field = 'last_comment_timestamp';
+  $fields['last_comment_timestamp'] = array(
     'label' => 'Last updated',
     'date_format' => 'raw time ago',
     'custom_date_format' => '',
@@ -138,18 +154,18 @@ $fields = array(
     'table' => 'node_comment_statistics',
     'field' => 'last_comment_timestamp',
     'relationship' => 'none',
-  ),
-  'name' => array(
-    'label' => 'Assigned to',
-    'link_to_user' => 1,
-    'overwrite_anonymous' => 1,
-    'anonymous_text' => '',
-    'exclude' => 0,
-    'id' => 'name',
-    'table' => 'users',
-    'field' => 'name',
-    'relationship' => 'assigned',
-  ),
+  );
+}
+$fields['name'] = array(
+  'label' => 'Assigned to',
+  'link_to_user' => 1,
+  'overwrite_anonymous' => 1,
+  'anonymous_text' => '',
+  'exclude' => 0,
+  'id' => 'name',
+  'table' => 'users',
+  'field' => 'name',
+  'relationship' => 'assigned',
 );
 if (module_exists('search')) {
   $fields['score'] = array(
@@ -161,7 +177,7 @@ if (module_exists('search')) {
     'separator' => ',',
     'prefix' => '',
     'suffix' => '',
-    'alternate_sort' => 'last_comment_timestamp',
+    'alternate_sort' => $last_update_field,
     'alternate_order' => 'desc',
     'exclude' => 0,
     'id' => 'score',
@@ -196,14 +212,28 @@ $handler->override_option('arguments', array(
     'validate_user_roles' => array('2' => 2),
   ),
 ));
-$sorts['last_comment_timestamp'] = array(
-  'order' => 'DESC',
-  'granularity' => 'second',
-  'id' => 'last_comment_timestamp',
-  'table' => 'node_comment_statistics',
-  'field' => 'last_comment_timestamp',
-  'relationship' => 'none',
-);
+$last_update_sort = array();
+if (function_exists('tracker2_views_api')) {
+  $last_update_sort['changed'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'changed',
+    'table' => 'tracker2_user',
+    'field' => 'changed',
+    'relationship' => 'none',
+  );
+}
+else {
+  $last_update_sort['last_comment_timestamp'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'last_comment_timestamp',
+    'table' => 'node_comment_statistics',
+    'field' => 'last_comment_timestamp',
+    'relationship' => 'none',
+  );
+}
+$sorts = $last_update_sort;
 if (module_exists('search')) {
   $sorts['score'] = array(
     'order' => 'DESC',
@@ -215,20 +245,6 @@ if (module_exists('search')) {
 }
 $handler->override_option('sorts', $sorts);
 $filters = array(
-  'status_extra' => array(
-    'operator' => '=',
-    'value' => '',
-    'group' => '0',
-    'exposed' => FALSE,
-    'expose' => array(
-      'operator' => FALSE,
-      'label' => '',
-    ),
-    'id' => 'status_extra',
-    'table' => 'node',
-    'field' => 'status_extra',
-    'relationship' => 'none',
-  ),
   'pid' => array(
     'operator' => 'in',
     'value' => '',
@@ -315,6 +331,40 @@ $filters = array(
     'relationship' => 'none',
   ),
 );
+$published_filter = array();
+if (function_exists('tracker2_views_api')) {
+  $published_filter['published'] = array(
+    'operator' => '=',
+    'value' => '1',
+    'group' => '0',
+    'exposed' => FALSE,
+    'expose' => array(
+      'operator' => FALSE,
+      'label' => '',
+    ),
+    'id' => 'published',
+    'table' => 'tracker2_user',
+    'field' => 'published',
+    'relationship' => 'none',
+  );
+}
+else {
+  $published_filter['status_extra'] = array(
+    'operator' => '=',
+    'value' => '',
+    'group' => '0',
+    'exposed' => FALSE,
+    'expose' => array(
+      'operator' => FALSE,
+      'label' => '',
+    ),
+    'id' => 'status_extra',
+    'table' => 'node',
+    'field' => 'status_extra',
+    'relationship' => 'none',
+  );
+}
+$filters = $published_filter + $filters;
 if (module_exists('search')) {
   $search_filter['keys'] = array(
     'operator' => 'optional',
@@ -362,7 +412,7 @@ $handler->override_option('style_options', array(
     'version' => 'version',
     'comment_count' => 'comment_count',
     'new_comments' => 'comment_count',
-    'last_comment_timestamp' => 'last_comment_timestamp',
+    $last_update_field => $last_update_field,
     'name' => 'name',
     'score' => 'score',
   ),
@@ -401,7 +451,7 @@ $handler->override_option('style_options', array(
     'new_comments' => array(
       'separator' => '',
     ),
-    'last_comment_timestamp' => array(
+    $last_update_field => array(
       'sortable' => 1,
       'separator' => '',
     ),
@@ -414,7 +464,7 @@ $handler->override_option('style_options', array(
       'separator' => '',
     ),
   ),
-  'default' => module_exists('search') ? 'score' : 'last_comment_timestamp',
+  'default' => module_exists('search') ? 'score' : $last_update_field,
 ));
 $handler = $view->new_display('page', 'Page', 'page_1');
 $handler->override_option('path', 'project/issues/user');
@@ -519,32 +569,8 @@ $handler->override_option('fields', array(
     'relationship' => 'none',
   ),
 ));
-$handler->override_option('sorts', array(
-  'last_comment_timestamp' => array(
-    'order' => 'DESC',
-    'granularity' => 'second',
-    'id' => 'last_comment_timestamp',
-    'table' => 'node_comment_statistics',
-    'field' => 'last_comment_timestamp',
-    'relationship' => 'none',
-  ),
-));
-$handler->override_option('filters', array(
-  'status_extra' => array(
-    'operator' => '=',
-    'value' => '',
-    'group' => '0',
-    'exposed' => FALSE,
-    'expose' => array(
-      'operator' => FALSE,
-      'label' => '',
-    ),
-    'id' => 'status_extra',
-    'table' => 'node',
-    'field' => 'status_extra',
-    'relationship' => 'none',
-  ),
-));
+$handler->override_option('sorts', $last_update_sort);
+$handler->override_option('filters', $published_filter);
 $handler->override_option('items_per_page', 15);
 $handler->override_option('use_pager', '0');
 $handler->override_option('use_more', 1);

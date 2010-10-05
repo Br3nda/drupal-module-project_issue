@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_project.view.php,v 1.3 2010/10/05 00:44:31 dww Exp $
+// $Id: project_issue_project.view.php,v 1.4 2010/10/05 17:12:43 dww Exp $
 
 /**
  * @file
@@ -188,6 +188,7 @@ $handler->override_option('arguments', array(
     'default_argument_php' => '',
   ),
 ));
+$sorts = array();
 $sorts['last_comment_timestamp'] = array(
   'order' => 'DESC',
   'granularity' => 'second',
@@ -325,6 +326,7 @@ $filters = array(
   ),
 );
 if (module_exists('search')) {
+  $search_filter = array();
   $search_filter['keys'] = array(
     'operator' => 'optional',
     'value' => '',

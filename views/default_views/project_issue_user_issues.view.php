@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_user_issues.view.php,v 1.4 2010/10/04 19:49:51 dww Exp $
+// $Id: project_issue_user_issues.view.php,v 1.5 2010/10/05 17:12:43 dww Exp $
 
 /**
  * @file
@@ -366,6 +366,7 @@ else {
 }
 $filters = $published_filter + $filters;
 if (module_exists('search')) {
+  $search_filter = array();
   $search_filter['keys'] = array(
     'operator' => 'optional',
     'value' => '',

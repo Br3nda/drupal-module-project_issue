@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue_project.view.php,v 1.2 2010/10/02 23:12:12 dww Exp $
+// $Id: project_issue_project.view.php,v 1.3 2010/10/05 00:44:31 dww Exp $
 
 /**
  * @file
@@ -562,6 +562,8 @@ $handler->override_option('filters', array(
     'relationship' => 'none',
   ),
 ));
+$handler->override_option('empty', 'No open issues.');
+$handler->override_option('empty_format', '1');
 $handler->override_option('items_per_page', 5);
 $handler->override_option('use_pager', '0');
 $handler->override_option('style_plugin', 'list');

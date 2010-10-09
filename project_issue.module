@@ -1,5 +1,5 @@
 <?php
-// $Id: project_issue.module,v 1.186 2010/10/01 21:50:23 dww Exp $
+// $Id: project_issue.module,v 1.187 2010/10/09 00:31:31 dww Exp $
 
 // issue nodes      -> project_issues
 // issue comments   -> project_issue_comments
@@ -1767,7 +1767,7 @@ function project_issue_views_filter_identifier($name) {
 function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
   if ($op == 'list') {
     $blocks['issue_cockpit'] = array(
-      'info' => t('Issue cockpit'),
+      'info' => t('Project Issue Summary'),
       'cache' => BLOCK_CACHE_PER_ROLE | BLOCK_CACHE_PER_PAGE,
     );
     return $blocks;
@@ -1789,9 +1789,17 @@ function project_issue_block($op = 'list', $delta = 0, $edit = array()) {
     cache_clear_all('project_issue_cockpit_block:', 'cache', TRUE);
   }
   elseif ($op == 'view') {
-    if (isset($edit['homebox']) && isset($edit['homebox']->nid)) {
-      // Homebox provides stored configuration in $edit.
-      $node = node_load($edit['homebox']->nid);
+    if (isset($edit['homebox'])) {
+      if (isset($edit['homebox']->nid)) {
+        // Homebox provides stored configuration in $edit.
+        $node = node_load($edit['homebox']->nid);
+      }
+      else {
+        return array(
+          'subject' => t('Issues for ...'),
+          'content' => t('<a href="javascript:void(0)" class="portlet-settings">Configure</a> to select a project.'),
+        );
+      }
     }
     else {
       // Otherwise check if we are on a project page.
